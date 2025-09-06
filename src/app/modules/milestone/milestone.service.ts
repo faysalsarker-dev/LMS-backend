@@ -1,6 +1,6 @@
 
 import { IMilestone } from "./milestone.interface";
-import Milestone from "./milestone.model";
+import Milestone from "./Milestone.model";
 
 export const createMilestone = async (data: Partial<IMilestone>): Promise<IMilestone> => {
   const milestone = new Milestone(data);

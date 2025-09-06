@@ -1,26 +1,16 @@
 import { Router } from "express"
-import CourseRoute from '../modules/course/course.routes'
-import MilestoneRoute from '../modules/milestone/milestone.routes'
+import CourseRoute from "../modules/course/course.routes"
+import MilestoneRoute from "../modules/milestone/milestone.routes"
+import ModuleRoute from "../modules/module/module.routes"
+// import UserRoute from "../modules/user/user.routes"
 
-
-
-
-
-
-
-
-
-
+export const router = Router()
 
 interface ModuleRoute {
     path: string;
     route: Router;
 }
 
-
-
-
-export const router = Router()
 const moduleRoutes: ModuleRoute[] = [
     // {
     //     path: "/user",
@@ -30,12 +20,15 @@ const moduleRoutes: ModuleRoute[] = [
         path: "/course",
         route: CourseRoute
     },
-    {
-        path: "/milestone",
-        route: MilestoneRoute
-    },
 
-   
+   {
+       path: "/milestone",
+       route: MilestoneRoute
+   },
+   {
+       path: "/module",
+       route: ModuleRoute
+   },
 ]
 
 moduleRoutes.forEach((route) => {
