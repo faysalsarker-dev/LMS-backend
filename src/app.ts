@@ -19,9 +19,14 @@ app.use("/api/v1", router)
 
 app.get("/", (req: Request, res: Response) => {
     res.status(200).json({
-        message: "api is working..."
+       message:"api is working....."
     })
 })
+
+
+
+
+
 
 
 app.use(globalErrorHandler);
