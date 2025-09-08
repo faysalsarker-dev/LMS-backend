@@ -6,10 +6,10 @@ dotenv.config();
 const envSchema = z.object({
   PORT: z.string().default('5000'),
   DATABASE_URL: z.string().url(),
-  JWT_SECRET: z.string().min(10),
-  JWT_EXPIRES_IN: z.string().default('1d'),
+  JWT_SECRET: z.string().min(32),
+  JWT_ACCESS_EXPIRES_IN: z.string(),
+  JWT_REFRESH_EXPIRES_IN: z.string(),
   BCRYPT_SALT_ROUNDS: z.string().regex(/^\d+$/).default('10'),
-  GOOGLE_MAPS_API_KEY: z.string(),
 });
 
 const env = envSchema.safeParse(process.env);
@@ -24,8 +24,8 @@ export default {
   database_url: env.data.DATABASE_URL,
   jwt: {
     secret: env.data.JWT_SECRET,
-    expires_in: env.data.JWT_EXPIRES_IN,
+    access_expires_in: env.data.JWT_ACCESS_EXPIRES_IN,
+    refresh_expires_in: env.data.JWT_REFRESH_EXPIRES_IN,
   },
   bcrypt_salt_rounds: Number(env.data.BCRYPT_SALT_ROUNDS),
-  google_maps_api_key: env.data.GOOGLE_MAPS_API_KEY,
-};
+  };

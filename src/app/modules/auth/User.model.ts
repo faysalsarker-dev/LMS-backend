@@ -1,82 +1,58 @@
-import { Schema, model } from 'mongoose';
-import { IUser } from './user.interface';
+import { model, Schema } from "mongoose";
+import { IUser } from "./auth.interface";
+import  bcrypt  from 'bcryptjs';
 
+const userSchema = new Schema<IUser>(
+  {
+    name: { type: String, required: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
+    },
+    phone: {
+      type: String,
+      required: true,
+      match: [/^\+?[0-9]{7,15}$/, "Invalid phone number"],
+    },
+    password: { type: String, required: true, minlength: 6 , select: false},
+    role: {
+      type: String,
+      enum: ["student", "instructor", "admin","super_admin"],
+      default: "student",
+    },
+    isActive: { type: Boolean, default: true },
+    isVerified: { type: Boolean, default: false },
+    profile: { type: String ,default:null},
+courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
+    // otp: { type: String, select: false },
+    // otpExpiry: { type: Date, select: false },
+    // lastLogin: { type: Date, default: null },
 
-const UserSchema = new Schema<IUser>({
-  userId: {
-    type: String,
-    required: true,
-    unique: true,
-    index: true,
+    // currentSession: {
+    //   tokenId: { type: String, default: null },
+    //   device: { type: String, default: null },
+    //   lastLogin: { type: Date, default: null },
+    // },
+
   },
-  email: {
-    type: String,
-    unique: true,
-    sparse: true, // Allows null values to not be unique
-    lowercase: true,
-    trim: true,
-  },
-  phoneNumber: {
-    type: String,
-    unique: true,
-    sparse: true,
-    trim: true,
-  },
-  countryCode: {
-    type: String,
-    trim: true,
-    default: '+86', // Default to China's country code
-  },
-  realName: {
-    type: String,
-    trim: true,
-  },
-  idCardNumber: {
-    type: String,
-    trim: true,
-    unique: true,
-    sparse: true, // This field is optional and sensitive, so it should be unique only if present
-  },
-  wechatOpenId: {
-    type: String,
-    unique: true,
-    sparse: true,
-  },
-  alipayUserId: {
-    type: String,
-    unique: true,
-    sparse: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  lastLoginAt: {
-    type: Date,
-    default: Date.now,
-  },
-  isActive: {
-    type: Boolean,
-    default: true,
-  },
-  displayName: {
-    type: String,
-    trim: true,
-  },
-  photoURL: {
-    type: String,
-  },
-  roles: {
-    type: [String],
-    required: true,
-    enum: ['super_admin', 'admin', 'instructor', 'user'],
-    default: ['user'],
-  },
-  enrollments: {
-    type: [String], // Array of course IDs. This is a simple reference.
-    default: [],
-  },
+  { timestamps: true }
+);
+
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
-// 3. Export the Mongoose model, which allows you to interact with the "users" collection.
-export const UserModel = model<IUser>('User', UserSchema);
+userSchema.methods.comparePassword = async function (
+  candidatePassword: string
+): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+const User = model<IUser>("User", userSchema);
+export default User;

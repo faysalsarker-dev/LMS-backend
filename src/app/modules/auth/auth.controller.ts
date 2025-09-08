@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
 import { userService } from "./auth.service";
 import sendResponse from "../../utils/sendResponse";
-import { setCookie } from "../../utils/setCookie";
+import { setCookie } from './../../utils/setCookie';
 
 
 export const userController = {
@@ -28,7 +28,7 @@ export const userController = {
       userAgent
     );
 
-    setCookie(res, accessToken);
+    setCookie(res, accessToken , refreshToken);
 
     sendResponse(res, {
       statusCode: 200,
@@ -49,19 +49,19 @@ export const userController = {
     });
   }),
 
-  refreshToken: catchAsync(async (req: Request, res: Response) => {
-    const { refreshToken } = req.body;
-    const { accessToken } = await userService.refreshToken(refreshToken);
+  // refreshToken: catchAsync(async (req: Request, res: Response) => {
+  //   const { refreshToken } = req.body;
+  //   const { accessToken } = await userService.refreshToken(refreshToken);
 
-    setCookie(res, accessToken);
+  //   setCookie(res, accessToken);
 
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Token refreshed successfully",
-      data: { accessToken },
-    });
-  }),
+  //   sendResponse(res, {
+  //     statusCode: 200,
+  //     success: true,
+  //     message: "Token refreshed successfully",
+  //     data: { accessToken },
+  //   });
+  // }),
 
   updateProfile: catchAsync(async (req: Request, res: Response) => {
     const userId = req.user.id;

@@ -4,6 +4,7 @@ import MilestoneRoute from "../modules/milestone/milestone.routes"
 import ModuleRoute from "../modules/module/module.routes"
 import  QuizRoutes  from "../modules/quiz/quiz.routes"
 import UserProgressRoutes from "../modules/progress/userProgress.routes"
+import EnrollmentRoutes from "../modules/enrollment/enrollment.route"
 // import UserRoute from "../modules/user/user.routes"
 
 export const router = Router()
@@ -38,6 +39,10 @@ const moduleRoutes: ModuleRoute[] = [
    {
        path: "/progress",
        route: UserProgressRoutes
+   },
+   {
+       path: "/enrollment",
+       route: EnrollmentRoutes
    },
 ]
 
