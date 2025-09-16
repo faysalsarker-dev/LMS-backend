@@ -7,4 +7,8 @@ router.post('/register', auth_controller_1.AuthController.register);
 router.post('/login', auth_controller_1.AuthController.login);
 router.post('/logout', auth_controller_1.AuthController.logout);
 router.get('/me', auth_controller_1.AuthController.me);
+router.put('/verify-otp', auth_controller_1.AuthController.verifyOtp);
+router.post('/send-otp', auth_controller_1.AuthController.sendOtp);
+router.post("/forget-password", auth_controller_1.AuthController.forgetPassword);
+router.put("/reset-password", auth_controller_1.AuthController.resetPassword);
 exports.default = router;

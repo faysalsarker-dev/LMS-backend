@@ -14,6 +14,7 @@ const envSchema = z.object({
   USER_PASS: z.string(),
   SMTP_HOST: z.string().default('smtp.gmail.com'),
   SMTP_PORT: z.string().regex(/^\d+$/).default('587'),
+  FRONTEND_URL:z.string(),
 });
 
 const env = envSchema.safeParse(process.env);
@@ -37,5 +38,6 @@ export default {
     pass: env.data.USER_PASS,
     host: env.data.SMTP_HOST,
    smtp_port: Number(env.data.SMTP_PORT),
+   frontend_url:env.data.FRONTEND_URL
 
   };

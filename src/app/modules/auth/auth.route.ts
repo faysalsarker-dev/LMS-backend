@@ -12,5 +12,7 @@ router.post('/logout', AuthController.logout);
 router.get('/me', AuthController.me);
 router.put('/verify-otp', AuthController.verifyOtp);
 router.post('/send-otp', AuthController.sendOtp);
+router.post("/forget-password",AuthController.forgetPassword);
+router.put("/reset-password",AuthController.resetPassword);
 
 export default router;

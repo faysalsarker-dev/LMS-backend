@@ -17,6 +17,7 @@ const envSchema = zod_1.z.object({
     USER_PASS: zod_1.z.string(),
     SMTP_HOST: zod_1.z.string().default('smtp.gmail.com'),
     SMTP_PORT: zod_1.z.string().regex(/^\d+$/).default('587'),
+    FRONTEND_URL: zod_1.z.string(),
 });
 const env = envSchema.safeParse(process.env);
 if (!env.success) {
@@ -36,4 +37,5 @@ exports.default = {
     pass: env.data.USER_PASS,
     host: env.data.SMTP_HOST,
     smtp_port: Number(env.data.SMTP_PORT),
+    frontend_url: env.data.FRONTEND_URL
 };

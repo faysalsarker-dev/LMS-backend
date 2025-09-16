@@ -27,7 +27,7 @@ export const AuthController = {
       
     );
 
-    setCookie(res, accessToken , refreshToken);
+    setCookie(res, accessToken , refreshToken );
 
     sendResponse(res, {
       statusCode: 200,
@@ -83,7 +83,7 @@ sendOtp: async (req: Request, res: Response) => {
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Your profile Retrieved Successfully",
+    message: "OTP Send Successfully",
     data: result
   });
 },
@@ -91,6 +91,31 @@ sendOtp: async (req: Request, res: Response) => {
 verifyOtp: async (req: Request, res: Response) => {
   const {email,otp} = req.body;
   const result = await userService.verifyOtp(email,otp);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Your Account Verify Successfully",
+    data: result
+  });
+},
+
+
+forgetPassword: async (req: Request, res: Response) => {
+  const {email} = req.body;
+  const result = await userService.forgotPassword(email);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Your profile Retrieved Successfully",
+    data: result
+  });
+},
+
+resetPassword: async (req: Request, res: Response) => {
+const { id, token, newPassword } = req.body;
+const result = await userService.resetPassword(id,token,newPassword);
 
   sendResponse(res, {
     success: true,

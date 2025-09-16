@@ -19,8 +19,8 @@ exports.AuthController = {
         });
     }),
     login: (0, catchAsync_1.catchAsync)(async (req, res) => {
-        const { email, password } = req.body;
-        const { user, accessToken, refreshToken } = await auth_service_1.userService.login(email, password);
+        const { email, password, remember } = req.body;
+        const { user, accessToken, refreshToken } = await auth_service_1.userService.login(email, password, Boolean(remember));
         (0, setCookie_1.setCookie)(res, accessToken, refreshToken);
         (0, sendResponse_1.default)(res, {
             statusCode: 200,
@@ -51,6 +51,46 @@ exports.AuthController = {
     me: async (req, res) => {
         const decodedToken = req.user.id;
         const result = await auth_service_1.userService.getMe(decodedToken);
+        (0, sendResponse_1.default)(res, {
+            success: true,
+            statusCode: 200,
+            message: "Your profile Retrieved Successfully",
+            data: result
+        });
+    },
+    sendOtp: async (req, res) => {
+        const email = req.body.email;
+        const result = await auth_service_1.userService.sendOtp(email);
+        (0, sendResponse_1.default)(res, {
+            success: true,
+            statusCode: 200,
+            message: "OTP Send Successfully",
+            data: result
+        });
+    },
+    verifyOtp: async (req, res) => {
+        const { email, otp } = req.body;
+        const result = await auth_service_1.userService.verifyOtp(email, otp);
+        (0, sendResponse_1.default)(res, {
+            success: true,
+            statusCode: 200,
+            message: "Your Account Verify Successfully",
+            data: result
+        });
+    },
+    forgetPassword: async (req, res) => {
+        const { email } = req.body;
+        const result = await auth_service_1.userService.forgotPassword(email);
+        (0, sendResponse_1.default)(res, {
+            success: true,
+            statusCode: 200,
+            message: "Your profile Retrieved Successfully",
+            data: result
+        });
+    },
+    resetPassword: async (req, res) => {
+        const { id, token, newPassword } = req.body;
+        const result = await auth_service_1.userService.resetPassword(id, token, newPassword);
         (0, sendResponse_1.default)(res, {
             success: true,
             statusCode: 200,
