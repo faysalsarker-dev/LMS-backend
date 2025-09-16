@@ -5,7 +5,9 @@ import sendResponse from "../../utils/sendResponse";
 import { setCookie } from './../../utils/setCookie';
 
 
-export const userController = {
+export const AuthController = {
+
+
   register: catchAsync(async (req: Request, res: Response) => {
     const user = await userService.register(req.body);
     sendResponse(res, {
@@ -17,15 +19,12 @@ export const userController = {
   }),
 
   login: catchAsync(async (req: Request, res: Response) => {
-    const { username, password } = req.body;
-    const ip = req.ip;
-    const userAgent = req.headers["user-agent"] || "";
-
+    const { email, password ,remember } = req.body;   
     const { user, accessToken, refreshToken } = await userService.login(
-      username,
+      email,
       password,
-      ip,
-      userAgent
+      Boolean(remember)
+      
     );
 
     setCookie(res, accessToken , refreshToken);
@@ -34,13 +33,28 @@ export const userController = {
       statusCode: 200,
       success: true,
       message: "Login successful",
-      data: { user, accessToken, refreshToken },
+      data:  user ,
     });
   }),
 
+
   logout: catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user.id; // from auth middleware
+    const userId = req.user.id; 
     await userService.logout(userId);
+
+
+
+    res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax"
+    })
+    res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax"
+    })
+
 
     sendResponse(res, {
       statusCode: 200,
@@ -48,6 +62,45 @@ export const userController = {
       message: "Logged out successfully",
     });
   }),
+
+
+me: async (req: Request, res: Response) => {
+  const decodedToken = req.user.id;
+  const result = await userService.getMe(decodedToken);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Your profile Retrieved Successfully",
+    data: result
+  });
+},
+
+sendOtp: async (req: Request, res: Response) => {
+  const email = req.body.email;
+  const result = await userService.sendOtp(email);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Your profile Retrieved Successfully",
+    data: result
+  });
+},
+
+verifyOtp: async (req: Request, res: Response) => {
+  const {email,otp} = req.body;
+  const result = await userService.verifyOtp(email,otp);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Your profile Retrieved Successfully",
+    data: result
+  });
+},
+
+
 
   // refreshToken: catchAsync(async (req: Request, res: Response) => {
   //   const { refreshToken } = req.body;

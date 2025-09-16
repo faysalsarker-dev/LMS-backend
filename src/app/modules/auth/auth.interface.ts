@@ -22,14 +22,9 @@ export interface IUser extends Document {
   isVerified: boolean;
   profile?: string;
  courses: Types.ObjectId[];
-  // otp?: string;
-  // otpExpiry?: Date;
-  // lastLogin: Date;
-  // currentSession: {
-  //   tokenId: string | null;
-  //   device: string | null;
-  //   lastLogin: Date | null;
-  // };
+  otp?: string;
+  otpExpiry?: Date;
+
 
   comparePassword(candidatePassword: string): Promise<boolean>;
 }

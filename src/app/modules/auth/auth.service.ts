@@ -1,42 +1,106 @@
-
 import bcrypt from "bcryptjs";
 import { IUser } from "./auth.interface";
 import User from "./User.model";
 import { ApiError } from "../../errors/ApiError";
 import config from "../../config/config";
 import { generateToken, verifyToken } from './../../utils/jwt';
+import { generateOTP } from "../../utils/otpGenerator";
+import { sendOtpEmail } from "../../utils/email";
 
 
 export const userService = {
 
   async register(data: Partial<IUser>) {
     const existing = await User.findOne({ email: data.email });
-    if (existing) {
+    if (existing && existing.isVerified) {
+      
       throw new ApiError(400, "Email already exists");
     }
+    if (existing && !existing.isVerified) {
+      throw new ApiError(400, "Account is not verified");
+    }
 
-    const user = new User(data);
+     const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+
+
+    const user = new User({
+      ...data,
+      otp,
+      otpExpiry
+    });
+
+
     await user.save();
     return user;
   },
 
+  async sendOtp(email: string) {
+    const user = await User.findOne({ email });
+    if (!user) throw new ApiError(404, "User not found");
 
-  async login(username: string, password: string, ip?: string, userAgent?: string) {
-    const user = await User.findOne({ username }).select("+password");
+    if (user.isVerified) {
+      throw new ApiError(400, "Account already verified");
+    }
+
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); 
+
+    user.otp = otp;
+    user.otpExpiry = otpExpiry;
+    console.log(user);
+    await user.save();
+
+  await sendOtpEmail(user.email, otp);
+
+    return { message: "OTP sent successfully", email: user.email };
+  },
+
+  async verifyOtp(email: string, otp: string) {
+const user = await User.findOne({ email }).select({ otp: 1, otpExpiry: 1 });
+
+    if (!user) throw new ApiError(404, "User not found");
+
+
+    if (user.isVerified) {
+      throw new ApiError(400, "Account already verified");
+    }
+
+    if (!user.otp || !user.otpExpiry || user.otpExpiry < new Date()) {
+      throw new ApiError(400, "OTP expired or not generated");
+    }
+
+    if (user.otp !== otp) {
+      throw new ApiError(400, "Invalid OTP");
+    }
+
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save();
+
+    return { message: "Account verified successfully", email: user.email };
+  },
+
+
+
+  async login(email: string, password: string ,remember:boolean) {
+    const user = await User.findOne({ email }).select("+password");
     if (!user) throw new ApiError(401, "Invalid credentials");
+    if (user && !user.isVerified) throw new ApiError(401, "Account is not verified");
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) throw new ApiError(401, "Invalid credentials");
 
-    // generate tokens
-    const accessToken = generateToken({ id: user._id, ...user }, config.jwt.access_expires_in);
-    const refreshToken = generateToken({ id: user._id, ...user }, config.jwt.refresh_expires_in);
+let refreshToken
+if(remember){
+    refreshToken = generateToken({ id: user._id, ...user }, config.jwt.refresh_expires_in);
+    
+}
 
-    // update login data
-    // user.lastLogin = new Date();
-    // user.loginDevice = { ip, userAgent };
-    // user.currentToken = accessToken;
-    // user.refreshToken = refreshToken;
+ const  accessToken  = generateToken({ id: user._id, ...user }, config.jwt.access_expires_in);
+
+  
     await user.save();
 
     return { user, accessToken, refreshToken };
@@ -50,30 +114,42 @@ export const userService = {
     );
   },
 
-  /** 🔹 Refresh access token */
-  // async refreshToken(token: string) {
-  //   const payload: any = verifyToken(token);
-  //   const user = await User.findById(payload.id).select("+refreshToken");
+  async refreshToken(token: string) {
+    const payload: any = verifyToken(token);
+    const user = await User.findById(payload.id).select("+refreshToken");
 
-  //   // if (!user || user.refreshToken !== token) {
-  //   //   throw new ApiError(401, "Invalid refresh token");
-  //   // }
+    if (!user) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
 
-  //   const accessToken = generateToken({ id: user._id, role: user.role });
-  //   user.currentToken = accessToken;
-  //   await user.save();
+    const accessToken = generateToken({ id: user._id, ...user }, config.jwt.access_expires_in);
+    await user.save();
 
-  //   return { accessToken };
-  // },
+    return { accessToken };
+  },
 
-  /** 🔹 Update user profile */
-  async updateProfile(userId: string, updates: Partial<IUser>) {
+  /** 🔹 Update user password */
+  async updatePassword(userId: string, updates: Partial<IUser>) {
     if (updates.password) {
       const salt = await bcrypt.genSalt(12);
       updates.password = await bcrypt.hash(updates.password, salt);
     }
     return User.findByIdAndUpdate(userId, updates, { new: true });
   },
+
+
+  async updateProfile(userId: string, updates: Partial<IUser>) {
+    return User.findByIdAndUpdate(userId, updates, { new: true });
+  },
+
+
+
+ async getMe(userId: string) {
+    const user = await User.findById(userId);
+    if (!user) throw new ApiError(404, 'User not found');
+    return user;
+  },
+
 
   /** 🔹 Find user by ID */
   async getUserById(userId: string) {

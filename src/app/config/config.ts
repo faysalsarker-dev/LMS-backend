@@ -10,6 +10,10 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string(),
   JWT_REFRESH_EXPIRES_IN: z.string(),
   BCRYPT_SALT_ROUNDS: z.string().regex(/^\d+$/).default('10'),
+  USER_MAIL: z.string().email(),
+  USER_PASS: z.string(),
+  SMTP_HOST: z.string().default('smtp.gmail.com'),
+  SMTP_PORT: z.string().regex(/^\d+$/).default('587'),
 });
 
 const env = envSchema.safeParse(process.env);
@@ -28,4 +32,10 @@ export default {
     refresh_expires_in: env.data.JWT_REFRESH_EXPIRES_IN,
   },
   bcrypt_salt_rounds: Number(env.data.BCRYPT_SALT_ROUNDS),
+
+    user: env.data.USER_MAIL,
+    pass: env.data.USER_PASS,
+    host: env.data.SMTP_HOST,
+   smtp_port: Number(env.data.SMTP_PORT),
+
   };

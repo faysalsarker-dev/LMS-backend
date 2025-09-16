@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodObject } from 'zod';
+import { AnyZodObject } from 'zod';
 import { ApiError } from '../errors/ApiError';
 
 
 
-const validateRequest =(schema: ZodObject) =>  async(req: Request, res: Response, next: NextFunction) => {
+const validateRequest =(schema:AnyZodObject ) =>  async(req: Request, res: Response, next: NextFunction) => {
   try {
      if (req.body.data) {
             req.body = JSON.parse(req.body.data)

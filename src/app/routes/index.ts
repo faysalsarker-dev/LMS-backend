@@ -3,9 +3,9 @@ import CourseRoute from "../modules/course/course.routes"
 import MilestoneRoute from "../modules/milestone/milestone.routes"
 import ModuleRoute from "../modules/module/module.routes"
 import  QuizRoutes  from "../modules/quiz/quiz.routes"
-import UserProgressRoutes from "../modules/progress/userProgress.routes"
+// import UserProgressRoutes from "../modules/progress/userProgress.routes"
 import EnrollmentRoutes from "../modules/enrollment/enrollment.route"
-// import UserRoute from "../modules/user/user.routes"
+import UserRoute from "../modules/auth/auth.route"
 
 export const router = Router()
 
@@ -15,10 +15,10 @@ interface ModuleRoute {
 }
 
 const moduleRoutes: ModuleRoute[] = [
-    // {
-    //     path: "/user",
-    //     route: UserRoute
-    // },
+    {
+        path: "/user",
+        route: UserRoute
+    },
     {
         path: "/course",
         route: CourseRoute
@@ -36,10 +36,10 @@ const moduleRoutes: ModuleRoute[] = [
        path: "/quiz",
        route: QuizRoutes
    },
-   {
-       path: "/progress",
-       route: UserProgressRoutes
-   },
+//    {
+//        path: "/progress",
+//        route: UserProgressRoutes
+//    },
    {
        path: "/enrollment",
        route: EnrollmentRoutes

@@ -27,15 +27,11 @@ const userSchema = new Schema<IUser>(
     isVerified: { type: Boolean, default: false },
     profile: { type: String ,default:null},
 courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
-    // otp: { type: String, select: false },
-    // otpExpiry: { type: Date, select: false },
-    // lastLogin: { type: Date, default: null },
 
-    // currentSession: {
-    //   tokenId: { type: String, default: null },
-    //   device: { type: String, default: null },
-    //   lastLogin: { type: Date, default: null },
-    // },
+
+    otp: { type: String, select: false },
+    otpExpiry: { type: Date, select: false },
+
 
   },
   { timestamps: true }
