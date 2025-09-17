@@ -7,6 +7,7 @@ import { generateToken, verifyToken } from "./../../utils/jwt";
 import { generateOTP } from "../../utils/otpGenerator";
 import { sendLinkEmail, sendOtpEmail } from "../../utils/email";
 import { JwtPayload } from "jsonwebtoken";
+import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 
 export const userService = {
   async register(data: Partial<IUser>) {
@@ -135,9 +136,25 @@ export const userService = {
     return User.findByIdAndUpdate(userId, updates, { new: true });
   },
 
-  async updateProfile(userId: string, updates: Partial<IUser>) {
-    return User.findByIdAndUpdate(userId, updates, { new: true });
-  },
+async updateProfile(userId: string, updates: Partial<IUser>) {
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError(404, "User not found");
+
+  const oldProfile = user.profile;
+
+  const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true });
+
+  if (updates.profile && oldProfile) {
+    try {
+      await deleteImageFromCLoudinary(oldProfile);
+    } catch (err) {
+      console.error("Failed to delete old image:", err);
+    }
+  }
+
+  return updatedUser;
+},
+
 
   async getMe(userId: string) {
     const user = await User.findById(userId);

@@ -39,10 +39,10 @@ export const AuthController = {
 
 
   logout: catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user.id; 
-    await userService.logout(userId);
+    // const userId = req.user.id; 
+    // await userService.logout(userId);
 
-
+console.log('calling...');
 
     res.clearCookie("accessToken", {
         httpOnly: true,
@@ -65,7 +65,7 @@ export const AuthController = {
 
 
 me: async (req: Request, res: Response) => {
-  const decodedToken = req.user.id;
+  const decodedToken = req.user._id;
   const result = await userService.getMe(decodedToken);
 
   sendResponse(res, {
@@ -142,8 +142,12 @@ const result = await userService.resetPassword(id,token,newPassword);
   // }),
 
   updateProfile: catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user.id;
-    const user = await userService.updateProfile(userId, req.body);
+    const userId = req.user._id;
+    const payload ={
+      ...req.body,
+      profile:req.file?.path
+    }
+    const user = await userService.updateProfile(userId,payload);
 
     sendResponse(res, {
       statusCode: 200,

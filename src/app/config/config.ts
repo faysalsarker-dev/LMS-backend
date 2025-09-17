@@ -15,6 +15,12 @@ const envSchema = z.object({
   SMTP_HOST: z.string().default('smtp.gmail.com'),
   SMTP_PORT: z.string().regex(/^\d+$/).default('587'),
   FRONTEND_URL:z.string(),
+
+      CLOUDINARY_CLOUD_NAME:z.string(),
+CLOUDINARY_API_KEY:z.string(),
+CLOUDINARY_API_SECRET:z.string()
+
+
 });
 
 const env = envSchema.safeParse(process.env);
@@ -38,6 +44,13 @@ export default {
     pass: env.data.USER_PASS,
     host: env.data.SMTP_HOST,
    smtp_port: Number(env.data.SMTP_PORT),
-   frontend_url:env.data.FRONTEND_URL
+   frontend_url:env.data.FRONTEND_URL,
+   cloudinary:{
+     cloudinary_cloud_name:env.data.CLOUDINARY_CLOUD_NAME,
+   cloudinary_api_key:env.data.CLOUDINARY_API_KEY,
+   cloudinary_api_secret:env.data.CLOUDINARY_API_SECRET,
+   }
+  
+
 
   };

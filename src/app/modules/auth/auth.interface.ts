@@ -2,7 +2,7 @@
 import { Document, Types } from "mongoose";
 
 export const UserRoles = {
-  USER: 'student',
+  STUDENT: 'student',
   INSTRUCTOR: 'instructor',
   ADMIN: 'admin',
   SUPER_ADMIN: 'super_admin',
@@ -22,6 +22,12 @@ export interface IUser extends Document {
   isVerified: boolean;
   profile?: string;
  courses: Types.ObjectId[];
+ 
+ address:{
+  country?:string,
+  city?:string
+
+ }
   otp?: string;
   otpExpiry?: Date;
 

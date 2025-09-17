@@ -28,6 +28,10 @@ const userSchema = new Schema<IUser>(
     profile: { type: String ,default:null},
 courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
 
+address:{
+  country:{type: String,default:null},
+  city:{type: String,default:null}
+},
 
     otp: { type: String, select: false },
     otpExpiry: { type: Date, select: false },
