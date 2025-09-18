@@ -3,7 +3,7 @@ import CourseRoute from "../modules/course/course.routes"
 import MilestoneRoute from "../modules/milestone/milestone.routes"
 import LessonRoute from "../modules/lesson/lesson.route"
 import  QuizRoutes  from "../modules/quiz/quiz.routes"
-// import UserProgressRoutes from "../modules/progress/userProgress.routes"
+import UserProgressRoutes from "../modules/progress/progress.route"
 import EnrollmentRoutes from "../modules/enrollment/enrollment.route"
 import UserRoute from "../modules/auth/auth.route"
 
@@ -36,10 +36,10 @@ const moduleRoutes: ModuleRoute[] = [
        path: "/quiz",
        route: QuizRoutes
    },
-//    {
-//        path: "/progress",
-//        route: UserProgressRoutes
-//    },
+   {
+       path: "/progress",
+       route: UserProgressRoutes
+   },
    {
        path: "/enrollment",
        route: EnrollmentRoutes

@@ -10,8 +10,9 @@ export interface IQuiz {
   options: IQuizOption[];
   correctAnswer: string; 
   explanation?: string;
-  module: Types.ObjectId; 
+  lesson: Types.ObjectId; 
   timer?: number; 
+  status:"active" | "inactive"
   createdAt?: Date;
   updatedAt?: Date;
 }

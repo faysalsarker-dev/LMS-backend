@@ -2,22 +2,13 @@ import { Schema, model } from "mongoose";
 import { IQuiz, IQuizOption } from "./quiz.interface";
 
 const optionSchema = new Schema<IQuizOption>(
-  {
-    label: { type: String, required: true },
-    text: { type: String, required: true },
-  },
-  { _id: false }
+  { text: { type: String, required: true } },
+  { _id: false } // optional: _id: true if you need option stats
 );
-
-
 
 const quizSchema = new Schema<IQuiz>(
   {
-    question: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    question: { type: String, required: true, trim: true },
     options: {
       type: [optionSchema],
       required: true,
@@ -29,27 +20,19 @@ const quizSchema = new Schema<IQuiz>(
     correctAnswer: {
       type: String,
       required: true,
+  
+        message: "Correct answer must be one of the options",
+    
     },
-    explanation: {
-      type: String,
-    },
-    module: {
-      type: Schema.Types.ObjectId,
-      ref: "Module",
-      required: true,
-    },
-    timer: {
-      type: Number,
-      default: null,
-    },
+    explanation: { type: String },
+    lesson: { type: Schema.Types.ObjectId, ref: "Lesson", required: true },
+    timer: { type: Number, default: null },
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-
+quizSchema.index({ lesson: 1 });
 
 const Quiz = model<IQuiz>("Quiz", quizSchema);
-
 export default Quiz;
