@@ -111,8 +111,8 @@ export const userService = {
   },
 
   async refreshToken(token: string) {
-    const payload: any = verifyToken(token);
-    const user = await User.findById(payload.id).select("+refreshToken");
+    const payload = verifyToken(token) as JwtPayload;
+    const user = await User.findById(payload?._doc?._id);
 
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
@@ -122,7 +122,7 @@ export const userService = {
       { id: user._id, ...user },
       config.jwt.access_expires_in
     );
-    await user.save();
+
 
     return { accessToken };
   },

@@ -12,6 +12,7 @@ router.post('/login', AuthController.login);
 router.post('/logout',checkAuth([UserRoles.ADMIN,UserRoles.INSTRUCTOR,UserRoles.SUPER_ADMIN,UserRoles.STUDENT]), AuthController.logout);
 router.get('/me',checkAuth([UserRoles.ADMIN,UserRoles.INSTRUCTOR,UserRoles.SUPER_ADMIN,UserRoles.STUDENT]), AuthController.me);
 router.put('/verify-otp', AuthController.verifyOtp);
+router.post("/refresh-token", AuthController.getNewAccessToken)
 router.post('/send-otp', AuthController.sendOtp);
 router.post("/forget-password",AuthController.forgetPassword);
 router.put("/reset-password",AuthController.resetPassword);

@@ -1,6 +1,6 @@
 import { Response } from "express";
 
-export const setCookie = (res: Response, accessToken: string, refreshToken: string) => {
+export const setCookie = (res: Response, accessToken: string, refreshToken?: string) => {
   if (accessToken) {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,

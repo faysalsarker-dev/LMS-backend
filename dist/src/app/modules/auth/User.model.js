@@ -29,6 +29,10 @@ const userSchema = new mongoose_1.Schema({
     isVerified: { type: Boolean, default: false },
     profile: { type: String, default: null },
     courses: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Course" }],
+    address: {
+        country: { type: String, default: null },
+        city: { type: String, default: null }
+    },
     otp: { type: String, select: false },
     otpExpiry: { type: Date, select: false },
 }, { timestamps: true });

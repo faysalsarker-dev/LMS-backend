@@ -1,33 +1,79 @@
-import { NextFunction, Request, Response } from "express";
+// import { NextFunction, Request, Response } from "express";
 
+// import { ApiError } from "../errors/ApiError";
+// import { verifyToken } from "../utils/jwt";
+// import {  JwtPayload } from 'jsonwebtoken';
+
+// export const checkAuth = (authRoles?: string[]) => async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//         const accessToken = req.cookies.accessToken;
+
+//         if (!accessToken) {
+//             throw new ApiError(403, "No Token Recieved")
+//         }
+
+
+//         const verifiedToken = verifyToken(accessToken) as JwtPayload;
+
+//         if (!verifiedToken) {
+//             throw new ApiError(403, "Invalid Token")
+//         }
+
+//         if (authRoles && !authRoles.includes(verifiedToken._doc.role)) {
+//             throw new ApiError(403, "You are not authorized to access this resource");
+//         }
+
+//         req.user = verifiedToken._doc;
+//         next();
+
+//     } catch (error) {
+//         console.log("jwt error", error);
+//         next(error)
+//     }
+// }
+
+
+import { NextFunction, Request, Response } from "express";
 import { ApiError } from "../errors/ApiError";
 import { verifyToken } from "../utils/jwt";
-import {  JwtPayload } from 'jsonwebtoken';
+import { JwtPayload } from "jsonwebtoken";
 
-export const checkAuth = (authRoles?: string[]) => async (req: Request, res: Response, next: NextFunction) => {
+export const checkAuth =
+  (authRoles?: string[]) =>
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const accessToken = req.cookies.accessToken;
+      const accessToken = req.cookies.accessToken;
 
-        if (!accessToken) {
-            throw new ApiError(403, "No Token Recieved")
+      if (!accessToken) {
+        throw new ApiError(401, "No token provided");
+      }
+
+      let verifiedToken: JwtPayload;
+
+      try {
+        verifiedToken = verifyToken(accessToken) as JwtPayload;
+      } catch (err: any) {
+        if (err.name === "TokenExpiredError") {
+          return next(new ApiError(401, "jwt expired"));
         }
-
-
-        const verifiedToken = verifyToken(accessToken) as JwtPayload;
-
-        if (!verifiedToken) {
-            throw new ApiError(403, "Invalid Token")
+        if (err.name === "JsonWebTokenError") {
+          return next(new ApiError(401, "invalid token"));
         }
+        return next(new ApiError(401, "Unauthorized"));
+      }
 
-        if (authRoles && !authRoles.includes(verifiedToken._doc.role)) {
-            throw new ApiError(403, "You are not authorized to access this resource");
-        }
+      if (!verifiedToken) {
+        throw new ApiError(401, "Invalid token");
+      }
 
-        req.user = verifiedToken._doc;
-        next();
+      if (authRoles && !authRoles.includes(verifiedToken._doc.role)) {
+        throw new ApiError(403, "You are not authorized to access this resource");
+      }
 
+      req.user = verifiedToken._doc;
+      next();
     } catch (error) {
-        console.log("jwt error", error);
-        next(error)
+      console.log("JWT error:", error);
+      next(error);
     }
-}
+  };

@@ -42,7 +42,6 @@ export const AuthController = {
     // const userId = req.user.id; 
     // await userService.logout(userId);
 
-console.log('calling...');
 
     res.clearCookie("accessToken", {
         httpOnly: true,
@@ -127,19 +126,19 @@ const result = await userService.resetPassword(id,token,newPassword);
 
 
 
-  // refreshToken: catchAsync(async (req: Request, res: Response) => {
-  //   const { refreshToken } = req.body;
-  //   const { accessToken } = await userService.refreshToken(refreshToken);
+  getNewAccessToken: catchAsync(async (req: Request, res: Response) => {
+    const refreshToken = req.cookies.refreshToken;
+    const { accessToken } = await userService.refreshToken(refreshToken);
 
-  //   setCookie(res, accessToken);
+    setCookie(res, accessToken);
 
-  //   sendResponse(res, {
-  //     statusCode: 200,
-  //     success: true,
-  //     message: "Token refreshed successfully",
-  //     data: { accessToken },
-  //   });
-  // }),
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Token refreshed successfully",
+      data: { accessToken },
+    });
+  }),
 
   updateProfile: catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;

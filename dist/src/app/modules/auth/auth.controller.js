@@ -30,8 +30,8 @@ exports.AuthController = {
         });
     }),
     logout: (0, catchAsync_1.catchAsync)(async (req, res) => {
-        const userId = req.user.id;
-        await auth_service_1.userService.logout(userId);
+        // const userId = req.user.id; 
+        // await userService.logout(userId);
         res.clearCookie("accessToken", {
             httpOnly: true,
             secure: false,
@@ -49,7 +49,7 @@ exports.AuthController = {
         });
     }),
     me: async (req, res) => {
-        const decodedToken = req.user.id;
+        const decodedToken = req.user._id;
         const result = await auth_service_1.userService.getMe(decodedToken);
         (0, sendResponse_1.default)(res, {
             success: true,
@@ -98,20 +98,24 @@ exports.AuthController = {
             data: result
         });
     },
-    // refreshToken: catchAsync(async (req: Request, res: Response) => {
-    //   const { refreshToken } = req.body;
-    //   const { accessToken } = await userService.refreshToken(refreshToken);
-    //   setCookie(res, accessToken);
-    //   sendResponse(res, {
-    //     statusCode: 200,
-    //     success: true,
-    //     message: "Token refreshed successfully",
-    //     data: { accessToken },
-    //   });
-    // }),
+    getNewAccessToken: (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const { refreshToken } = req.cookies.refreshToken;
+        const { accessToken } = await auth_service_1.userService.refreshToken(refreshToken);
+        (0, setCookie_1.setCookie)(res, accessToken);
+        (0, sendResponse_1.default)(res, {
+            statusCode: 200,
+            success: true,
+            message: "Token refreshed successfully",
+            data: { accessToken },
+        });
+    }),
     updateProfile: (0, catchAsync_1.catchAsync)(async (req, res) => {
-        const userId = req.user.id;
-        const user = await auth_service_1.userService.updateProfile(userId, req.body);
+        const userId = req.user._id;
+        const payload = {
+            ...req.body,
+            profile: req.file?.path
+        };
+        const user = await auth_service_1.userService.updateProfile(userId, payload);
         (0, sendResponse_1.default)(res, {
             statusCode: 200,
             success: true,

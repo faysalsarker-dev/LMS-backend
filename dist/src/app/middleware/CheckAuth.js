@@ -1,4 +1,5 @@
 "use strict";
+// import { NextFunction, Request, Response } from "express";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkAuth = void 0;
 const ApiError_1 = require("../errors/ApiError");
@@ -7,11 +8,23 @@ const checkAuth = (authRoles) => async (req, res, next) => {
     try {
         const accessToken = req.cookies.accessToken;
         if (!accessToken) {
-            throw new ApiError_1.ApiError(403, "No Token Recieved");
+            throw new ApiError_1.ApiError(401, "No token provided");
         }
-        const verifiedToken = (0, jwt_1.verifyToken)(accessToken);
+        let verifiedToken;
+        try {
+            verifiedToken = (0, jwt_1.verifyToken)(accessToken);
+        }
+        catch (err) {
+            if (err.name === "TokenExpiredError") {
+                return next(new ApiError_1.ApiError(401, "jwt expired"));
+            }
+            if (err.name === "JsonWebTokenError") {
+                return next(new ApiError_1.ApiError(401, "invalid token"));
+            }
+            return next(new ApiError_1.ApiError(401, "Unauthorized"));
+        }
         if (!verifiedToken) {
-            throw new ApiError_1.ApiError(403, "Invalid Token");
+            throw new ApiError_1.ApiError(401, "Invalid token");
         }
         if (authRoles && !authRoles.includes(verifiedToken._doc.role)) {
             throw new ApiError_1.ApiError(403, "You are not authorized to access this resource");
@@ -20,7 +33,7 @@ const checkAuth = (authRoles) => async (req, res, next) => {
         next();
     }
     catch (error) {
-        console.log("jwt error", error);
+        console.log("JWT error:", error);
         next(error);
     }
 };

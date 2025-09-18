@@ -11,6 +11,7 @@ const config_1 = __importDefault(require("../../config/config"));
 const jwt_1 = require("./../../utils/jwt");
 const otpGenerator_1 = require("../../utils/otpGenerator");
 const email_1 = require("../../utils/email");
+const cloudinary_config_1 = require("../../config/cloudinary.config");
 exports.userService = {
     async register(data) {
         const existing = await User_model_1.default.findOne({ email: data.email });
@@ -84,12 +85,11 @@ exports.userService = {
     },
     async refreshToken(token) {
         const payload = (0, jwt_1.verifyToken)(token);
-        const user = await User_model_1.default.findById(payload.id).select("+refreshToken");
+        const user = await User_model_1.default.findById(payload._id);
         if (!user) {
             throw new ApiError_1.ApiError(401, "Invalid refresh token");
         }
         const accessToken = (0, jwt_1.generateToken)({ id: user._id, ...user }, config_1.default.jwt.access_expires_in);
-        await user.save();
         return { accessToken };
     },
     /** 🔹 Update user password */
@@ -101,7 +101,20 @@ exports.userService = {
         return User_model_1.default.findByIdAndUpdate(userId, updates, { new: true });
     },
     async updateProfile(userId, updates) {
-        return User_model_1.default.findByIdAndUpdate(userId, updates, { new: true });
+        const user = await User_model_1.default.findById(userId);
+        if (!user)
+            throw new ApiError_1.ApiError(404, "User not found");
+        const oldProfile = user.profile;
+        const updatedUser = await User_model_1.default.findByIdAndUpdate(userId, updates, { new: true });
+        if (updates.profile && oldProfile) {
+            try {
+                await (0, cloudinary_config_1.deleteImageFromCLoudinary)(oldProfile);
+            }
+            catch (err) {
+                console.error("Failed to delete old image:", err);
+            }
+        }
+        return updatedUser;
     },
     async getMe(userId) {
         const user = await User_model_1.default.findById(userId);
