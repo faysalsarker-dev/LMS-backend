@@ -85,7 +85,7 @@ exports.userService = {
     },
     async refreshToken(token) {
         const payload = (0, jwt_1.verifyToken)(token);
-        const user = await User_model_1.default.findById(payload._id);
+        const user = await User_model_1.default.findById(payload?._doc?._id);
         if (!user) {
             throw new ApiError_1.ApiError(401, "Invalid refresh token");
         }

@@ -99,7 +99,7 @@ exports.AuthController = {
         });
     },
     getNewAccessToken: (0, catchAsync_1.catchAsync)(async (req, res) => {
-        const { refreshToken } = req.cookies.refreshToken;
+        const refreshToken = req.cookies.refreshToken;
         const { accessToken } = await auth_service_1.userService.refreshToken(refreshToken);
         (0, setCookie_1.setCookie)(res, accessToken);
         (0, sendResponse_1.default)(res, {

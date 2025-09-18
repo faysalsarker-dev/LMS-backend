@@ -1,7 +1,7 @@
 import { Router } from "express"
 import CourseRoute from "../modules/course/course.routes"
 import MilestoneRoute from "../modules/milestone/milestone.routes"
-import ModuleRoute from "../modules/module/module.routes"
+import LessonRoute from "../modules/lesson/lesson.route"
 import  QuizRoutes  from "../modules/quiz/quiz.routes"
 // import UserProgressRoutes from "../modules/progress/userProgress.routes"
 import EnrollmentRoutes from "../modules/enrollment/enrollment.route"
@@ -29,8 +29,8 @@ const moduleRoutes: ModuleRoute[] = [
        route: MilestoneRoute
    },
    {
-       path: "/module",
-       route: ModuleRoute
+       path: "/lesson",
+       route: LessonRoute
    },
    {
        path: "/quiz",
