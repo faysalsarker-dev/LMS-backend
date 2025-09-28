@@ -11,7 +11,6 @@ const milestoneSchema = new Schema<IMilestone>(
   { timestamps: true }
 );
 
-// Index for faster course-wise query
 milestoneSchema.index({ course: 1, order: 1 });
 
 milestoneSchema.pre<IMilestone>("save", async function (next) {

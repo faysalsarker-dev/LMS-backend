@@ -17,8 +17,12 @@ export const createMilestone = catchAsync(async (req: Request, res: Response) =>
 
 // Get all milestones
 export const getAllMilestones = catchAsync(async (req: Request, res: Response) => {
-  const { courseId } = req.query;
-  const milestones: IMilestone[] = await milestoneService.getAllMilestones(courseId as string);
+  const { course, search, status } = req.query;
+  const milestones: IMilestone[] = await milestoneService.getAllMilestones(
+    course as string | undefined,
+    search as string | undefined,
+    status as string | undefined
+  );
   sendResponse<IMilestone[]>(res, {
     statusCode: 200,
     success: true,

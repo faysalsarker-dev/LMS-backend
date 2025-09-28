@@ -7,9 +7,14 @@ export const createMilestone = async (data: Partial<IMilestone>): Promise<IMiles
   return milestone.save();
 };
 
-export const getAllMilestones = async (courseId?: string): Promise<IMilestone[]> => {
-  const filter = courseId ? { course: courseId } : {};
-  return Milestone.find(filter).sort({ order: 1 });
+export const getAllMilestones = async (course?: string, search?: string, status?: string): Promise<IMilestone[]> => {
+  const filter: any = {};
+  if (course) filter.course = course !== 'all' ? course : { $exists: true };
+  if (search) filter.title = { $regex: search, $options: "i" }; 
+  if (status) filter.status = status !== 'all' ? status : { $exists: true };
+const result = await Milestone.find(filter).populate('course','title').sort({ order: 1 });
+
+  return result; 
 };
 
 export const getMilestoneById = async (id: string): Promise<IMilestone | null> => {

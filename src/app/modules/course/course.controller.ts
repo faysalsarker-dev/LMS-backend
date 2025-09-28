@@ -3,11 +3,22 @@ import { catchAsync } from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import * as CourseService from './course.service';
 import  httpStatus  from 'http-status';
+import { ICourseFilters } from "./course.interface";
 
 
 // Create Course
 export const createCourse = catchAsync(async (req: Request, res: Response) => {
-  const course = await CourseService.createCourse(req.body);
+
+const payload = {
+  ...req.body,
+  thumbnail:req?.file?.path,
+  instructor:req?.user?._id
+}
+
+
+
+
+  const course = await CourseService.createCourse(payload);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -17,8 +28,8 @@ export const createCourse = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Get Course by ID
-export const getCourseById = catchAsync(async (req: Request, res: Response) => {
-  const course = await CourseService.getCourseById(req.params.id);
+export const getCourseBySlug = catchAsync(async (req: Request, res: Response) => {
+  const course = await CourseService.getCourseBySlug(req.params.slug);
   if (!course) {
     return sendResponse(res, {
       statusCode: httpStatus.NOT_FOUND,
@@ -36,17 +47,54 @@ export const getCourseById = catchAsync(async (req: Request, res: Response) => {
 
 // Get All Courses
 export const getAllCourses = catchAsync(async (req: Request, res: Response) => {
-  const courses = await CourseService.getAllCourses();
+  const {
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    search,
+    level,
+    status,
+    isDiscounted,
+    certificateAvailable,
+    isFeatured
+  } = req.query;
+
+  // ✅ Build filters with type-safety
+  const filters: Partial<ICourseFilters> & {
+    page?: number;
+    limit?: number;
+    search?: string;
+  } = {
+    page: page ? Number(page) : 1,
+    limit: limit ? Number(limit) : 10,
+    sortBy: sortBy as string,
+    sortOrder: sortOrder === "desc" ? "desc" : "asc",
+    search: search as string,
+    level: ["beginner", "intermediate", "advanced", "all"].includes(level as string)
+      ? (level as ICourseFilters["level"])
+      : undefined,
+    status: ["draft", "published", "archived", "all"].includes(status as string)
+      ? (status as ICourseFilters["status"])
+      : undefined,
+    isDiscounted: isDiscounted === "true",
+    certificateAvailable: certificateAvailable === "true",
+    isFeatured: isFeatured === "true"
+  };
+
+  const result = await CourseService.getAllCourses(filters);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Courses fetched successfully",
-    data: courses,
+    data: result,
   });
 });
 
 // Update Course
 export const updateCourse = catchAsync(async (req: Request, res: Response) => {
+  console.log(req.params.id);
   const course = await CourseService.updateCourse(req.params.id, req.body);
   if (!course) {
     return sendResponse(res, {

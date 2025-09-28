@@ -7,6 +7,7 @@ import { multerUpload } from '../../config/multer.config';
 
 const router = Router();
 
+router.get('/', AuthController.getAll);
 router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
 router.post('/logout',checkAuth([UserRoles.ADMIN,UserRoles.INSTRUCTOR,UserRoles.SUPER_ADMIN,UserRoles.STUDENT]), AuthController.logout);

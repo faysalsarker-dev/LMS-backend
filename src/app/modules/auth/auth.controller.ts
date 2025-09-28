@@ -146,6 +146,7 @@ const result = await userService.resetPassword(id,token,newPassword);
       ...req.body,
       profile:req.file?.path
     }
+
     const user = await userService.updateProfile(userId,payload);
 
     sendResponse(res, {
@@ -164,6 +165,18 @@ const result = await userService.resetPassword(id,token,newPassword);
       success: true,
       message: "User fetched successfully",
       data: user,
+    });
+  }),
+
+  getAll: catchAsync(async (req: Request, res: Response) => {
+    const result = await userService.getAll(req);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Users fetched successfully",
+      data: result,
+  
     });
   }),
 

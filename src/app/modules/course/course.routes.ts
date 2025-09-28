@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as CourseController from './course.controller';
 import validateRequest from "../../middleware/validateRequest.middleware";
 import { iCourseSchema } from "./course.validation";
+import { multerUpload } from "../../config/multer.config";
 
 
 
@@ -14,18 +15,18 @@ router.get("/", CourseController.getAllCourses);
 // Protected routes
 router.post(
   "/",
-validateRequest(iCourseSchema),
+multerUpload.single("file"),
   CourseController.createCourse
 );
 
 
-router.get("/:id", CourseController.getCourseById);
+router.get("/:slug", CourseController.getCourseBySlug);
 
 
 
 router.put(
   "/:id",
-
+multerUpload.single("file"),
   CourseController.updateCourse
 );
 
