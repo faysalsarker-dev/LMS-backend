@@ -51,21 +51,24 @@ const lessonSchema = new Schema<ILesson>(
   { timestamps: true }
 );
 
-// Generate slug before save
+
+
 lessonSchema.pre("save", async function (next) {
-  if (!this.isModified("title")) return next();
+  if (!this.slug && this.title) {
+    let baseSlug = slugify(this.title, { lower: true, strict: true });
+    let slug = baseSlug;
+    let count = 1;
 
-  let baseSlug = slugify(this.title, { lower: true, strict: true });
-  let slug = baseSlug;
-  let count = 1;
+    while (await mongoose.models.Lesson.findOne({ slug, course: this.course })) {
+      slug = `${baseSlug}-${count++}`;
+    }
 
-  while (await mongoose.models.Lesson.findOne({ slug, course: this.course })) {
-    slug = `${baseSlug}-${count++}`;
+    this.slug = slug;
   }
 
-  this.slug = slug;
   next();
 });
+
 
 // Indexes
 lessonSchema.index({ milestone: 1, slug: 1, course: 1 }, { unique: true });

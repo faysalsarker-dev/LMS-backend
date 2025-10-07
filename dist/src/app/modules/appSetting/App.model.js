@@ -14,7 +14,6 @@ const appConfigSchema = new mongoose_1.Schema({
         pass: { type: String },
     },
     jwt: {
-        secret: { type: String },
         accessExpiresIn: { type: String },
         refreshExpiresIn: { type: String },
     },

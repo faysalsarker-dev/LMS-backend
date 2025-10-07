@@ -20,7 +20,6 @@ const appConfigSchema = new Schema<IAppConfig>(
     },
 
     jwt: {
-      secret: { type: String },
       accessExpiresIn: { type: String },
       refreshExpiresIn: { type: String },
     },

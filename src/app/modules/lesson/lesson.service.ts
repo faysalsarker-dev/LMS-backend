@@ -3,8 +3,13 @@ import Lesson from "./Lesson.model";
 
 // Create
 export const createLesson = async (payload: Partial<ILesson>) => {
-  const lesson = await Lesson.create(payload);
-  return lesson;
+const lesson = new Lesson(payload);
+          
+
+
+const result = await lesson.save({ validateBeforeSave: false });
+
+return result 
 };
 
 // Get All (with milestone filter)

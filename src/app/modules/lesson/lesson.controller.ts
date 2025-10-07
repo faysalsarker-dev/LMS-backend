@@ -7,6 +7,8 @@ import  httpStatus  from 'http-status';
 
 // Create
 export const createLessonController = catchAsync(async (req: Request, res: Response) => {
+  
+ console.log('data',req.body)
   const lesson = await LessonService.createLesson(req.body);
 
   sendResponse(res, {
