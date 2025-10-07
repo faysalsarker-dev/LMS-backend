@@ -30,3 +30,47 @@ const storage = new CloudinaryStorage({
 })
 
 export const multerUpload = multer({ storage: storage })
+
+
+
+
+
+
+const videoStorage = new CloudinaryStorage({
+  cloudinary: cloudinaryUpload,
+  params: async (req, file) => {
+    const originalName = file.originalname
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/\./g, "-")
+      .replace(/[^a-z0-9\-\.]/g, "");
+
+    const extension = file.originalname.split(".").pop();
+    const uniqueFileName =
+      Math.random().toString(36).substring(2) +
+      "-" +
+      Date.now() +
+      "-" +
+      originalName +
+      "." +
+      extension;
+
+    return {
+      folder: "videos",
+      public_id: uniqueFileName,
+      resource_type: "video", 
+      format: extension, 
+    };
+  },
+});
+
+
+
+export const multerVideoUpload = multer({
+    storage: videoStorage,
+    limits: {
+        fileSize: 300 * 1024 * 1024 
+    }
+})
+
+

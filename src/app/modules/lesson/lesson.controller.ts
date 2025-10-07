@@ -8,8 +8,12 @@ import  httpStatus  from 'http-status';
 // Create
 export const createLessonController = catchAsync(async (req: Request, res: Response) => {
   
- console.log('data',req.body)
-  const lesson = await LessonService.createLesson(req.body);
+  if (req.body.videoSourceType === "upload" && req.file?.path) {
+    req.body.videoUrl = req.file.path;
+  }
+
+
+   const lesson = await LessonService.createLesson(req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
