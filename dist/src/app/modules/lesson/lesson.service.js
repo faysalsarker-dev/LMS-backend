@@ -7,8 +7,9 @@ exports.deleteLesson = exports.updateLesson = exports.getSingleLesson = exports.
 const Lesson_model_1 = __importDefault(require("./Lesson.model"));
 // Create
 const createLesson = async (payload) => {
-    const lesson = await Lesson_model_1.default.create(payload);
-    return lesson;
+    const lesson = new Lesson_model_1.default(payload);
+    const result = await lesson.save({ validateBeforeSave: false });
+    return result;
 };
 exports.createLesson = createLesson;
 // Get All (with milestone filter)

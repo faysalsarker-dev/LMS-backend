@@ -38,9 +38,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const LessonController = __importStar(require("./lesson.controller"));
+const multer_config_1 = require("../../config/multer.config");
 const router = express_1.default.Router();
 // CRUD
-router.post("/", LessonController.createLessonController);
+router.post("/", multer_config_1.multerVideoUpload.single("video"), LessonController.createLessonController);
 router.get("/", LessonController.getAllLessonsController);
 router.get("/:id", LessonController.getSingleLessonController);
 router.patch("/:id", LessonController.updateLessonController);

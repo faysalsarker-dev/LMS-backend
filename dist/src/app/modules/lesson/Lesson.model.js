@@ -77,17 +77,16 @@ const lessonSchema = new mongoose_1.Schema({
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     viewCount: { type: Number, default: 0 },
 }, { timestamps: true });
-// Generate slug before save
 lessonSchema.pre("save", async function (next) {
-    if (!this.isModified("title"))
-        return next();
-    let baseSlug = (0, slugify_1.default)(this.title, { lower: true, strict: true });
-    let slug = baseSlug;
-    let count = 1;
-    while (await mongoose_1.default.models.Lesson.findOne({ slug, course: this.course })) {
-        slug = `${baseSlug}-${count++}`;
+    if (!this.slug && this.title) {
+        let baseSlug = (0, slugify_1.default)(this.title, { lower: true, strict: true });
+        let slug = baseSlug;
+        let count = 1;
+        while (await mongoose_1.default.models.Lesson.findOne({ slug, course: this.course })) {
+            slug = `${baseSlug}-${count++}`;
+        }
+        this.slug = slug;
     }
-    this.slug = slug;
     next();
 });
 // Indexes

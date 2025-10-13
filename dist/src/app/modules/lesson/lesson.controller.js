@@ -43,6 +43,9 @@ const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const http_status_1 = __importDefault(require("http-status"));
 // Create
 exports.createLessonController = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    if (req.body.videoSourceType === "upload" && req.file?.path) {
+        req.body.videoUrl = req.file.path;
+    }
     const lesson = await LessonService.createLesson(req.body);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,

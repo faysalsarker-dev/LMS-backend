@@ -1,11 +1,14 @@
-import { Router } from "express";
-import { getConfig, createConfig, updateConfig } from "./appConfig.controller";
+import express from "express";
+import * as AppConfigController from "./appConfig.controller";
 
-const router = Router();
+const router = express.Router();
 
 
-router.get("/", getConfig);
-router.post("/", createConfig);
-router.put("/", updateConfig);
+router.get("/", AppConfigController.getConfig);
+
+router.post("/", AppConfigController.createConfig);
+
+router.put("/:id", AppConfigController.updateConfig);
+
 
 export default router;
