@@ -5,6 +5,7 @@ const sendResponse = (res, payload) => {
         success: payload.success,
         message: payload.message,
         data: payload.data ?? null,
+        meta: payload.meta ?? null
     });
 };
 exports.default = sendResponse;

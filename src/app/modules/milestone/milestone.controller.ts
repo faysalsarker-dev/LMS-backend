@@ -3,6 +3,7 @@ import * as milestoneService from "./milestone.service";
 import { IMilestone } from "./milestone.interface";
 import { catchAsync } from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
+import { ApiError } from "../../errors/ApiError";
 
 // Create milestone
 export const createMilestone = catchAsync(async (req: Request, res: Response) => {
@@ -58,7 +59,7 @@ export const updateMilestone = catchAsync(async (req: Request, res: Response) =>
 // Delete milestone
 export const deleteMilestone = catchAsync(async (req: Request, res: Response) => {
   const milestone: IMilestone | null = await milestoneService.deleteMilestone(req.params.id);
-  if (!milestone) throw new Error("Milestone not found");
+  if (!milestone) throw new ApiError(404,"Milestone not found");
   sendResponse<IMilestone>(res, {
     statusCode: 200,
     success: true,

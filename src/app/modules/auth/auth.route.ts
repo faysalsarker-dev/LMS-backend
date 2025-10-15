@@ -10,9 +10,9 @@ const router = Router();
 router.get('/', AuthController.getAll);
 router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
+router.put('/verify-otp', AuthController.verifyOtp);
 router.post('/logout',checkAuth([UserRoles.ADMIN,UserRoles.INSTRUCTOR,UserRoles.SUPER_ADMIN,UserRoles.STUDENT]), AuthController.logout);
 router.get('/me',checkAuth([UserRoles.ADMIN,UserRoles.INSTRUCTOR,UserRoles.SUPER_ADMIN,UserRoles.STUDENT]), AuthController.me);
-router.put('/verify-otp', AuthController.verifyOtp);
 router.post("/refresh-token", AuthController.getNewAccessToken)
 router.post('/send-otp', AuthController.sendOtp);
 router.post("/forget-password",AuthController.forgetPassword);

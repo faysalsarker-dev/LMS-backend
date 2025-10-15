@@ -1,10 +1,41 @@
 
+import mongoose from "mongoose";
+import Course from "../course/Course.model";
 import { IMilestone } from "./milestone.interface";
 import Milestone from "./Milestone.model";
+import { ApiError } from "../../errors/ApiError";
+import  httpStatus  from 'http-status';
 
-export const createMilestone = async (data: Partial<IMilestone>): Promise<IMilestone> => {
-  const milestone = new Milestone(data);
-  return milestone.save();
+export const createMilestone = async (
+  data: Partial<IMilestone>
+): Promise<IMilestone> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const milestone = new Milestone(data);
+    const result = await milestone.save({ session });
+    if (data.course) {
+      await Course.findByIdAndUpdate(
+        data.course,
+        { $push: { milestones: result._id } },
+        { new: true, session }
+      );
+    } else {
+      throw new ApiError(404,"Course ID is missing in milestone data");
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return result;
+  } catch (error: any) {
+    await session.abortTransaction();
+    session.endSession();
+
+    console.error("❌ Transaction failed:", error.message);
+    throw new ApiError(httpStatus.FAILED_DEPENDENCY ,"Failed to create milestone and update course");
+  }
 };
 
 export const getAllMilestones = async (course?: string, search?: string, status?: string): Promise<IMilestone[]> => {

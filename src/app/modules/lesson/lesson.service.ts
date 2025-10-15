@@ -1,23 +1,133 @@
+import mongoose from "mongoose";
 import { ILesson } from "./lesson.interface";
 import Lesson from "./Lesson.model";
+import Milestone from "../milestone/Milestone.model";
+import { ApiError } from "../../errors/ApiError";
 
 // Create
 export const createLesson = async (payload: Partial<ILesson>) => {
-const lesson = new Lesson(payload);
-          
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
+  try {
+    const lesson = new Lesson(payload);
+    const result = await lesson.save({ validateBeforeSave: false, session });
 
-const result = await lesson.save({ validateBeforeSave: false });
+    if (payload.milestone) {
+     await Milestone.findByIdAndUpdate(
+        payload.milestone,
+        { $push: { lesson: result._id } },
+        { new: true, session }
+      );
+    }
 
-return result 
+    await session.commitTransaction();
+    session.endSession();
+
+    return result;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new ApiError(401,`Failed to create lesson: ${(error as Error).message}`);
+  }
 };
 
-// Get All (with milestone filter)
-export const getAllLessons = async (milestoneId?: string) => {
-  const filter = milestoneId ? { milestone: milestoneId } : {};
-  const lessons = await Lesson.find(filter).sort({ order: 1 });
-  return lessons;
+
+
+
+
+interface GetAllLessonsParams {
+  milestone?: string;
+    course?: string;
+type?:string;
+  search?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}
+
+export const getAllLessons = async (params: GetAllLessonsParams) => {
+  const {
+    milestone = '',
+    search = '',
+    status = 'all',
+    course='all',
+    page = 1,
+    limit = 10,
+    type
+  } = params;
+
+  // Build filter object
+  const filter: any = {};
+
+  // Milestone filter
+  if (milestone && milestone !== 'all') {
+    filter.milestone = milestone;
+  }
+  // Course filter
+  if (course && course !== 'all') {
+    filter.course = course;
+  }
+  if (search && search.trim() !== '') {
+    filter.$or = [
+      { title: { $regex: search.trim(), $options: 'i' } }
+    ];
+  }
+
+ if(type && type !== 'all'){
+  filter.contentType = type
+ }
+
+  if (status && status !== 'all') {
+    filter.status = status;
+  }
+
+  // Calculate pagination
+  const skip = (page - 1) * limit;
+
+  // Execute query with pagination
+  const [lessons, total] = await Promise.all([
+    Lesson.find(filter)
+      .populate('milestone', 'title') 
+      .sort({ order: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Lesson.countDocuments(filter)
+  ]);
+
+  // Calculate meta information
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    data: lessons,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
+    }
+  };
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Get Single
 export const getSingleLesson = async (id: string) => {

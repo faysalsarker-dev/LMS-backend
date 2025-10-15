@@ -26,13 +26,36 @@ export const createLessonController = catchAsync(async (req: Request, res: Respo
 
 // Get All
 export const getAllLessonsController = catchAsync(async (req: Request, res: Response) => {
-  const { milestoneId } = req.query;
-  const lessons = await LessonService.getAllLessons(milestoneId as string);
+    const {
+      search,
+      status,
+      course,
+      milestone,
+      page = '1',
+      limit = '10',
+      type
+    } = req.query;
+
+
+
+
+    
+    const {data , meta} = await LessonService.getAllLessons({
+      milestone: milestone as string,
+      search: search as string,
+      status: status as string,
+      course:course as string,
+      type:type as string,
+      page: parseInt(page as string, 10),
+      limit: parseInt(limit as string, 10)
+    });;
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Lessons fetchedsuccessfully",
-    data: lessons,
+    data: data,
+    meta:meta
   });
   
 

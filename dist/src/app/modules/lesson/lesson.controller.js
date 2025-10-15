@@ -56,13 +56,22 @@ exports.createLessonController = (0, catchAsync_1.catchAsync)(async (req, res) =
 });
 // Get All
 exports.getAllLessonsController = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    const { milestoneId } = req.query;
-    const lessons = await LessonService.getAllLessons(milestoneId);
+    const { search, status, course, milestone, page = '1', limit = '10' } = req.query;
+    const { data, meta } = await LessonService.getAllLessons({
+        milestone: milestone,
+        search: search,
+        status: status,
+        course: course,
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10)
+    });
+    ;
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Lessons fetchedsuccessfully",
-        data: lessons,
+        data: data,
+        meta: meta
     });
 });
 // Get Single

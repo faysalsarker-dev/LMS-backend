@@ -47,42 +47,8 @@ export const getCourseBySlug = catchAsync(async (req: Request, res: Response) =>
 
 // Get All Courses
 export const getAllCourses = catchAsync(async (req: Request, res: Response) => {
-  const {
-    page,
-    limit,
-    sortBy,
-    sortOrder,
-    search,
-    level,
-    status,
-    isDiscounted,
-    certificateAvailable,
-    isFeatured
-  } = req.query;
 
-  // ✅ Build filters with type-safety
-  const filters: Partial<ICourseFilters> & {
-    page?: number;
-    limit?: number;
-    search?: string;
-  } = {
-    page: page ? Number(page) : 1,
-    limit: limit ? Number(limit) : 10,
-    sortBy: sortBy as string,
-    sortOrder: sortOrder === "desc" ? "desc" : "asc",
-    search: search as string,
-    level: ["beginner", "intermediate", "advanced", "all"].includes(level as string)
-      ? (level as ICourseFilters["level"])
-      : undefined,
-    status: ["draft", "published", "archived", "all"].includes(status as string)
-      ? (status as ICourseFilters["status"])
-      : undefined,
-    isDiscounted: isDiscounted === "true",
-    certificateAvailable: certificateAvailable === "true",
-    isFeatured: isFeatured === "true"
-  };
-
-  const result = await CourseService.getAllCourses(filters);
+  const result = await CourseService.getAllCourses(req.query);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -94,8 +60,13 @@ export const getAllCourses = catchAsync(async (req: Request, res: Response) => {
 
 // Update Course
 export const updateCourse = catchAsync(async (req: Request, res: Response) => {
-  console.log(req.params.id);
-  const course = await CourseService.updateCourse(req.params.id, req.body);
+
+const payload = {
+  ...req.body,
+  thumbnail:req?.file?.path,
+}
+
+  const course = await CourseService.updateCourse(req.params.id, payload);
   if (!course) {
     return sendResponse(res, {
       statusCode: httpStatus.NOT_FOUND,

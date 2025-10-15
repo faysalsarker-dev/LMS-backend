@@ -65,6 +65,7 @@ export const AuthController = {
 
 me: async (req: Request, res: Response) => {
   const decodedToken = req.user._id;
+
   const result = await userService.getMe(decodedToken);
 
   sendResponse(res, {
@@ -89,7 +90,7 @@ sendOtp: async (req: Request, res: Response) => {
 
 verifyOtp: async (req: Request, res: Response) => {
   const {email,otp} = req.body;
-  const result = await userService.verifyOtp(email,otp);
+ const result = await userService.verifyOtp(email,otp);
 
   sendResponse(res, {
     success: true,

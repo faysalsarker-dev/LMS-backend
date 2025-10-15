@@ -6,6 +6,7 @@ const milestoneSchema = new mongoose_1.Schema({
     course: { type: mongoose_1.Schema.Types.ObjectId, ref: "Course", required: true },
     order: { type: Number, default: 1, min: 1 },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
+    lesson: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Lesson", default: [] }],
 }, { timestamps: true });
 milestoneSchema.index({ course: 1, order: 1 });
 milestoneSchema.pre("save", async function (next) {

@@ -75,25 +75,7 @@ exports.getCourseBySlug = (0, catchAsync_1.catchAsync)(async (req, res) => {
 });
 // Get All Courses
 exports.getAllCourses = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    const { page, limit, sortBy, sortOrder, search, level, status, isDiscounted, certificateAvailable, isFeatured } = req.query;
-    // ✅ Build filters with type-safety
-    const filters = {
-        page: page ? Number(page) : 1,
-        limit: limit ? Number(limit) : 10,
-        sortBy: sortBy,
-        sortOrder: sortOrder === "desc" ? "desc" : "asc",
-        search: search,
-        level: ["beginner", "intermediate", "advanced", "all"].includes(level)
-            ? level
-            : undefined,
-        status: ["draft", "published", "archived", "all"].includes(status)
-            ? status
-            : undefined,
-        isDiscounted: isDiscounted === "true",
-        certificateAvailable: certificateAvailable === "true",
-        isFeatured: isFeatured === "true"
-    };
-    const result = await CourseService.getAllCourses(filters);
+    const result = await CourseService.getAllCourses(req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,

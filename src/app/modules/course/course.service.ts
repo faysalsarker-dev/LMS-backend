@@ -25,8 +25,6 @@ export const getAllCourses = async (
   const {
     level,
     status,
-    isDiscounted,
-    certificateAvailable,
     sortBy,
     sortOrder,
     page = 1,
@@ -36,18 +34,14 @@ export const getAllCourses = async (
   } = filters;
 
   const query: any = {};
-
   // Filtering
   if (level && level !== "all") query.level = level;
   if (status && status !== "all") query.status = status;
-  if (isDiscounted !== undefined) query.isDiscounted = isDiscounted === true;
-  if (certificateAvailable !== undefined)
-    query.certificateAvailable = certificateAvailable === true;
 if(isFeatured !== undefined)
-query.isFeatured=isFeatured===true;
+query.isFeatured= isFeatured;
   // Search by title
   if (search) {
-    query.title = { $regex: search, $options: "i" }; // case-insensitive
+    query.title = { $regex: search, $options: "i" }; 
   }
 
   // Sorting
@@ -55,7 +49,7 @@ query.isFeatured=isFeatured===true;
   if (sortBy) {
     sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
   } else {
-    sortOptions.createdAt = -1; // default: newest first
+    sortOptions.createdAt = -1;
   }
 
   // Pagination

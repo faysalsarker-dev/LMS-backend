@@ -7,6 +7,7 @@ const milestoneSchema = new Schema<IMilestone>(
     course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
     order: { type: Number, default: 1, min: 1 },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
+    lesson:[{ type: Schema.Types.ObjectId, ref: "Lesson", default:[]}],
   },
   { timestamps: true }
 );

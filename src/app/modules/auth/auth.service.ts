@@ -55,8 +55,8 @@ export const userService = {
   },
 
   async verifyOtp(email: string, otp: string) {
+   
     const user = await User.findOne({ email }).select({ otp: 1, otpExpiry: 1 });
-
     if (!user) throw new ApiError(404, "User not found");
 
     if (user.isVerified) {
