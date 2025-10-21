@@ -4,9 +4,22 @@ import * as EnrollmentService from "./enrollment.service";
 import { catchAsync } from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { Request, Response } from "express";
+import { ApiError } from "../../errors/ApiError";
 
 export const createEnrollment = catchAsync(async (req: Request, res: Response) => {
-  const result = await EnrollmentService.createEnrollment(req.body);
+  
+  const userId = req.user._id
+  if(!userId){
+     throw new ApiError(401,'user not found')
+  }
+
+  const payload ={
+    ...req.body,
+    user:userId
+  }
+
+
+  const result = await EnrollmentService.createEnrollment(payload);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,

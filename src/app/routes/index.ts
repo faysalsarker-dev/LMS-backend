@@ -6,6 +6,7 @@ import UserProgressRoutes from "../modules/progress/progress.route"
 import EnrollmentRoutes from "../modules/enrollment/enrollment.route"
 import UserRoute from "../modules/auth/auth.route"
 import AppConfig from "../modules/appSetting/appConfig.routes"
+import Category from '../modules/category/category.routes'
 export const router = Router()
 
 interface ModuleRoute {
@@ -38,6 +39,10 @@ const moduleRoutes: ModuleRoute[] = [
    {
        path: "/enrollment",
        route: EnrollmentRoutes
+   },
+   {
+       path: "/category",
+       route: Category
    },
    {
        path: "/app-config",

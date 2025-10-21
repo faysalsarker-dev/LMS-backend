@@ -1,8 +1,28 @@
+import mongoose from "mongoose";
+import User from "../auth/User.model";
 import { IEnrollment } from "./enrollment.interface";
 import Enrollment from './Enrollment.model';
 
 export const createEnrollment = async (data: IEnrollment): Promise<IEnrollment> => {
-  return await Enrollment.create(data);
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+    const enrollment = await new Enrollment(data).save({ session });
+    await User.findByIdAndUpdate(
+      data.user,
+      { $push: { courses: data.course } },
+      { new: true, session }
+    );
+    await session.commitTransaction();
+    session.endSession();
+
+    return enrollment;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
 };
 
 export const getAllEnrollments = async (): Promise<IEnrollment[]> => {

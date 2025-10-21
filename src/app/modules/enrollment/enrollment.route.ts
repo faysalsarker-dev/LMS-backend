@@ -1,22 +1,15 @@
 import express from "express";
 import * as EnrollmentController from "./enrollment.controller";
-import validateRequest from "../../middleware/validateRequest.middleware";
-import { iEnrollmentSchema } from "./enrollment.validation";
-
+import { checkAuth } from "../../middleware/CheckAuth";
 
 const router = express.Router();
 
-router.post(
-  "/",
-  validateRequest(iEnrollmentSchema),
-  EnrollmentController.createEnrollment
-);
+router.post("/", checkAuth(), EnrollmentController.createEnrollment);
 
-router.get("/", EnrollmentController.getAllEnrollments);
-router.get("/:id", EnrollmentController.getEnrollmentById);
-router.patch("/:id", EnrollmentController.updateEnrollment);
-router.delete("/:id", EnrollmentController.deleteEnrollment);
-
+router.get("/", checkAuth(), EnrollmentController.getAllEnrollments);
+router.get("/:id", checkAuth(), EnrollmentController.getEnrollmentById);
+router.patch("/:id", checkAuth(), EnrollmentController.updateEnrollment);
+router.delete("/:id", checkAuth(), EnrollmentController.deleteEnrollment);
 
 const EnrollmentRoutes = router;
 export default EnrollmentRoutes;

@@ -6,6 +6,7 @@ export interface ICourse extends Document {
   description?: string;
   instructor: Types.ObjectId;
   milestones: Types.ObjectId[];
+  category: Types.ObjectId;
   thumbnail?: string | null;
   tags: string[];
   skills: string[];
@@ -35,6 +36,7 @@ export interface ICourse extends Document {
 export interface ICourseFilters {
 status?: "draft" | "published" | "archived" | "all";
 level?: "beginner" | "intermediate" | "advanced" | "all";  
+category?:string;
 isFeatured?:boolean;
   isDiscounted?: boolean;
   certificateAvailable?: boolean;

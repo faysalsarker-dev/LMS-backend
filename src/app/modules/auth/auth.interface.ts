@@ -22,6 +22,7 @@ export interface IUser extends Document {
   isVerified: boolean;
   profile?: string;
  courses: Types.ObjectId[];
+ wishlist: Types.ObjectId[];
  
  address:{
   country?:string,

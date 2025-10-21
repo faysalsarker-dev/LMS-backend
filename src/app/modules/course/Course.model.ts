@@ -9,6 +9,7 @@ const CourseSchema: Schema<ICourse> = new Schema(
     description: { type: String, trim: true, maxlength: 4000 },
     instructor: { type: Schema.Types.ObjectId, ref: "User", required: false },
     milestones: [{ type: Schema.Types.ObjectId, ref: "Milestone", default: [] }],
+    category: { type: Schema.Types.ObjectId, ref: "Category", required:true },
     thumbnail: { type: String, default: null },
     tags: [{ type: String, trim: true, index: true }],
     skills: [{ type: String }],

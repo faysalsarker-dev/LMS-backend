@@ -1,16 +1,42 @@
 
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import Course from "./Course.model";
 import { ICourse, ICourseFilters, IPaginatedResponse } from "./course.interface";
+import { Category } from "../category/Category.model";
+
+
 
 export const createCourse = async (data: Partial<ICourse>): Promise<ICourse> => {
-  const course = new Course(data);
-  return course.save();
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const course = new Course(data);
+    const result = await course.save({ session });
+    if (result.category) {
+      await Category.findByIdAndUpdate(
+        result.category,
+        { $inc: { totalCourse: 1 } },
+        { new: true, session }
+      );
+    }
+    await session.commitTransaction();
+    session.endSession();
+
+    return result;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
 };
 
+
 export const getCourseBySlug = async (slug: string): Promise<ICourse | null> => {
-  return Course.findOne({ slug }).populate("milestones");
+  return Course.findOne({ slug }).populate("category").populate("milestones");
 };
+
+
 
 
 
@@ -26,55 +52,65 @@ export const getAllCourses = async (
     level,
     status,
     sortBy,
-    sortOrder,
+    sortOrder = "desc",
     page = 1,
     limit = 10,
     search,
-    isFeatured
+    isFeatured,
+    category,
   } = filters;
 
-  const query: any = {};
-  // Filtering
+  const query: Record<string, any> = {};
+
+  // 🎯 Filtering
   if (level && level !== "all") query.level = level;
   if (status && status !== "all") query.status = status;
-if(isFeatured !== undefined)
-query.isFeatured= isFeatured;
-  // Search by title
-  if (search) {
-    query.title = { $regex: search, $options: "i" }; 
+  if (isFeatured !== undefined) query.isFeatured = isFeatured;
+ if (category && category !== "all") {
+  if (mongoose.Types.ObjectId.isValid(category)) {
+    query.category = new mongoose.Types.ObjectId(category);
   }
+}
 
-  // Sorting
-  const sortOptions: any = {};
+  // 🔍 Search by title
+  if (search) query.title = { $regex: search, $options: "i" };
+
+  // 🔽 Sorting
+  const sortOptions: Record<string, 1 | -1> = {};
   if (sortBy) {
     sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
   } else {
     sortOptions.createdAt = -1;
   }
 
-  // Pagination
-  const skip = (page - 1) * limit;
+  // 📄 Pagination
+  const skip = (Number(page) - 1) * Number(limit);
 
+  // 🧵 Parallel queries
   const [data, total] = await Promise.all([
     Course.find(query)
       .populate("instructor", "name email")
       .populate("milestones")
+      .populate("category")
       .sort(sortOptions)
       .skip(skip)
-      .limit(limit),
+      .limit(Number(limit))
+      .lean(),
     Course.countDocuments(query),
   ]);
 
+  // 📦 Response
   return {
     meta: {
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
     },
     data,
   };
 };
+
 
 
 

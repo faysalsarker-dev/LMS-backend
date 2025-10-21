@@ -27,6 +27,7 @@ const userSchema = new Schema<IUser>(
     isVerified: { type: Boolean, default: false },
     profile: { type: String ,default:null},
 courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
+wishlist: [{ type: Schema.Types.ObjectId, ref: "Course" }],
 
 address:{
   country:{type: String,default:null},

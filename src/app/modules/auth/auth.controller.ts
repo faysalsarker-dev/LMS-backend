@@ -88,6 +88,22 @@ sendOtp: async (req: Request, res: Response) => {
   });
 },
 
+
+addToWishlist: catchAsync(async (req: Request, res: Response) => {
+ const id = req.user._id
+
+const result = await userService.addToWishlist(id,req.body)
+
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Logged out successfully",
+      data:result
+    });
+  }),
+
+
 verifyOtp: async (req: Request, res: Response) => {
   const {email,otp} = req.body;
  const result = await userService.verifyOtp(email,otp);

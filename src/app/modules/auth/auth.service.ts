@@ -236,6 +236,14 @@ const [users, total] = await Promise.all([
     };
   },
 
+async addToWishlist(id: string, courseId: string) {
+  const user = await User.findByIdAndUpdate(
+    id,
+    { $push: { wishlist: courseId } },
+    { new: true }
+  );
+  return user;
+},
 
 
 

@@ -17,7 +17,6 @@ const payload = {
 
 
 
-
   const course = await CourseService.createCourse(payload);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
