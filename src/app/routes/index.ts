@@ -37,7 +37,7 @@ const moduleRoutes: ModuleRoute[] = [
        route: UserProgressRoutes
    },
    {
-       path: "/enrollment",
+       path: "/enrolment",
        route: EnrollmentRoutes
    },
    {

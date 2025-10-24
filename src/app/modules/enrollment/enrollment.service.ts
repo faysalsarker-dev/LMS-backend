@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import User from "../auth/User.model";
 import { IEnrollment } from "./enrollment.interface";
 import Enrollment from './Enrollment.model';
+import Progress from "../progress/progress.model";
+import Course from "../course/Course.model";
 
 export const createEnrollment = async (data: IEnrollment): Promise<IEnrollment> => {
   const session = await mongoose.startSession();
@@ -14,6 +16,27 @@ export const createEnrollment = async (data: IEnrollment): Promise<IEnrollment> 
       { $push: { courses: data.course } },
       { new: true, session }
     );
+
+    await Course.findByIdAndUpdate(data.course, { $inc: { totalEnrolled: 1 } },
+      { new: true, session })
+
+
+
+
+
+  const newProgress = new Progress({
+      student: data.user,
+      course: data.course,
+      completedLessons: [],
+      progressPercentage: 0,
+      isCompleted: false,
+    });
+    await newProgress.save({ session });
+
+
+
+
+
     await session.commitTransaction();
     session.endSession();
 

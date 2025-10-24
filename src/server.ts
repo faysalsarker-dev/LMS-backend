@@ -2,12 +2,18 @@ import mongoose from 'mongoose';
 import app from './app';
 import config from './app/config/config';
 import { Server } from "http";
+import Progress from './app/modules/progress/progress.model';
 
 let server: Server;
 (async () => {
   try {
     await mongoose.connect(config.database_url);
+    
     console.log('✅ MongoDB connected');
+
+
+
+
 
     server =  app.listen(config.port, () => {
       console.log(`🚀 Server running on port ${config.port}`);

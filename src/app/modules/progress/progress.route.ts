@@ -1,10 +1,21 @@
 import express from "express";
-import * as ProgressController from "./progress.controller";
+import * as progressController from "./progress.controller";
+import { checkAuth } from "../../middleware/CheckAuth";
 
 const router = express.Router();
 
-router.post("/complete", ProgressController.markCompleteController);
-router.post("/incomplete", ProgressController.markIncompleteController);
-router.get("/", ProgressController.getProgressController);
+router.post(
+  "/complete-lesson",
+  checkAuth(),
+  progressController.handleMarkLessonComplete,
+);
 
-export default router;
+router.get(
+  "/:courseId",
+  checkAuth(),
+  progressController.handleGetStudentProgress,
+);
+
+const progressRoutes = router;
+
+export default progressRoutes

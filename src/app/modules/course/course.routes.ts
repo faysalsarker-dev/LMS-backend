@@ -20,6 +20,7 @@ multerUpload.single("file"),
 );
 
 
+router.get("/my-course/:id", CourseController.getCourseById);
 router.get("/:slug", CourseController.getCourseBySlug);
 
 

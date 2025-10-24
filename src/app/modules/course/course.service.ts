@@ -37,6 +37,30 @@ export const getCourseBySlug = async (slug: string): Promise<ICourse | null> => 
 };
 
 
+export const getCourseById = async (id: string): Promise<ICourse | null> => {
+  const course = await Course.findById(id)
+    .select("_id title slug milestones")
+    .populate({
+      path: "milestones",
+      match: { status: "active" }, 
+      options: { sort: { order: 1 } },
+      select: "_id title order lesson status",
+      populate: {
+        path: "lesson",
+        match: { status: "active" },
+        options: { sort: { order: 1 } }, 
+        model: "Lesson",
+        select:
+          "_id quiz title order contentType videoUrl status docContent",
+      },
+    })
+    .lean(); 
+
+  return course;
+};
+
+
+
 
 
 

@@ -7,7 +7,6 @@ import { Request, Response } from "express";
 import { ApiError } from "../../errors/ApiError";
 
 export const createEnrollment = catchAsync(async (req: Request, res: Response) => {
-  
   const userId = req.user._id
   if(!userId){
      throw new ApiError(401,'user not found')

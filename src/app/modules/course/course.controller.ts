@@ -44,6 +44,24 @@ export const getCourseBySlug = catchAsync(async (req: Request, res: Response) =>
   });
 });
 
+
+export const getCourseById = catchAsync(async (req: Request, res: Response) => {
+  const course = await CourseService.getCourseById(req.params.id);
+  if (!course) {
+    return sendResponse(res, {
+      statusCode: httpStatus.NOT_FOUND,
+      success: false,
+      message: "Course not found",
+    });
+  }
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Course fetched successfully",
+    data: course,
+  });
+});
+
 // Get All Courses
 export const getAllCourses = catchAsync(async (req: Request, res: Response) => {
 

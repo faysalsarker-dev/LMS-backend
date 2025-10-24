@@ -9,6 +9,7 @@ import { sendLinkEmail, sendOtpEmail } from "../../utils/email";
 import { JwtPayload } from "jsonwebtoken";
 import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 import { Request } from "express";
+import mongoose, { Query } from "mongoose";
 
 export const userService = {
   async register(data: Partial<IUser>) {
@@ -157,11 +158,31 @@ async updateProfile(userId: string, updates: Partial<IUser>) {
 },
 
 
-  async getMe(userId: string) {
-    const user = await User.findById(userId);
-    if (!user) throw new ApiError(404, "User not found");
-    return user;
-  },
+
+
+async getMe(
+  userId: string,
+  includeCourses = false,
+  includeWishlist = false
+): Promise<IUser & Document> {
+  let query: Query<IUser & Document | null, IUser & Document> = User.findById(userId);
+
+if (includeCourses) {
+  query = query.populate({
+    path: "courses",
+    select: "-milestone",
+  }) as typeof query;
+
+}  if (includeWishlist) query = query.populate({
+    path: "wishlist",
+    select: "-milestone",
+  }) as typeof query;
+
+  const user = await query.exec();
+
+  if (!user) throw new ApiError(404, "User not found");
+  return user;
+},
 
 
 
@@ -236,13 +257,37 @@ const [users, total] = await Promise.all([
     };
   },
 
+
 async addToWishlist(id: string, courseId: string) {
-  const user = await User.findByIdAndUpdate(
-    id,
-    { $push: { wishlist: courseId } },
-    { new: true }
+  const user = await User.findById(id);
+  if (!user) throw new Error("User not found");
+
+  // Convert to ObjectId
+  const courseObjectId = new mongoose.Types.ObjectId(courseId);
+
+
+  const isAlreadyInWishlist = user.wishlist.some(
+    (item: mongoose.Types.ObjectId) => item.equals(courseObjectId)
   );
-  return user;
+
+  let updatedUser;
+  if (isAlreadyInWishlist) {
+    // 🔹 Remove if exists
+    updatedUser = await User.findByIdAndUpdate(
+      id,
+      { $pull: { wishlist: courseObjectId } },
+      { new: true }
+    );
+  } else {
+    // 🔹 Add if not exists
+    updatedUser = await User.findByIdAndUpdate(
+      id,
+      { $push: { wishlist: courseObjectId } },
+      { new: true }
+    );
+  }
+
+  return updatedUser;
 },
 
 

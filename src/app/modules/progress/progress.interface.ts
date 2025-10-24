@@ -1,8 +1,13 @@
-import { Document, Types } from "mongoose";
+import { Schema } from "mongoose";
 
 export interface IProgress extends Document {
-  student:Types.ObjectId; 
-  lesson: Types.ObjectId;  
+  student: Schema.Types.ObjectId;
+  course: Schema.Types.ObjectId;
+
+  completedLessons: Schema.Types.ObjectId[];
+
+  progressPercentage: number;
   isCompleted: boolean;
-  completedAt?: Date;
+
+  completedAt: Date | null;
 }

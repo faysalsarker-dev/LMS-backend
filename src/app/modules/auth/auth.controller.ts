@@ -38,10 +38,7 @@ export const AuthController = {
   }),
 
 
-  logout: catchAsync(async (req: Request, res: Response) => {
-    // const userId = req.user.id; 
-    // await userService.logout(userId);
-
+  logout: catchAsync(async (_req: Request, res: Response) => {
 
     res.clearCookie("accessToken", {
         httpOnly: true,
@@ -64,17 +61,33 @@ export const AuthController = {
 
 
 me: async (req: Request, res: Response) => {
-  const decodedToken = req.user._id;
+  try {
+    const userId = req.user._id.toString();
+    const { courses, wishlist } = req.query;
 
-  const result = await userService.getMe(decodedToken);
+    const result = await userService.getMe(
+      userId,
+      courses === 'true',
+      wishlist === 'true'
+    );
 
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: "Your profile Retrieved Successfully",
-    data: result
-  });
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Your profile retrieved successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    sendResponse(res, {
+      success: false,
+      statusCode: 500,
+      message: "Failed to retrieve profile",
+    });
+  }
 },
+
+
 
 sendOtp: async (req: Request, res: Response) => {
   const email = req.body.email;
@@ -91,8 +104,7 @@ sendOtp: async (req: Request, res: Response) => {
 
 addToWishlist: catchAsync(async (req: Request, res: Response) => {
  const id = req.user._id
-
-const result = await userService.addToWishlist(id,req.body)
+ const result = await userService.addToWishlist(id,req.body.courseId)
 
 
     sendResponse(res, {
