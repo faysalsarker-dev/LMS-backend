@@ -4,9 +4,13 @@ import Enrollment from "../enrollment/Enrollment.model";
 import Lesson from "../lesson/Lesson.model";
 import Milestone from "../milestone/Milestone.model";
 
+interface GrowthData {
+  month: string;
+  count: number;
+}
 
 class OverviewService {
-  // 📊 Get Complete Dashboard Statistics
+  // 📊 Full Dashboard Stats
   async getDashboardStats() {
     const [
       userStats,
@@ -14,14 +18,20 @@ class OverviewService {
       enrollmentStats,
       revenueStats,
       popularCourses,
+      topInstructors,
       recentEnrollments,
+      contentStats,
+      growthAnalytics,
     ] = await Promise.all([
       this.getUserStats(),
       this.getCourseStats(),
       this.getEnrollmentStats(),
       this.getRevenueStats(),
       this.getPopularCourses(5),
+      this.getTopInstructors(5),
       this.getRecentEnrollments(10),
+      this.getContentStats(),
+      this.getGrowthAnalytics(),
     ]);
 
     return {
@@ -32,22 +42,22 @@ class OverviewService {
         enrollments: enrollmentStats,
         revenue: revenueStats,
         popularCourses,
+        topInstructors,
         recentEnrollments,
+        contentStats,
+        growthAnalytics,
         timestamp: new Date(),
       },
     };
   }
 
-  // 👥 User Statistics
+  // 👥 User Stats
   async getUserStats() {
     const stats = await User.aggregate([
       {
         $facet: {
           total: [{ $count: "count" }],
-          byRole: [
-            { $group: { _id: "$role", count: { $sum: 1 } } },
-            { $sort: { _id: 1 } },
-          ],
+          byRole: [{ $group: { _id: "$role", count: { $sum: 1 } } }],
           byStatus: [
             {
               $group: {
@@ -68,26 +78,6 @@ class OverviewService {
               },
             },
             { $count: "count" },
-          ],
-          topInstructors: [
-            { $match: { role: "instructor" } },
-            {
-              $lookup: {
-                from: "courses",
-                localField: "_id",
-                foreignField: "instructor",
-                as: "coursesCreated",
-              },
-            },
-            {
-              $project: {
-                name: 1,
-                email: 1,
-                totalCourses: { $size: "$coursesCreated" },
-              },
-            },
-            { $sort: { totalCourses: -1 } },
-            { $limit: 5 },
           ],
         },
       },
@@ -110,64 +100,25 @@ class OverviewService {
         unverified: result.byStatus[0]?.unverified || 0,
       },
       newThisMonth: result.newThisMonth[0]?.count || 0,
-      topInstructors: result.topInstructors,
     };
   }
 
-  // 📚 Course Statistics
+  // 📚 Course Stats
   async getCourseStats() {
     const stats = await Course.aggregate([
       {
         $facet: {
           total: [{ $count: "count" }],
-          byStatus: [
-            { $group: { _id: "$status", count: { $sum: 1 } } },
-            { $sort: { _id: 1 } },
-          ],
-          byLevel: [
-            { $group: { _id: "$level", count: { $sum: 1 } } },
-            { $sort: { _id: 1 } },
-          ],
-          totalEnrollments: [
-            { $group: { _id: null, total: { $sum: "$totalEnrolled" } } },
-          ],
+          byStatus: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
+          byLevel: [{ $group: { _id: "$level", count: { $sum: 1 } } }],
+          totalEnrollments: [{ $group: { _id: null, total: { $sum: "$totalEnrolled" } } }],
           averageRating: [
-            {
-              $match: { averageRating: { $gt: 0 } },
-            },
-            {
-              $group: {
-                _id: null,
-                avgRating: { $avg: "$averageRating" },
-                totalRatedCourses: { $sum: 1 },
-              },
-            },
+            { $match: { averageRating: { $gt: 0 } } },
+            { $group: { _id: null, avgRating: { $avg: "$averageRating" }, totalRatedCourses: { $sum: 1 } } },
           ],
-          featured: [
-            { $match: { isFeatured: true } },
-            { $count: "count" },
-          ],
-          withDiscount: [
-            { $match: { isDiscounted: true } },
-            { $count: "count" },
-          ],
-          certificateOffering: [
-            { $match: { certificateAvailable: true } },
-            { $count: "count" },
-          ],
-          topRated: [
-            { $match: { status: "published", averageRating: { $gt: 0 } } },
-            {
-              $project: {
-                title: 1,
-                averageRating: 1,
-                totalEnrolled: 1,
-                price: 1,
-              },
-            },
-            { $sort: { averageRating: -1, totalEnrolled: -1 } },
-            { $limit: 5 },
-          ],
+          featured: [{ $match: { isFeatured: true } }, { $count: "count" }],
+          withDiscount: [{ $match: { isDiscounted: true } }, { $count: "count" }],
+          certificateOffering: [{ $match: { certificateAvailable: true } }, { $count: "count" }],
         },
       },
     ]);
@@ -192,52 +143,25 @@ class OverviewService {
       featured: result.featured[0]?.count || 0,
       withDiscount: result.withDiscount[0]?.count || 0,
       certificateOffering: result.certificateOffering[0]?.count || 0,
-      topRated: result.topRated,
     };
   }
 
-  // 📝 Enrollment Statistics
+  // 📝 Enrollment Stats
   async getEnrollmentStats() {
     const stats = await Enrollment.aggregate([
       {
         $facet: {
           total: [{ $count: "count" }],
-          byStatus: [
-            { $group: { _id: "$status", count: { $sum: 1 } } },
-          ],
-          byPaymentStatus: [
-            { $group: { _id: "$paymentStatus", count: { $sum: 1 } } },
-          ],
-          byPaymentMethod: [
-            { $group: { _id: "$method", count: { $sum: 1 } } },
-          ],
+          byStatus: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
+          byPaymentStatus: [{ $group: { _id: "$paymentStatus", count: { $sum: 1 } } }],
+          byPaymentMethod: [{ $group: { _id: "$method", count: { $sum: 1 } } }],
           thisMonth: [
-            {
-              $match: {
-                enrolledAt: {
-                  $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-                },
-              },
-            },
+            { $match: { enrolledAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } } },
             { $count: "count" },
           ],
           completionRate: [
-            {
-              $group: {
-                _id: null,
-                total: { $sum: 1 },
-                completed: {
-                  $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
-                },
-              },
-            },
-            {
-              $project: {
-                rate: {
-                  $multiply: [{ $divide: ["$completed", "$total"] }, 100],
-                },
-              },
-            },
+            { $group: { _id: null, total: { $sum: 1 }, completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } } } },
+            { $project: { rate: { $multiply: [{ $divide: ["$completed", "$total"] }, 100] } } },
           ],
         },
       },
@@ -266,84 +190,25 @@ class OverviewService {
     };
   }
 
-  // 💰 Revenue Statistics
+  // 💰 Revenue Stats
   async getRevenueStats() {
     const stats = await Enrollment.aggregate([
-      {
-        $match: { paymentStatus: "paid" },
-      },
-      {
-        $lookup: {
-          from: "courses",
-          localField: "course",
-          foreignField: "_id",
-          as: "courseDetails",
-        },
-      },
-      {
-        $unwind: "$courseDetails",
-      },
-      {
-        $group: {
+      { $match: { paymentStatus: "paid" } },
+      { $lookup: { from: "courses", localField: "course", foreignField: "_id", as: "courseDetails" } },
+      { $unwind: "$courseDetails" },
+      { $group: { 
           _id: null,
-          totalRevenue: {
-            $sum: {
-              $cond: [
-                "$courseDetails.isDiscounted",
-                "$courseDetails.discountPrice",
-                "$courseDetails.price",
-              ],
-            },
-          },
+          totalRevenue: { $sum: { $cond: ["$courseDetails.isDiscounted", "$courseDetails.discountPrice", "$courseDetails.price"] } },
           totalTransactions: { $sum: 1 },
-          averageOrderValue: {
-            $avg: {
-              $cond: [
-                "$courseDetails.isDiscounted",
-                "$courseDetails.discountPrice",
-                "$courseDetails.price",
-              ],
-            },
-          },
-        },
-      },
+          averageOrderValue: { $avg: { $cond: ["$courseDetails.isDiscounted", "$courseDetails.discountPrice", "$courseDetails.price"] } },
+      } },
     ]);
 
-    // Revenue this month
     const monthlyRevenue = await Enrollment.aggregate([
-      {
-        $match: {
-          paymentStatus: "paid",
-          enrolledAt: {
-            $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "courses",
-          localField: "course",
-          foreignField: "_id",
-          as: "courseDetails",
-        },
-      },
-      {
-        $unwind: "$courseDetails",
-      },
-      {
-        $group: {
-          _id: null,
-          monthlyRevenue: {
-            $sum: {
-              $cond: [
-                "$courseDetails.isDiscounted",
-                "$courseDetails.discountPrice",
-                "$courseDetails.price",
-              ],
-            },
-          },
-        },
-      },
+      { $match: { paymentStatus: "paid", enrolledAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } } },
+      { $lookup: { from: "courses", localField: "course", foreignField: "_id", as: "courseDetails" } },
+      { $unwind: "$courseDetails" },
+      { $group: { _id: null, monthlyRevenue: { $sum: { $cond: ["$courseDetails.isDiscounted", "$courseDetails.discountPrice", "$courseDetails.price"] } } } },
     ]);
 
     return {
@@ -364,6 +229,17 @@ class OverviewService {
       .lean();
   }
 
+  // 🏆 Top Instructors
+  async getTopInstructors(limit: number = 5) {
+    return await User.aggregate([
+      { $match: { role: "instructor" } },
+      { $lookup: { from: "courses", localField: "_id", foreignField: "instructor", as: "coursesCreated" } },
+      { $project: { name: 1, email: 1, totalCourses: { $size: "$coursesCreated" } } },
+      { $sort: { totalCourses: -1 } },
+      { $limit: limit },
+    ]);
+  }
+
   // 🕐 Recent Enrollments
   async getRecentEnrollments(limit: number = 10) {
     return await Enrollment.find()
@@ -374,14 +250,12 @@ class OverviewService {
       .lean();
   }
 
-  // 📈 Content Statistics
+  // 📈 Content Stats
   async getContentStats() {
     const [milestoneCount, lessonCount, lessonsByType] = await Promise.all([
       Milestone.countDocuments(),
       Lesson.countDocuments(),
-      Lesson.aggregate([
-        { $group: { _id: "$contentType", count: { $sum: 1 } } },
-      ]),
+      Lesson.aggregate([{ $group: { _id: "$contentType", count: { $sum: 1 } } }]),
     ]);
 
     return {
@@ -396,48 +270,29 @@ class OverviewService {
     };
   }
 
-  // 📊 Growth Analytics (Last 6 Months)
+  // 📊 Growth Analytics
   async getGrowthAnalytics() {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
     const [userGrowth, enrollmentGrowth] = await Promise.all([
       User.aggregate([
-        {
-          $match: { createdAt: { $gte: sixMonthsAgo } },
-        },
-        {
-          $group: {
-            _id: {
-              year: { $year: "$createdAt" },
-              month: { $month: "$createdAt" },
-            },
-            count: { $sum: 1 },
-          },
-        },
-        { $sort: { "_id.year": 1, "_id.month": 1 } },
+        { $match: { createdAt: { $gte: sixMonthsAgo } } },
+        { $group: { _id: { month: { $month: "$createdAt" } }, count: { $sum: 1 } } },
+        { $sort: { "_id.month": 1 } },
       ]),
       Enrollment.aggregate([
-        {
-          $match: { enrolledAt: { $gte: sixMonthsAgo } },
-        },
-        {
-          $group: {
-            _id: {
-              year: { $year: "$enrolledAt" },
-              month: { $month: "$enrolledAt" },
-            },
-            count: { $sum: 1 },
-          },
-        },
-        { $sort: { "_id.year": 1, "_id.month": 1 } },
+        { $match: { enrolledAt: { $gte: sixMonthsAgo } } },
+        { $group: { _id: { month: { $month: "$enrolledAt" } }, count: { $sum: 1 } } },
+        { $sort: { "_id.month": 1 } },
       ]),
     ]);
 
-    return {
-      userGrowth,
-      enrollmentGrowth,
-    };
+    const userGrowthByMonth: GrowthData[] = userGrowth.map(i => ({ month: monthNames[i._id.month-1], count: i.count }));
+    const enrollmentGrowthByMonth: GrowthData[] = enrollmentGrowth.map(i => ({ month: monthNames[i._id.month-1], count: i.count }));
+
+    return { userGrowth: userGrowthByMonth, enrollmentGrowth: enrollmentGrowthByMonth };
   }
 }
 

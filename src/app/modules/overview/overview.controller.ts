@@ -1,119 +1,114 @@
-
 import { Request, Response } from "express";
-import { catchAsync } from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
 import OverviewService from "./overview.service";
 
-class OverviewController {
-  // 📊 Get Complete Dashboard Overview
-  getDashboard = catchAsync(async (req: Request, res: Response) => {
-    const result = await OverviewService.getDashboardStats();
+class AdminDashboardController {
+  // GET /api/admin/dashboard
+  async getDashboard(req: Request, res: Response) {
+    try {
+      const stats = await OverviewService.getDashboardStats();
+      return res.status(200).json(stats);
+    } catch (error: any) {
+      console.error("Dashboard Error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch dashboard stats",
+        error: error.message,
+      });
+    }
+  }
 
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Dashboard statistics retrieved successfully",
-      data: result.data,
-    });
-  });
+  // GET /api/admin/users
+  async getUsers(req: Request, res: Response) {
+    try {
+      const users = await OverviewService.getUserStats();
+      return res.status(200).json({ success: true, data: users });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
 
-  // 👥 Get User Statistics
-  getUserStats = catchAsync(async (req: Request, res: Response) => {
-    const userStats = await OverviewService.getUserStats();
+  // GET /api/admin/courses
+  async getCourses(req: Request, res: Response) {
+    try {
+      const courses = await OverviewService.getCourseStats();
+      return res.status(200).json({ success: true, data: courses });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
 
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "User statistics retrieved successfully",
-      data: userStats,
-    });
-  });
+  // GET /api/admin/enrollments
+  async getEnrollments(req: Request, res: Response) {
+    try {
+      const enrollments = await OverviewService.getEnrollmentStats();
+      return res.status(200).json({ success: true, data: enrollments });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
 
-  // 📚 Get Course Statistics
-  getCourseStats = catchAsync(async (req: Request, res: Response) => {
-    const courseStats = await OverviewService.getCourseStats();
+  // GET /api/admin/revenue
+  async getRevenue(req: Request, res: Response) {
+    try {
+      const revenue = await OverviewService.getRevenueStats();
+      return res.status(200).json({ success: true, data: revenue });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
 
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Course statistics retrieved successfully",
-      data: courseStats,
-    });
-  });
+  // GET /api/admin/popular-courses
+  async getPopularCourses(req: Request, res: Response) {
+    try {
+      const limit = Number(req.query.limit) || 10;
+      const courses = await OverviewService.getPopularCourses(limit);
+      return res.status(200).json({ success: true, data: courses });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
 
-  // 📝 Get Enrollment Statistics
-  getEnrollmentStats = catchAsync(async (req: Request, res: Response) => {
-    const enrollmentStats = await OverviewService.getEnrollmentStats();
+  // GET /api/admin/top-instructors
+  async getTopInstructors(req: Request, res: Response) {
+    try {
+      const limit = Number(req.query.limit) || 5;
+      const instructors = await OverviewService.getTopInstructors(limit);
+      return res.status(200).json({ success: true, data: instructors });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
 
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Enrollment statistics retrieved successfully",
-      data: enrollmentStats,
-    });
-  });
+  // GET /api/admin/recent-enrollments
+  async getRecentEnrollments(req: Request, res: Response) {
+    try {
+      const limit = Number(req.query.limit) || 10;
+      const enrollments = await OverviewService.getRecentEnrollments(limit);
+      return res.status(200).json({ success: true, data: enrollments });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
 
-  // 💰 Get Revenue Statistics
-  getRevenueStats = catchAsync(async (req: Request, res: Response) => {
-    const revenueStats = await OverviewService.getRevenueStats();
+  // GET /api/admin/content-stats
+  async getContentStats(req: Request, res: Response) {
+    try {
+      const stats = await OverviewService.getContentStats();
+      return res.status(200).json({ success: true, data: stats });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
 
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Revenue statistics retrieved successfully",
-      data: revenueStats,
-    });
-  });
-
-  // 🔥 Get Popular Courses
-  getPopularCourses = catchAsync(async (req: Request, res: Response) => {
-    const limit = parseInt(req.query.limit as string) || 10;
-    const popularCourses = await OverviewService.getPopularCourses(limit);
-
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Popular courses retrieved successfully",
-      data: popularCourses,
-    });
-  });
-
-  // 🕐 Get Recent Enrollments
-  getRecentEnrollments = catchAsync(async (req: Request, res: Response) => {
-    const limit = parseInt(req.query.limit as string) || 10;
-    const recentEnrollments = await OverviewService.getRecentEnrollments(limit);
-
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Recent enrollments retrieved successfully",
-      data: recentEnrollments,
-    });
-  });
-
-  // 📈 Get Content Statistics
-  getContentStats = catchAsync(async (req: Request, res: Response) => {
-    const contentStats = await OverviewService.getContentStats();
-
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Content statistics retrieved successfully",
-      data: contentStats,
-    });
-  });
-
-  // 📊 Get Growth Analytics
-  getGrowthAnalytics = catchAsync(async (req: Request, res: Response) => {
-    const growthData = await OverviewService.getGrowthAnalytics();
-
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Growth analytics retrieved successfully",
-      data: growthData,
-    });
-  });
+  // GET /api/admin/growth-analytics
+  async getGrowthAnalytics(req: Request, res: Response) {
+    try {
+      const analytics = await OverviewService.getGrowthAnalytics();
+      return res.status(200).json({ success: true, data: analytics });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
 }
 
-export default new OverviewController();
+export default new AdminDashboardController();

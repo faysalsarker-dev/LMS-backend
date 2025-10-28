@@ -7,6 +7,8 @@ import EnrollmentRoutes from "../modules/enrollment/enrollment.route"
 import UserRoute from "../modules/auth/auth.route"
 import AppConfig from "../modules/appSetting/appConfig.routes"
 import Category from '../modules/category/category.routes'
+import OverView from '../modules/overview/overview.routes'
+import TestimonialRoutes  from "../modules/testimonial/testimonial.routes"
 export const router = Router()
 
 interface ModuleRoute {
@@ -43,6 +45,14 @@ const moduleRoutes: ModuleRoute[] = [
    {
        path: "/category",
        route: Category
+   },
+   {
+       path: "/testimonial",
+       route: TestimonialRoutes
+   },
+   {
+       path: "/overview",
+       route: OverView
    },
    {
        path: "/app-config",
