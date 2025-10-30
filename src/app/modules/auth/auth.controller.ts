@@ -60,8 +60,8 @@ export const AuthController = {
   }),
 
 
-me: async (req: Request, res: Response) => {
-  try {
+me: catchAsync(async (req: Request, res: Response) => {
+ 
     const userId = req.user._id.toString();
     const { courses, wishlist } = req.query;
 
@@ -77,19 +77,12 @@ me: async (req: Request, res: Response) => {
       message: "Your profile retrieved successfully",
       data: result,
     });
-  } catch (error) {
-    console.error(error);
-    sendResponse(res, {
-      success: false,
-      statusCode: 500,
-      message: "Failed to retrieve profile",
-    });
-  }
-},
+  
+}),
 
 
 
-sendOtp: async (req: Request, res: Response) => {
+sendOtp: catchAsync(async (req: Request, res: Response) => {
   const email = req.body.email;
   const result = await userService.sendOtp(email);
 
@@ -99,7 +92,7 @@ sendOtp: async (req: Request, res: Response) => {
     message: "OTP Send Successfully",
     data: result
   });
-},
+}),
 
 
 addToWishlist: catchAsync(async (req: Request, res: Response) => {
@@ -116,7 +109,7 @@ addToWishlist: catchAsync(async (req: Request, res: Response) => {
   }),
 
 
-verifyOtp: async (req: Request, res: Response) => {
+verifyOtp: catchAsync(async (req: Request, res: Response) => {
   const {email,otp} = req.body;
  const result = await userService.verifyOtp(email,otp);
 
@@ -126,10 +119,10 @@ verifyOtp: async (req: Request, res: Response) => {
     message: "Your Account Verify Successfully",
     data: result
   });
-},
+}),
 
 
-forgetPassword: async (req: Request, res: Response) => {
+forgetPassword: catchAsync(async (req: Request, res: Response) => {
   const {email} = req.body;
   const result = await userService.forgotPassword(email);
 
@@ -139,9 +132,9 @@ forgetPassword: async (req: Request, res: Response) => {
     message: "Your profile Retrieved Successfully",
     data: result
   });
-},
+}),
 
-resetPassword: async (req: Request, res: Response) => {
+resetPassword: catchAsync(async (req: Request, res: Response) => {
 const { id, token, newPassword } = req.body;
 const result = await userService.resetPassword(id,token,newPassword);
 
@@ -151,11 +144,11 @@ const result = await userService.resetPassword(id,token,newPassword);
     message: "Your profile Retrieved Successfully",
     data: result
   });
-},
+}),
 
 
 
-  getNewAccessToken: catchAsync(async (req: Request, res: Response) => {
+getNewAccessToken: catchAsync(async (req: Request, res: Response) => {
     const refreshToken = req.cookies.refreshToken;
     const { accessToken } = await userService.refreshToken(refreshToken);
 
@@ -169,6 +162,20 @@ const result = await userService.resetPassword(id,token,newPassword);
     });
   }),
 
+  updatePassword: catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+
+
+    const user = await userService.updatePassword(userId, req.body);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Password updated successfully",
+      data: user,
+    });
+  }),
+  
   updateProfile: catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
     const payload ={

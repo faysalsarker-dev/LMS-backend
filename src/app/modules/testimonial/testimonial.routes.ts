@@ -1,20 +1,26 @@
 import express from "express";
-
-import {
-  createOrUpdateTestimonial,
-  getCourseTestimonials,
-  deleteTestimonial,
-} from "./testimonial.controller";
+import * as testimonialController from "./testimonial.controller";
 import { checkAuth } from "../../middleware/CheckAuth";
 
 const router = express.Router();
 
-router.post("/", checkAuth(), createOrUpdateTestimonial);
+// ✅ Create testimonial
+router.post("/", checkAuth(), testimonialController.createTestimonial);
 
-router.get("/:courseId", getCourseTestimonials);
+// ✅ Update testimonial
+router.patch("/:testimonialId", checkAuth(), testimonialController.updateTestimonial);
 
-router.delete("/:id", checkAuth(), deleteTestimonial);
+// ✅ Public course review summary
+router.get("/course/:courseId", testimonialController.getCourseReviewSummary);
 
-const testimonialRoutes = router;
+// ✅ Admin all testimonials with pagination/sorting
+router.get("/admin",  testimonialController.getAllTestimonialsAdmin);
 
-export default testimonialRoutes; 
+// ✅ Public top 20
+router.get("/top", testimonialController.getTopTestimonials);
+router.get("/my-review", testimonialController.getMyReview);
+
+// ✅ Delete testimonial
+router.delete("/:testimonialId", checkAuth(), testimonialController.deleteTestimonial);
+
+export default router;

@@ -1,49 +1,100 @@
-import httpStatus from "http-status";
-import { catchAsync } from "../../utils/catchAsync";
-import * as testimonialService from "./testimonial.service";
-import sendResponse from "../../utils/sendResponse";
 import { Request, Response } from "express";
 
-export const createOrUpdateTestimonial = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user._id;
-  const { courseId, rating, review } = req.body;
+import httpStatus from "http-status";
+import * as testimonialService from "./testimonial.service";
+import { catchAsync } from "../../utils/catchAsync";
+import sendResponse from "../../utils/sendResponse";
 
-  const testimonial = await testimonialService.createOrUpdateTestimonial({
-    userId,
-    courseId,
-    rating,
-    review,
+// ✅ Create testimonial
+export const createTestimonial = catchAsync(async (req: Request, res: Response) => {
+  const testimonial = await testimonialService.createTestimonial({
+    userId: req.user.id,
+    ...req.body,
   });
-
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: "Review submitted successfully.",
+    message: "Review added successfully",
     data: testimonial,
   });
 });
 
-export const getCourseTestimonials = catchAsync(async(req: Request, res: Response) => {
-  const { courseId } = req.params;
-  const data = await testimonialService.getAllTestimonialsByCourse(courseId);
-
+// ✅ Update testimonial
+export const updateTestimonial = catchAsync(async (req: Request, res: Response) => {
+  const { testimonialId } = req.params;
+  const testimonial = await testimonialService.updateTestimonial({
+    testimonialId,
+    userId: req.user.id,
+    ...req.body,
+  });
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Course testimonials retrieved successfully.",
+    message: "Review updated successfully",
+    data: testimonial,
+  });
+});
+
+// ✅ Public: get summary for a single course
+export const getCourseReviewSummary = catchAsync(async (req: Request, res: Response) => {
+  const { courseId } = req.params;
+  const data = await testimonialService.getCourseReviewSummary(courseId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Course reviews fetched successfully",
     data,
   });
 });
 
-export const deleteTestimonial = catchAsync(async(req: Request, res: Response) => {
-  const userId = req.user._id;
-  const { id } = req.params;
-
-  await testimonialService.deleteTestimonial(id, userId);
-
+// ✅ Admin: paginated + sorted
+export const getAllTestimonialsAdmin = catchAsync(async (req: Request, res: Response) => {
+  const { page = 1, limit = 10, sort = "newest" } = req.query;
+  const data = await testimonialService.getAllTestimonialsAdmin(
+    Number(page),
+    Number(limit),
+    String(sort)
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Testimonial deleted successfully.",
+    message: "All testimonials fetched successfully",
+    data,
+  });
+});
+
+// ✅ Public homepage
+export const getTopTestimonials = catchAsync(async (req: Request, res: Response) => {
+  const data = await testimonialService.getTopTestimonials();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Top testimonials fetched successfully",
+    data,
+  });
+});
+
+export const getMyReview = catchAsync(async (req: Request, res: Response) => {
+  const { courseId } = req.params;
+  const userId = req.user._id;
+
+  const testimonial = await testimonialService.getMyReview(userId, courseId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Your review fetched successfully",
+    data: testimonial,
+  });
+});
+
+// ✅ Delete
+export const deleteTestimonial = catchAsync(async (req: Request, res: Response) => {
+  const { testimonialId } = req.params;
+  const deletedId = await testimonialService.deleteTestimonial(testimonialId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Testimonial deleted successfully",
+    data: deletedId,
   });
 });

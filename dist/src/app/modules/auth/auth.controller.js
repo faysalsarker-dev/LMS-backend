@@ -32,12 +32,12 @@ exports.AuthController = {
     logout: (0, catchAsync_1.catchAsync)(async (_req, res) => {
         res.clearCookie("accessToken", {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: "lax"
         });
         res.clearCookie("refreshToken", {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: "lax"
         });
         (0, sendResponse_1.default)(res, {
@@ -46,28 +46,18 @@ exports.AuthController = {
             message: "Logged out successfully",
         });
     }),
-    me: async (req, res) => {
-        try {
-            const userId = req.user._id.toString();
-            const { courses, wishlist } = req.query;
-            const result = await auth_service_1.userService.getMe(userId, courses === 'true', wishlist === 'true');
-            (0, sendResponse_1.default)(res, {
-                success: true,
-                statusCode: 200,
-                message: "Your profile retrieved successfully",
-                data: result,
-            });
-        }
-        catch (error) {
-            console.error(error);
-            (0, sendResponse_1.default)(res, {
-                success: false,
-                statusCode: 500,
-                message: "Failed to retrieve profile",
-            });
-        }
-    },
-    sendOtp: async (req, res) => {
+    me: (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const userId = req.user._id.toString();
+        const { courses, wishlist } = req.query;
+        const result = await auth_service_1.userService.getMe(userId, courses === 'true', wishlist === 'true');
+        (0, sendResponse_1.default)(res, {
+            success: true,
+            statusCode: 200,
+            message: "Your profile retrieved successfully",
+            data: result,
+        });
+    }),
+    sendOtp: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const email = req.body.email;
         const result = await auth_service_1.userService.sendOtp(email);
         (0, sendResponse_1.default)(res, {
@@ -76,10 +66,10 @@ exports.AuthController = {
             message: "OTP Send Successfully",
             data: result
         });
-    },
+    }),
     addToWishlist: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const id = req.user._id;
-        const result = await auth_service_1.userService.addToWishlist(id, req.body);
+        const result = await auth_service_1.userService.addToWishlist(id, req.body.courseId);
         (0, sendResponse_1.default)(res, {
             statusCode: 200,
             success: true,
@@ -87,7 +77,7 @@ exports.AuthController = {
             data: result
         });
     }),
-    verifyOtp: async (req, res) => {
+    verifyOtp: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const { email, otp } = req.body;
         const result = await auth_service_1.userService.verifyOtp(email, otp);
         (0, sendResponse_1.default)(res, {
@@ -96,8 +86,8 @@ exports.AuthController = {
             message: "Your Account Verify Successfully",
             data: result
         });
-    },
-    forgetPassword: async (req, res) => {
+    }),
+    forgetPassword: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const { email } = req.body;
         const result = await auth_service_1.userService.forgotPassword(email);
         (0, sendResponse_1.default)(res, {
@@ -106,8 +96,8 @@ exports.AuthController = {
             message: "Your profile Retrieved Successfully",
             data: result
         });
-    },
-    resetPassword: async (req, res) => {
+    }),
+    resetPassword: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const { id, token, newPassword } = req.body;
         const result = await auth_service_1.userService.resetPassword(id, token, newPassword);
         (0, sendResponse_1.default)(res, {
@@ -116,7 +106,7 @@ exports.AuthController = {
             message: "Your profile Retrieved Successfully",
             data: result
         });
-    },
+    }),
     getNewAccessToken: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const refreshToken = req.cookies.refreshToken;
         const { accessToken } = await auth_service_1.userService.refreshToken(refreshToken);
@@ -126,6 +116,16 @@ exports.AuthController = {
             success: true,
             message: "Token refreshed successfully",
             data: { accessToken },
+        });
+    }),
+    updatePassword: (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const userId = req.user._id;
+        const user = await auth_service_1.userService.updatePassword(userId, req.body);
+        (0, sendResponse_1.default)(res, {
+            statusCode: 200,
+            success: true,
+            message: "Password updated successfully",
+            data: user,
         });
     }),
     updateProfile: (0, catchAsync_1.catchAsync)(async (req, res) => {

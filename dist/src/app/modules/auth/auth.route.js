@@ -17,5 +17,6 @@ router.post("/refresh-token", auth_controller_1.AuthController.getNewAccessToken
 router.post('/send-otp', auth_controller_1.AuthController.sendOtp);
 router.post("/forget-password", auth_controller_1.AuthController.forgetPassword);
 router.put("/reset-password", auth_controller_1.AuthController.resetPassword);
+router.put("/update-password", (0, CheckAuth_1.checkAuth)(), auth_controller_1.AuthController.updatePassword);
 router.put("/update", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerUpload.single("file"), auth_controller_1.AuthController.updateProfile);
 exports.default = router;

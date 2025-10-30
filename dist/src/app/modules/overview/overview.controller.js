@@ -3,103 +3,115 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const catchAsync_1 = require("../../utils/catchAsync");
-const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const overview_service_1 = __importDefault(require("./overview.service"));
-class OverviewController {
-    constructor() {
-        // 📊 Get Complete Dashboard Overview
-        this.getDashboard = (0, catchAsync_1.catchAsync)(async (req, res) => {
-            const result = await overview_service_1.default.getDashboardStats();
-            (0, sendResponse_1.default)(res, {
-                statusCode: 200,
-                success: true,
-                message: "Dashboard statistics retrieved successfully",
-                data: result.data,
+class AdminDashboardController {
+    // GET /api/admin/dashboard
+    async getDashboard(req, res) {
+        try {
+            const stats = await overview_service_1.default.getDashboardStats();
+            return res.status(200).json(stats);
+        }
+        catch (error) {
+            console.error("Dashboard Error:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Failed to fetch dashboard stats",
+                error: error.message,
             });
-        });
-        // 👥 Get User Statistics
-        this.getUserStats = (0, catchAsync_1.catchAsync)(async (req, res) => {
-            const userStats = await overview_service_1.default.getUserStats();
-            (0, sendResponse_1.default)(res, {
-                statusCode: 200,
-                success: true,
-                message: "User statistics retrieved successfully",
-                data: userStats,
-            });
-        });
-        // 📚 Get Course Statistics
-        this.getCourseStats = (0, catchAsync_1.catchAsync)(async (req, res) => {
-            const courseStats = await overview_service_1.default.getCourseStats();
-            (0, sendResponse_1.default)(res, {
-                statusCode: 200,
-                success: true,
-                message: "Course statistics retrieved successfully",
-                data: courseStats,
-            });
-        });
-        // 📝 Get Enrollment Statistics
-        this.getEnrollmentStats = (0, catchAsync_1.catchAsync)(async (req, res) => {
-            const enrollmentStats = await overview_service_1.default.getEnrollmentStats();
-            (0, sendResponse_1.default)(res, {
-                statusCode: 200,
-                success: true,
-                message: "Enrollment statistics retrieved successfully",
-                data: enrollmentStats,
-            });
-        });
-        // 💰 Get Revenue Statistics
-        this.getRevenueStats = (0, catchAsync_1.catchAsync)(async (req, res) => {
-            const revenueStats = await overview_service_1.default.getRevenueStats();
-            (0, sendResponse_1.default)(res, {
-                statusCode: 200,
-                success: true,
-                message: "Revenue statistics retrieved successfully",
-                data: revenueStats,
-            });
-        });
-        // 🔥 Get Popular Courses
-        this.getPopularCourses = (0, catchAsync_1.catchAsync)(async (req, res) => {
-            const limit = parseInt(req.query.limit) || 10;
-            const popularCourses = await overview_service_1.default.getPopularCourses(limit);
-            (0, sendResponse_1.default)(res, {
-                statusCode: 200,
-                success: true,
-                message: "Popular courses retrieved successfully",
-                data: popularCourses,
-            });
-        });
-        // 🕐 Get Recent Enrollments
-        this.getRecentEnrollments = (0, catchAsync_1.catchAsync)(async (req, res) => {
-            const limit = parseInt(req.query.limit) || 10;
-            const recentEnrollments = await overview_service_1.default.getRecentEnrollments(limit);
-            (0, sendResponse_1.default)(res, {
-                statusCode: 200,
-                success: true,
-                message: "Recent enrollments retrieved successfully",
-                data: recentEnrollments,
-            });
-        });
-        // 📈 Get Content Statistics
-        this.getContentStats = (0, catchAsync_1.catchAsync)(async (req, res) => {
-            const contentStats = await overview_service_1.default.getContentStats();
-            (0, sendResponse_1.default)(res, {
-                statusCode: 200,
-                success: true,
-                message: "Content statistics retrieved successfully",
-                data: contentStats,
-            });
-        });
-        // 📊 Get Growth Analytics
-        this.getGrowthAnalytics = (0, catchAsync_1.catchAsync)(async (req, res) => {
-            const growthData = await overview_service_1.default.getGrowthAnalytics();
-            (0, sendResponse_1.default)(res, {
-                statusCode: 200,
-                success: true,
-                message: "Growth analytics retrieved successfully",
-                data: growthData,
-            });
-        });
+        }
+    }
+    // GET /api/admin/users
+    async getUsers(req, res) {
+        try {
+            const users = await overview_service_1.default.getUserStats();
+            return res.status(200).json({ success: true, data: users });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+    // GET /api/admin/courses
+    async getCourses(req, res) {
+        try {
+            const courses = await overview_service_1.default.getCourseStats();
+            return res.status(200).json({ success: true, data: courses });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+    // GET /api/admin/enrollments
+    async getEnrollments(req, res) {
+        try {
+            const enrollments = await overview_service_1.default.getEnrollmentStats();
+            return res.status(200).json({ success: true, data: enrollments });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+    // GET /api/admin/revenue
+    async getRevenue(req, res) {
+        try {
+            const revenue = await overview_service_1.default.getRevenueStats();
+            return res.status(200).json({ success: true, data: revenue });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+    // GET /api/admin/popular-courses
+    async getPopularCourses(req, res) {
+        try {
+            const limit = Number(req.query.limit) || 10;
+            const courses = await overview_service_1.default.getPopularCourses(limit);
+            return res.status(200).json({ success: true, data: courses });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+    // GET /api/admin/top-instructors
+    async getTopInstructors(req, res) {
+        try {
+            const limit = Number(req.query.limit) || 5;
+            const instructors = await overview_service_1.default.getTopInstructors(limit);
+            return res.status(200).json({ success: true, data: instructors });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+    // GET /api/admin/recent-enrollments
+    async getRecentEnrollments(req, res) {
+        try {
+            const limit = Number(req.query.limit) || 10;
+            const enrollments = await overview_service_1.default.getRecentEnrollments(limit);
+            return res.status(200).json({ success: true, data: enrollments });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+    // GET /api/admin/content-stats
+    async getContentStats(req, res) {
+        try {
+            const stats = await overview_service_1.default.getContentStats();
+            return res.status(200).json({ success: true, data: stats });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+    // GET /api/admin/growth-analytics
+    async getGrowthAnalytics(req, res) {
+        try {
+            const analytics = await overview_service_1.default.getGrowthAnalytics();
+            return res.status(200).json({ success: true, data: analytics });
+        }
+        catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
     }
 }
-exports.default = new OverviewController();
+exports.default = new AdminDashboardController();

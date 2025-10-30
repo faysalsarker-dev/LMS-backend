@@ -18,6 +18,7 @@ router.post("/refresh-token", AuthController.getNewAccessToken)
 router.post('/send-otp', AuthController.sendOtp);
 router.post("/forget-password",AuthController.forgetPassword);
 router.put("/reset-password",AuthController.resetPassword);
+router.put("/update-password",checkAuth(), AuthController.updatePassword);
 router.put("/update",checkAuth(),multerUpload.single("file"),AuthController.updateProfile);
 
 export default router;

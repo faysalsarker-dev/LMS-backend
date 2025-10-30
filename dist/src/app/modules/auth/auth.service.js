@@ -94,12 +94,22 @@ exports.userService = {
         return { accessToken };
     },
     /** 🔹 Update user password */
-    async updatePassword(userId, updates) {
-        if (updates.password) {
-            const salt = await bcryptjs_1.default.genSalt(12);
-            updates.password = await bcryptjs_1.default.hash(updates.password, salt);
+    async updatePassword(userId, payload) {
+        const user = await User_model_1.default.findById(userId).select("+password");
+        if (!user) {
+            throw new ApiError_1.ApiError(404, "User not found");
         }
-        return User_model_1.default.findByIdAndUpdate(userId, updates, { new: true });
+        // Compare current password
+        const isMatch = await bcryptjs_1.default.compare(payload.currentPassword, user.password);
+        if (!isMatch) {
+            throw new ApiError_1.ApiError(401, "Current password is incorrect");
+        }
+        // Hash and update the new password
+        const salt = await bcryptjs_1.default.genSalt(config_1.default.bcrypt_salt_rounds);
+        const hashedPassword = await bcryptjs_1.default.hash(payload.newPassword, salt);
+        user.password = hashedPassword;
+        await user.save();
+        return user;
     },
     async updateProfile(userId, updates) {
         const user = await User_model_1.default.findById(userId);
@@ -119,10 +129,17 @@ exports.userService = {
     },
     async getMe(userId, includeCourses = false, includeWishlist = false) {
         let query = User_model_1.default.findById(userId);
-        if (includeCourses)
-            query = query.populate("courses");
+        if (includeCourses) {
+            query = query.populate({
+                path: "courses",
+                select: "-milestone",
+            });
+        }
         if (includeWishlist)
-            query = query.populate("wishlist");
+            query = query.populate({
+                path: "wishlist",
+                select: "-milestone",
+            });
         const user = await query.exec();
         if (!user)
             throw new ApiError_1.ApiError(404, "User not found");

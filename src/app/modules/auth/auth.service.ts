@@ -130,13 +130,37 @@ export const userService = {
   },
 
   /** 🔹 Update user password */
-  async updatePassword(userId: string, updates: Partial<IUser>) {
-    if (updates.password) {
-      const salt = await bcrypt.genSalt(12);
-      updates.password = await bcrypt.hash(updates.password, salt);
-    }
-    return User.findByIdAndUpdate(userId, updates, { new: true });
-  },
+
+
+
+
+async updatePassword(userId: string, payload: {
+  currentPassword: string;
+  newPassword: string;
+}) {
+  const user = await User.findById(userId).select("+password");
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // Compare current password
+  const isMatch = await bcrypt.compare(payload.currentPassword, user.password);
+  if (!isMatch) {
+    throw new ApiError(401, "Current password is incorrect");
+  }
+
+  // Hash and update the new password
+  const salt = await bcrypt.genSalt(config.bcrypt_salt_rounds);
+  const hashedPassword = await bcrypt.hash(payload.newPassword, salt);
+
+  user.password = hashedPassword;
+  await user.save();
+
+  return user
+},
+
+
+
 
 async updateProfile(userId: string, updates: Partial<IUser>) {
   const user = await User.findById(userId);

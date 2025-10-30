@@ -13,6 +13,8 @@ const enrollment_route_1 = __importDefault(require("../modules/enrollment/enroll
 const auth_route_1 = __importDefault(require("../modules/auth/auth.route"));
 const appConfig_routes_1 = __importDefault(require("../modules/appSetting/appConfig.routes"));
 const category_routes_1 = __importDefault(require("../modules/category/category.routes"));
+const overview_routes_1 = __importDefault(require("../modules/overview/overview.routes"));
+const testimonial_routes_1 = __importDefault(require("../modules/testimonial/testimonial.routes"));
 exports.router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -42,6 +44,14 @@ const moduleRoutes = [
     {
         path: "/category",
         route: category_routes_1.default
+    },
+    {
+        path: "/testimonial",
+        route: testimonial_routes_1.default
+    },
+    {
+        path: "/overview",
+        route: overview_routes_1.default
     },
     {
         path: "/app-config",
