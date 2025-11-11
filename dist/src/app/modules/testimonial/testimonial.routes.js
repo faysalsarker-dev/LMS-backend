@@ -50,7 +50,7 @@ router.get("/course/:courseId", testimonialController.getCourseReviewSummary);
 router.get("/admin", testimonialController.getAllTestimonialsAdmin);
 // ✅ Public top 20
 router.get("/top", testimonialController.getTopTestimonials);
-router.get("/my-review", testimonialController.getMyReview);
+router.get("/my-review/:courseId", (0, CheckAuth_1.checkAuth)(), testimonialController.getMyReview);
 // ✅ Delete testimonial
 router.delete("/:testimonialId", (0, CheckAuth_1.checkAuth)(), testimonialController.deleteTestimonial);
 exports.default = router;

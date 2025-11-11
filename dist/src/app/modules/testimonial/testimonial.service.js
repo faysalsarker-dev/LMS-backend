@@ -58,8 +58,8 @@ const recalculateCourseAverage = async (courseId) => {
 const getCourseReviewSummary = async (courseId) => {
     const totalReviews = await Testimonial_model_1.default.countDocuments({ course: courseId });
     const topTestimonials = await Testimonial_model_1.default.find({ course: courseId })
-        .populate("user", "name email profileImage")
-        .sort({ rating: -1 })
+        .populate("user", "name profile")
+        .sort({ rating: -1, createdAt: -1 })
         .limit(10);
     return { totalReviews, topTestimonials };
 };
@@ -108,7 +108,7 @@ const deleteTestimonial = async (testimonialId) => {
 };
 exports.deleteTestimonial = deleteTestimonial;
 const getMyReview = async (userId, courseId) => {
-    const testimonial = await Testimonial_model_1.default.findOne({ user: userId, course: courseId });
+    const testimonial = await Testimonial_model_1.default.findOne({ user: userId, course: courseId }).populate("user", "name profile");
     return testimonial;
 };
 exports.getMyReview = getMyReview;

@@ -77,7 +77,6 @@ export const getTopTestimonials = catchAsync(async (req: Request, res: Response)
 export const getMyReview = catchAsync(async (req: Request, res: Response) => {
   const { courseId } = req.params;
   const userId = req.user._id;
-
   const testimonial = await testimonialService.getMyReview(userId, courseId);
   sendResponse(res, {
     statusCode: httpStatus.OK,

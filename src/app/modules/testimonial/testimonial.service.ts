@@ -85,8 +85,8 @@ const recalculateCourseAverage = async (courseId: string) => {
 export const getCourseReviewSummary = async (courseId: string) => {
   const totalReviews = await CourseTestimonial.countDocuments({ course: courseId });
   const topTestimonials = await CourseTestimonial.find({ course: courseId })
-    .populate("user", "name email profileImage")
-    .sort({ rating: -1 })
+    .populate("user", "name profile")
+    .sort({ rating: -1, createdAt: -1 })
     .limit(10);
 
   return { totalReviews, topTestimonials };
@@ -148,6 +148,6 @@ export const deleteTestimonial = async (testimonialId: string) => {
 
 
 export const getMyReview = async (userId: string, courseId: string) => {
-  const testimonial = await CourseTestimonial.findOne({ user: userId, course: courseId });
+  const testimonial = await CourseTestimonial.findOne({ user: userId, course: courseId }).populate("user", "name profile");
   return testimonial;
 }

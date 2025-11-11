@@ -6,6 +6,8 @@ export interface IEnrollment {
   status: "active" | "completed" | "cancelled";
   paymentStatus: "pending" | "paid" | "failed";
   method:"alipay" | "wechat" ;
+  ammount:number;
+  currency:string;
   enrolledAt: Date;
   completedAt?: Date;
 }

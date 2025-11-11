@@ -18,7 +18,7 @@ router.get("/admin",  testimonialController.getAllTestimonialsAdmin);
 
 // ✅ Public top 20
 router.get("/top", testimonialController.getTopTestimonials);
-router.get("/my-review", testimonialController.getMyReview);
+router.get("/my-review/:courseId",checkAuth(), testimonialController.getMyReview);
 
 // ✅ Delete testimonial
 router.delete("/:testimonialId", checkAuth(), testimonialController.deleteTestimonial);
