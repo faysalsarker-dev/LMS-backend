@@ -1,5 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
-import { ILesson, IQuestion, IVideo, IAudio } from "./lesson.interface";
+import { ILesson, IQuestion, IVideo, IAudio, IAssignment } from "./lesson.interface";
 import slugify from "slugify";
 
 // ---------------------------
@@ -48,12 +48,29 @@ const questionSchema = new Schema<IQuestion>(
         text: { type: String, required: true, trim: true },
       },
     ],
-    correctAnswer: { type: Schema.Types.Mixed, required: true },
+    correctAnswer: { type: Schema.Types.Mixed, required: false },
     explanation: { type: String, default: null },
     timer: { type: Number, default: null },
   },
   { _id: false }
 );
+
+const assignmentSchema = new Schema<IAssignment>(
+  {
+    instruction: { type: String, required: true, trim: true },
+    maxMarks: { type: Number, default: null },
+    allowMultipleSubmissions: { type: Boolean, default: false },
+    passingMarks: { type: Number, default: null },
+    deadline :{type:Date ,default:null} 
+
+  },
+  { _id: false }
+);
+
+
+
+
+
 
 // ---------------------------
 // Main Lesson Schema
@@ -61,19 +78,19 @@ const questionSchema = new Schema<IQuestion>(
 const lessonSchema = new Schema<ILesson>(
   {
     title: { type: String, required: true, trim: true },
-    slug: { type: String, required: true, trim: true },
+    slug: { type: String,  trim: true },
 
     milestone: { type: Schema.Types.ObjectId, ref: "Milestone", required: true },
     course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
     order: { type: Number, min: 1 },
 
-    type: { type: String, enum: ["video", "doc", "quiz", "audio"], required: true },
+    type: { type: String, enum: ["video", "doc", "quiz", "audio" ,"assignment"], required: true },
 
-    content: { type: String, default: null },
-
+doc: { type: Schema.Types.Mixed, default: null },
     video: { type: videoSchema, default: null },
     audio: { type: audioSchema, default: null },
     questions: { type: [questionSchema], default: [] },
+     assignment: { type: assignmentSchema, default: null },
 
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     viewCount: { type: Number, default: 0 },
@@ -124,6 +141,8 @@ lessonSchema.pre("validate", function (next) {
   if (l.type !== "quiz") l.questions = [];
   if (l.type !== "video") l.video = null;
   if (l.type !== "audio") l.audio = null;
+  if (l.type !== "assignment") l.assignment = null;
+ 
 
   next();
 });

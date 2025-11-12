@@ -29,7 +29,13 @@ export interface IVideo {
   duration?: number;
 }
 
-
+export interface IAssignment {
+  instruction: string;              
+  maxMarks?: number;                 
+  allowMultipleSubmissions?: boolean;  
+  passingMarks?: number | null;        
+deadline:Date | null
+}
 
 // ---- Lesson ----
 export interface ILesson extends Document {
@@ -44,12 +50,14 @@ export interface ILesson extends Document {
     | "doc"
     | "quiz"
     | "audio"
+    | "assignment"
 
 
-  content?: string;
+  doc?: string;
   questions?: IQuestion[] | null;
   video?: IVideo | null;
 audio?: IAudio | null;
+assignment?:IAssignment | null;
 
   status?: "active" | "inactive";
   viewCount?: number;

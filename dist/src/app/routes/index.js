@@ -15,6 +15,7 @@ const appConfig_routes_1 = __importDefault(require("../modules/appSetting/appCon
 const category_routes_1 = __importDefault(require("../modules/category/category.routes"));
 const overview_routes_1 = __importDefault(require("../modules/overview/overview.routes"));
 const testimonial_routes_1 = __importDefault(require("../modules/testimonial/testimonial.routes"));
+const agt_route_1 = __importDefault(require("../modules/agt/agt.route"));
 exports.router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -44,6 +45,10 @@ const moduleRoutes = [
     {
         path: "/category",
         route: category_routes_1.default
+    },
+    {
+        path: "/assignment",
+        route: agt_route_1.default
     },
     {
         path: "/testimonial",

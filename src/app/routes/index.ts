@@ -9,6 +9,7 @@ import AppConfig from "../modules/appSetting/appConfig.routes"
 import Category from '../modules/category/category.routes'
 import OverView from '../modules/overview/overview.routes'
 import TestimonialRoutes  from "../modules/testimonial/testimonial.routes"
+import Assignment  from "../modules/agt/agt.route"
 export const router = Router()
 
 interface ModuleRoute {
@@ -45,6 +46,10 @@ const moduleRoutes: ModuleRoute[] = [
    {
        path: "/category",
        route: Category
+   },
+   {
+       path: "/assignment",
+       route: Assignment
    },
    {
        path: "/testimonial",
