@@ -16,6 +16,7 @@ const category_routes_1 = __importDefault(require("../modules/category/category.
 const overview_routes_1 = __importDefault(require("../modules/overview/overview.routes"));
 const testimonial_routes_1 = __importDefault(require("../modules/testimonial/testimonial.routes"));
 const agt_route_1 = __importDefault(require("../modules/agt/agt.route"));
+const promo_routes_1 = __importDefault(require("../modules/promoCode/promo.routes"));
 exports.router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -49,6 +50,10 @@ const moduleRoutes = [
     {
         path: "/assignment",
         route: agt_route_1.default
+    },
+    {
+        path: "/promo",
+        route: promo_routes_1.default
     },
     {
         path: "/testimonial",

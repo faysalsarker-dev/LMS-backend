@@ -10,6 +10,7 @@ import Category from '../modules/category/category.routes'
 import OverView from '../modules/overview/overview.routes'
 import TestimonialRoutes  from "../modules/testimonial/testimonial.routes"
 import Assignment  from "../modules/agt/agt.route"
+import Promo  from "../modules/promoCode/promo.routes"
 export const router = Router()
 
 interface ModuleRoute {
@@ -50,6 +51,10 @@ const moduleRoutes: ModuleRoute[] = [
    {
        path: "/assignment",
        route: Assignment
+   },
+   {
+       path: "/promo",
+       route: Promo
    },
    {
        path: "/testimonial",
