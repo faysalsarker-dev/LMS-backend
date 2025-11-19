@@ -7,6 +7,7 @@ import {
   deletePromo,
   getPromoById,
   getAllPromosAdmin,
+  getAnalytics,
 } from "./promo.controller";
 import { checkAuth } from "../../middleware/CheckAuth";
 
@@ -16,7 +17,7 @@ const router = Router();
 
 
 router.post(
-  "/create",
+  "/",
   checkAuth(), 
   createPromo
 );
@@ -53,7 +54,7 @@ router.delete(
 
 router.get(
   "/admin/all",
-  checkAuth(), 
+  // checkAuth(), 
   getAllPromosAdmin
 );
 
@@ -61,6 +62,13 @@ router.get(
   "/admin/:id",
   checkAuth(), 
   getPromoById
+);
+
+
+router.get(
+  "/analytics",
+  checkAuth(), 
+  getAnalytics
 );
 
 export default router;

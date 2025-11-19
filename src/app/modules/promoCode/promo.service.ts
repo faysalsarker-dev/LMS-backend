@@ -5,11 +5,10 @@ import PromoCode from "./Promo.model";
 // --------------------------
 // Create promo (User can create only ONE)
 // --------------------------
-const createPromo = async (userId: string, data: IPromoCode) => {
-  const exist = await PromoCode.findOne({ createdBy: userId, isDeleted: false });
-  if (exist) throw new ApiError(400, "You already created a promo");
-
-  const promo = await PromoCode.create({ ...data, createdBy: userId });
+const createPromo = async (data: IPromoCode) => {
+  const exist = await PromoCode.findOne({ createdBy: data.createdBy, isDeleted: false });
+  if (exist) throw new ApiError(400, "User already contain a promo");
+  const promo = await PromoCode.create({ ...data });
   return promo;
 };
 
@@ -70,6 +69,52 @@ const deletePromo = async (id: string) => {
 // --------------------------
 // ADMIN — Get all promo with pagination + filter + sort
 // --------------------------
+// const getAllPromosAdmin = async (query: any) => {
+//   const {
+//     page = 1,
+//     limit = 10,
+//     sortBy = "createdAt",
+//     sortOrder = "desc",
+//     search = "",
+//     isActive,
+//   } = query;
+
+// console.log(query);
+
+
+//   const skip = (page - 1) * limit;
+
+//   // filters
+//   const filter: any = { isDeleted: false };
+
+//   if (search) {
+//     filter.$or = [
+//       { code: { $regex: search, $options: "i" } },
+//       { "createdBy.name": { $regex: search, $options: "i" } },
+//       { "createdBy.email": { $regex: search, $options: "i" } },
+//     ];
+//   }
+
+//   if (isActive !== undefined) filter.isActive = isActive;
+
+//   const promos = await PromoCode.find(filter)
+//     .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
+//     .skip(skip)
+//     .limit(Number(limit))
+//     .populate("createdBy", "name email");
+
+//   const total = await PromoCode.countDocuments(filter);
+
+//   return {
+//     data: promos,
+//     meta: {
+//       page: Number(page),
+//       limit: Number(limit),
+//       total,
+//     },
+//   };
+// };
+
 const getAllPromosAdmin = async (query: any) => {
   const {
     page = 1,
@@ -86,7 +131,11 @@ const getAllPromosAdmin = async (query: any) => {
   const filter: any = { isDeleted: false };
 
   if (search) {
-    filter.code = { $regex: search, $options: "i" };
+    filter.$or = [
+      { code: { $regex: search, $options: "i" } },
+      { "createdBy.name": { $regex: search, $options: "i" } },
+      { "createdBy.email": { $regex: search, $options: "i" } },
+    ];
   }
 
   if (isActive !== undefined) filter.isActive = isActive;
@@ -109,6 +158,7 @@ const getAllPromosAdmin = async (query: any) => {
   };
 };
 
+
 // --------------------------
 // ADMIN — Get single promo with info
 // --------------------------
@@ -119,6 +169,144 @@ const getPromoById = async (id: string) => {
   return promo;
 };
 
+
+
+
+
+
+
+
+
+
+// Service 1: Get promo statistics (no filters)
+const getPromoStatistics = async () => {
+  // Total codes
+  const totalCodes = await PromoCode.countDocuments({ isDeleted: false });
+
+  // Active codes
+  const activeCodes = await PromoCode.countDocuments({
+    isDeleted: false,
+    isActive: true,
+  });
+
+  // Total usage across all promos
+  const usageResult = await PromoCode.aggregate([
+    { $match: { isDeleted: false } },
+    {
+      $group: {
+        _id: null,
+        totalUsage: { $sum: "$usageCount" },
+      },
+    },
+  ]);
+  const totalUsage = usageResult[0]?.totalUsage || 0;
+
+  // Average discount
+  const discountResult = await PromoCode.aggregate([
+    { $match: { isDeleted: false } },
+    {
+      $group: {
+        _id: null,
+        avgDiscount: { $avg: "$discount" },
+      },
+    },
+  ]);
+  const avgDiscount = discountResult[0]?.avgDiscount || 0;
+
+  return {
+    totalCodes,
+    activeCodes,
+    totalUsage,
+    avgDiscount: Math.round(avgDiscount * 100) / 100,
+  };
+};
+
+// Service 2: Get monthly usage chart data with filters
+const getPromoMonthlyChart = async (query: any) => {
+  const {
+    year = new Date().getFullYear(),
+    isActive,
+    code,
+  } = query;
+
+  // Build match filter
+  const matchFilter: any = {
+    isDeleted: false,
+    createdAt: {
+      $gte: new Date(`${year}-01-01`),
+      $lte: new Date(`${year}-12-31T23:59:59.999Z`),
+    },
+  };
+
+  // Apply optional filters
+  if (isActive !== undefined) {
+    matchFilter.isActive = isActive === 'true' || isActive === true;
+  }
+
+  if (code) {
+    matchFilter.code = { $regex: code, $options: "i" };
+  }
+
+  // Aggregate monthly usage
+  const monthlyData = await PromoCode.aggregate([
+    { $match: matchFilter },
+    {
+      $group: {
+        _id: { $month: "$createdAt" },
+        usage: { $sum: "$usageCount" },
+        promoCount: { $sum: 1 },
+      },
+    },
+    { $sort: { "_id": 1 } },
+  ]);
+
+  // Month names for chart
+  const monthNames = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  // Fill all 12 months with data (0 if no data)
+  const chartData = monthNames.map((month, index) => {
+    const monthData = monthlyData.find((m) => m._id === index + 1);
+    return {
+      month,
+      usage: monthData?.usage || 0,
+      promoCount: monthData?.promoCount || 0,
+    };
+  });
+
+  return {
+    year: Number(year),
+    chartData,
+    filters: {
+      isActive: isActive !== undefined ? (isActive === 'true' || isActive === true) : null,
+      code: code || null,
+    },
+  };
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const PromoService = {
   createPromo,
   getMyPromo,
@@ -127,4 +315,6 @@ export const PromoService = {
   deletePromo,
   getAllPromosAdmin,
   getPromoById,
+  getPromoStatistics,
+  getPromoMonthlyChart
 };

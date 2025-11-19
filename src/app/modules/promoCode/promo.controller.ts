@@ -6,17 +6,8 @@ import { catchAsync } from "../../utils/catchAsync";
 // -------------------------- CREATE --------------------------
 export const createPromo = catchAsync(
   async (req: Request, res: Response) => {
-    const userId = req.user?._id;
-    if (!userId) {
-      return sendResponse(res, {
-        statusCode: 401,
-        success: false,
-        message: "Unauthorized",
-        data: null,
-      });
-    }
 
-    const result = await PromoService.createPromo(userId, req.body);
+    const result = await PromoService.createPromo(req.body);
 
     sendResponse(res, {
       statusCode: 201,
@@ -103,13 +94,14 @@ export const deletePromo = catchAsync(async (req: Request, res: Response) => {
 export const getAllPromosAdmin = catchAsync(
   async (req: Request, res: Response) => {
     // optional: you can validate admin role here if not done in middleware
-    const result = await PromoService.getAllPromosAdmin(req.query);
+    const {data , meta} = await PromoService.getAllPromosAdmin(req.query);
 
     sendResponse(res, {
       statusCode: 200,
       success: true,
       message: "Promos fetched (admin)",
-      data: result,
+      data: data,
+      meta:meta
     });
   }
 );
@@ -126,3 +118,17 @@ export const getPromoById = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+
+export const getAnalytics = catchAsync(async (req: Request, res: Response) => {
+  const result = await PromoService.getPromoStatistics();
+const meta = await PromoService.getPromoMonthlyChart(req.query)
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Promo Analytics fetched",
+    data: result,
+    meta
+  });
+});
+
