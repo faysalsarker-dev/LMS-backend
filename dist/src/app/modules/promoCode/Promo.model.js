@@ -19,6 +19,7 @@ const PromoCodeSchema = new mongoose_1.Schema({
         required: true,
         unique: true,
         trim: true,
+        index: true,
     },
     description: {
         type: String,
@@ -45,10 +46,6 @@ const PromoCodeSchema = new mongoose_1.Schema({
     isActive: {
         type: Boolean,
         default: true,
-    },
-    isDeleted: {
-        type: Boolean,
-        default: false,
     },
     // --- Validity ---
     validFrom: {

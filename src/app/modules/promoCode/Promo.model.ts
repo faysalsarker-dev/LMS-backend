@@ -24,6 +24,7 @@ const PromoCodeSchema = new Schema<IPromoCode>(
       required: true,
       unique: true,
       trim: true,
+index: true,
     },
 
     description: {
@@ -56,12 +57,6 @@ const PromoCodeSchema = new Schema<IPromoCode>(
       type: Boolean,
       default: true,
     },
-
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
-
     // --- Validity ---
     validFrom: {
       type: Date,

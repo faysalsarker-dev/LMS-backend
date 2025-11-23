@@ -15,7 +15,6 @@ export interface IPromoCode {
   createdBy: Types.ObjectId;
 
   isActive: boolean;
-  isDeleted?: boolean;
 
   validFrom: Date;
   expirationDate: Date;

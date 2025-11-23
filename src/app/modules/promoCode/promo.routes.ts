@@ -8,6 +8,8 @@ import {
   getPromoById,
   getAllPromosAdmin,
   getAnalytics,
+  redeemPromo,
+  checkPromo,
 } from "./promo.controller";
 import { checkAuth } from "../../middleware/CheckAuth";
 
@@ -29,21 +31,21 @@ router.get(
 );
 
 router.get(
-  "/mine/stats",
+  "/my-promo",
    checkAuth(), 
   getMyPromoUsageStats
 );
 
 
 
-router.patch(
-  "/update/:id",
+router.put(
+  "/:id",
   checkAuth(), 
   updatePromo
 );
 
 router.delete(
-  "/delete/:id",
+  "/:id",
    checkAuth(), 
   deletePromo
 );
@@ -70,5 +72,11 @@ router.get(
   checkAuth(), 
   getAnalytics
 );
+
+
+router.post("/validate", checkAuth(), checkPromo);
+
+// Redeem promo (final apply)
+router.post("/redeem", checkAuth(), redeemPromo);
 
 export default router;

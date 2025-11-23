@@ -3,22 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPromoById = exports.getAllPromosAdmin = exports.deletePromo = exports.updatePromo = exports.getMyPromoUsageStats = exports.getMyPromo = exports.createPromo = void 0;
+exports.redeemPromo = exports.checkPromo = exports.getAnalytics = exports.getPromoById = exports.getAllPromosAdmin = exports.deletePromo = exports.updatePromo = exports.getMyPromoUsageStats = exports.getMyPromo = exports.createPromo = void 0;
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const promo_service_1 = require("./promo.service");
 const catchAsync_1 = require("../../utils/catchAsync");
 // -------------------------- CREATE --------------------------
 exports.createPromo = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    const userId = req.user?._id;
-    if (!userId) {
-        return (0, sendResponse_1.default)(res, {
-            statusCode: 401,
-            success: false,
-            message: "Unauthorized",
-            data: null,
-        });
-    }
-    const result = await promo_service_1.PromoService.createPromo(userId, req.body);
+    const result = await promo_service_1.PromoService.createPromo(req.body);
     (0, sendResponse_1.default)(res, {
         statusCode: 201,
         success: true,
@@ -89,12 +80,13 @@ exports.deletePromo = (0, catchAsync_1.catchAsync)(async (req, res) => {
 // -------------------------- ADMIN: GET ALL (pagination + filter + sort) --------------------------
 exports.getAllPromosAdmin = (0, catchAsync_1.catchAsync)(async (req, res) => {
     // optional: you can validate admin role here if not done in middleware
-    const result = await promo_service_1.PromoService.getAllPromosAdmin(req.query);
+    const { data, meta } = await promo_service_1.PromoService.getAllPromosAdmin(req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
         message: "Promos fetched (admin)",
-        data: result,
+        data: data,
+        meta: meta
     });
 });
 // -------------------------- ADMIN: GET SINGLE --------------------------
@@ -105,6 +97,47 @@ exports.getPromoById = (0, catchAsync_1.catchAsync)(async (req, res) => {
         statusCode: 200,
         success: true,
         message: "Promo fetched",
+        data: result,
+    });
+});
+exports.getAnalytics = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const result = await promo_service_1.PromoService.getPromoStatistics();
+    // const meta = await PromoService.getPromoMonthlyChart(req.query)
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Promo Analytics fetched",
+        data: result,
+        meta: null
+    });
+});
+exports.checkPromo = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const userId = req.user?._id;
+    const { code, orderAmount } = req.body;
+    const result = await promo_service_1.PromoService.validatePromoService({
+        code,
+        userId,
+        orderAmount,
+    });
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Promo Checked successfully",
+        data: result,
+    });
+});
+exports.redeemPromo = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const userId = req.user?._id;
+    const { code, orderAmount } = req.body;
+    const result = await promo_service_1.PromoService.validatePromoService({
+        code,
+        userId,
+        orderAmount,
+    });
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Promo applied successfully",
         data: result,
     });
 });

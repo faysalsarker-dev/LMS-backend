@@ -122,13 +122,59 @@ export const getPromoById = catchAsync(async (req: Request, res: Response) => {
 
 export const getAnalytics = catchAsync(async (req: Request, res: Response) => {
   const result = await PromoService.getPromoStatistics();
-const meta = await PromoService.getPromoMonthlyChart(req.query)
+// const meta = await PromoService.getPromoMonthlyChart(req.query)
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "Promo Analytics fetched",
     data: result,
-    meta
+    meta:null
+  });
+});
+
+
+export const checkPromo = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?._id;
+    const { code, orderAmount } = req.body;
+
+ 
+
+
+   
+  const result = await PromoService.validatePromoService({
+      code,
+      userId,
+      orderAmount,
+    });
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Promo Checked successfully",
+    data: result,
+    
+  });
+});
+
+
+export const redeemPromo = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+
+    const { code, orderAmount } = req.body;
+ 
+
+
+   
+  const result = await PromoService.validatePromoService({
+      code,
+      userId,
+      orderAmount,
+    });
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Promo applied successfully",
+    data: result,
+    
   });
 });
 
