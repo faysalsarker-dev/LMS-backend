@@ -3,6 +3,9 @@ import mongoose, { Types } from "mongoose";
 import Course from "./Course.model";
 import { ICourse, ICourseFilters, IPaginatedResponse } from "./course.interface";
 import { Category } from "../category/Category.model";
+import Progress from "../progress/progress.model";
+import { ApiError } from "../../errors/ApiError";
+import Lesson from "../lesson/Lesson.model";
 
 
 
@@ -146,4 +149,77 @@ export const updateCourse = async (id: string, data: Partial<ICourse>): Promise<
 export const deleteCourse = async (id: string): Promise<ICourse | null> => {
   if (!Types.ObjectId.isValid(id)) return null;
   return Course.findByIdAndDelete(id).exec();
+};
+
+
+
+
+
+
+
+
+
+
+// =========== Additional  functions ===========
+export const getCurriculumFromDB = async (courseId: string, userId: string) => {
+  const [course, progress] = await Promise.all([
+    Course.findById(courseId)
+      .select("title slug milestones")
+      .populate({
+        path: "milestones",
+        match: { status: "active" },
+        options: { sort: { order: 1 } },
+        select: "title order lessons",
+        populate: {
+          path: "lesson",
+          match: { status: "active" },
+          options: { sort: { order: 1 } },
+          select: "title order contentType",
+        },
+      })
+      .lean(),
+    Progress.findOne({ student: userId, course: courseId })
+      .select("completedLessons")
+      .lean(),
+  ]);
+
+  if (!course) {
+    throw new ApiError(404, "Course not found");
+  }
+
+  const completedIds = new Set(
+    progress?.completedLessons?.map((id) => id.toString()) || []
+  );
+
+  // Formatting the curriculum structure
+  const curriculum = course?.milestones?.map((milestone: any) => ({
+    _id: milestone._id,
+    title: milestone.title,
+    order: milestone.order,
+    lessons: milestone.lesson?.map((lesson: any) => ({
+      _id: lesson._id,
+      title: lesson.title,
+      order: lesson.order,
+      contentType: lesson.contentType,
+      isCompleted: completedIds.has(lesson._id.toString()),
+    })),
+  }));
+
+  return {
+    _id: course._id,
+    title: course.title,
+    curriculum,
+  };
+};
+
+export const getLessonContentFromDB = async (lessonId: string) => {
+  const lesson = await Lesson.findOne({ _id: lessonId, status: "active" })
+    .select("+videoUrl +docContent +quiz") 
+    .lean();
+
+  if (!lesson) {
+    throw new ApiError(404, "Lesson not found or inactive");
+  }
+
+  return lesson;
 };

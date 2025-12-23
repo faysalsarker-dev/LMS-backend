@@ -115,3 +115,34 @@ export const deleteCourse = catchAsync(async (req: Request, res: Response) => {
     message: "Course deleted successfully",
   });
 });
+
+
+
+//============ Additional  functions ===========
+
+export const getCourseCurriculum = catchAsync(async (req: Request, res: Response) => {
+  const { courseId } = req.params;
+  const userId = req.user?._id; 
+
+  const result = await CourseService.getCurriculumFromDB(courseId, userId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Curriculum fetched successfully",
+    data: result,
+  });
+});
+
+export const getLessonContent = catchAsync(async (req: Request, res: Response) => {
+  const { lessonId } = req.params;
+
+  const result = await CourseService.getLessonContentFromDB(lessonId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Lesson content fetched successfully",
+    data: result,
+  });
+});

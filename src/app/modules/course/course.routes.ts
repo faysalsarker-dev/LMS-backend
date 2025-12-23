@@ -3,6 +3,7 @@ import * as CourseController from './course.controller';
 import validateRequest from "../../middleware/validateRequest.middleware";
 import { iCourseSchema } from "./course.validation";
 import { multerUpload } from "../../config/multer.config";
+import { checkAuth } from "../../middleware/CheckAuth";
 
 
 
@@ -22,6 +23,19 @@ multerUpload.single("file"),
 
 router.get("/my-course/:id", CourseController.getCourseById);
 router.get("/:slug", CourseController.getCourseBySlug);
+router.get(
+  "/:courseId/curriculum",
+  checkAuth(), 
+  CourseController.getCourseCurriculum
+);
+
+router.get(
+  "/lessons/:lessonId",
+  checkAuth(),
+  CourseController.getLessonContent
+);
+
+
 
 
 
@@ -36,5 +50,8 @@ router.delete(
 
   CourseController.deleteCourse
 );
+
+
+
 
 export default router;
