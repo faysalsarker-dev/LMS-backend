@@ -162,6 +162,7 @@ export const deleteCourse = async (id: string): Promise<ICourse | null> => {
 
 // =========== Additional  functions ===========
 export const getCurriculumFromDB = async (courseId: string, userId: string) => {
+console.log("Fetching curriculum for courseId:", courseId, "and userId:", userId);
   const [course, progress] = await Promise.all([
     Course.findById(courseId)
       .select("title slug milestones")
@@ -172,20 +173,25 @@ export const getCurriculumFromDB = async (courseId: string, userId: string) => {
         select: "title order lessons",
         populate: {
           path: "lesson",
-          match: { status: "active" },
+          match: { status: "published" },
           options: { sort: { order: 1 } },
-          select: "title order contentType",
+          select: "title order type",
         },
       })
       .lean(),
+     
     Progress.findOne({ student: userId, course: courseId })
       .select("completedLessons")
       .lean(),
   ]);
 
+
+   
   if (!course) {
     throw new ApiError(404, "Course not found");
   }
+
+console.log("User ID for progress lookup:",course )
 
   const completedIds = new Set(
     progress?.completedLessons?.map((id) => id.toString()) || []
@@ -213,7 +219,7 @@ export const getCurriculumFromDB = async (courseId: string, userId: string) => {
 };
 
 export const getLessonContentFromDB = async (lessonId: string) => {
-  const lesson = await Lesson.findOne({ _id: lessonId, status: "active" })
+  const lesson = await Lesson.findOne({ _id: lessonId, status: "published" })
     .select("+videoUrl +docContent +quiz") 
     .lean();
 

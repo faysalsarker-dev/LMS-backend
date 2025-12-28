@@ -63,7 +63,7 @@ const questionSchema = new mongoose_1.Schema({
         enum: ["mcq", "true_false", "fill_blank", "short_answer", "audio"],
         required: true,
     },
-    questionText: { type: String, required: true },
+    questionText: { type: mongoose_1.Schema.Types.Mixed, required: true },
     audio: { type: String, default: null },
     options: [
         {
@@ -96,7 +96,7 @@ const lessonSchema = new mongoose_1.Schema({
     audio: { type: audioSchema, default: null },
     questions: { type: [questionSchema], default: [] },
     assignment: { type: assignmentSchema, default: null },
-    status: { type: String, enum: ["active", "inactive"], default: "active" },
+    status: { type: String, enum: ["draft", "archived", "published"], default: "published" },
     viewCount: { type: Number, default: 0 },
 }, { timestamps: true });
 // ---------------------------
@@ -120,8 +120,27 @@ lessonSchema.pre("save", async function (next) {
 lessonSchema.pre("validate", function (next) {
     const l = this;
     // Quiz lessons must have questions
-    if (l.type === "quiz" && (!l.questions || l.questions.length === 0)) {
-        return next(new Error("Quiz lessons must contain at least one question."));
+    // if (l.type === "quiz" && (!l.questions || l.questions.length === 0)) {
+    //   return next(new Error("Quiz lessons must contain at least one question."));
+    // }
+    // ---------------------------
+    // Type-Based Validation
+    // ---------------------------
+    // Parse questions if it's a string (coming from FormData)
+    if (l.type === "quiz") {
+        let questionsArray = l.questions;
+        if (typeof questionsArray === "string") {
+            try {
+                questionsArray = JSON.parse(questionsArray);
+                l.questions = questionsArray;
+            }
+            catch {
+                return next(new Error("Invalid questions format. Must be valid JSON array."));
+            }
+        }
+        if (!Array.isArray(questionsArray) || questionsArray.length === 0) {
+            return next(new Error("Quiz lessons must contain at least one question."));
+        }
     }
     // Video lessons must have video
     if (l.type === "video" && !l.video) {

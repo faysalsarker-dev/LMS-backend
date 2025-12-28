@@ -6,12 +6,19 @@ import { ApiError } from "../../errors/ApiError";
 
 // Create
 export const createLesson = async (payload: Partial<ILesson>) => {
+console.log("Creating lesson with payload:", payload);
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
+
+  if (payload.questions && typeof payload.questions === 'string') {
+    payload.questions = JSON.parse(payload.questions);
+  }
+
+
     const lesson = new Lesson(payload);
-    const result = await lesson.save({ validateBeforeSave: false, session });
+    const result = await lesson.save({ validateBeforeSave: true, session });
 
     if (payload.milestone) {
      await Milestone.findByIdAndUpdate(
@@ -23,7 +30,7 @@ export const createLesson = async (payload: Partial<ILesson>) => {
 
     await session.commitTransaction();
     session.endSession();
-
+console.log(result);
     return result;
   } catch (error) {
     await session.abortTransaction();

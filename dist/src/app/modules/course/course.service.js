@@ -36,10 +36,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteCourse = exports.updateCourse = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
+exports.getLessonContentFromDB = exports.getCurriculumFromDB = exports.deleteCourse = exports.updateCourse = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const Course_model_1 = __importDefault(require("./Course.model"));
 const Category_model_1 = require("../category/Category.model");
+const progress_model_1 = __importDefault(require("../progress/progress.model"));
+const ApiError_1 = require("../../errors/ApiError");
+const Lesson_model_1 = __importDefault(require("../lesson/Lesson.model"));
 const createCourse = async (data) => {
     const session = await mongoose_1.default.startSession();
     session.startTransaction();
@@ -148,3 +151,61 @@ const deleteCourse = async (id) => {
     return Course_model_1.default.findByIdAndDelete(id).exec();
 };
 exports.deleteCourse = deleteCourse;
+// =========== Additional  functions ===========
+const getCurriculumFromDB = async (courseId, userId) => {
+    console.log("Fetching curriculum for courseId:", courseId, "and userId:", userId);
+    const [course, progress] = await Promise.all([
+        Course_model_1.default.findById(courseId)
+            .select("title slug milestones")
+            .populate({
+            path: "milestones",
+            match: { status: "active" },
+            options: { sort: { order: 1 } },
+            select: "title order lessons",
+            populate: {
+                path: "lesson",
+                match: { status: "published" },
+                options: { sort: { order: 1 } },
+                select: "title order type",
+            },
+        })
+            .lean(),
+        progress_model_1.default.findOne({ student: userId, course: courseId })
+            .select("completedLessons")
+            .lean(),
+    ]);
+    if (!course) {
+        throw new ApiError_1.ApiError(404, "Course not found");
+    }
+    console.log("User ID for progress lookup:", course);
+    const completedIds = new Set(progress?.completedLessons?.map((id) => id.toString()) || []);
+    // Formatting the curriculum structure
+    const curriculum = course?.milestones?.map((milestone) => ({
+        _id: milestone._id,
+        title: milestone.title,
+        order: milestone.order,
+        lessons: milestone.lesson?.map((lesson) => ({
+            _id: lesson._id,
+            title: lesson.title,
+            order: lesson.order,
+            contentType: lesson.contentType,
+            isCompleted: completedIds.has(lesson._id.toString()),
+        })),
+    }));
+    return {
+        _id: course._id,
+        title: course.title,
+        curriculum,
+    };
+};
+exports.getCurriculumFromDB = getCurriculumFromDB;
+const getLessonContentFromDB = async (lessonId) => {
+    const lesson = await Lesson_model_1.default.findOne({ _id: lessonId, status: "published" })
+        .select("+videoUrl +docContent +quiz")
+        .lean();
+    if (!lesson) {
+        throw new ApiError_1.ApiError(404, "Lesson not found or inactive");
+    }
+    return lesson;
+};
+exports.getLessonContentFromDB = getLessonContentFromDB;

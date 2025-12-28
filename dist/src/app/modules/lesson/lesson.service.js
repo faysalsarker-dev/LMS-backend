@@ -10,16 +10,21 @@ const Milestone_model_1 = __importDefault(require("../milestone/Milestone.model"
 const ApiError_1 = require("../../errors/ApiError");
 // Create
 const createLesson = async (payload) => {
+    console.log("Creating lesson with payload:", payload);
     const session = await mongoose_1.default.startSession();
     session.startTransaction();
     try {
+        if (payload.questions && typeof payload.questions === 'string') {
+            payload.questions = JSON.parse(payload.questions);
+        }
         const lesson = new Lesson_model_1.default(payload);
-        const result = await lesson.save({ validateBeforeSave: false, session });
+        const result = await lesson.save({ validateBeforeSave: true, session });
         if (payload.milestone) {
             await Milestone_model_1.default.findByIdAndUpdate(payload.milestone, { $push: { lesson: result._id } }, { new: true, session });
         }
         await session.commitTransaction();
         session.endSession();
+        console.log(result);
         return result;
     }
     catch (error) {

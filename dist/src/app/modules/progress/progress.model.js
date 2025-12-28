@@ -1,56 +1,8 @@
 "use strict";
-// import { IProgress } from "./progress.interface";
-// import { Schema, model } from "mongoose";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// const progressSchema = new Schema<IProgress>(
-//   {
-//     student: {
-//       type: Schema.Types.ObjectId,
-//       ref: "User",
-//       required: true,
-//       index: true,
-//     },
-//     course: {
-//       type: Schema.Types.ObjectId,
-//       ref: "Course",
-//       required: true,
-//     },
-//     completedLessons: [
-//       {
-//         type: Schema.Types.ObjectId,
-//         ref: "Lesson",
-//       },
-//     ],
-//     progressPercentage: {
-//       type: Number,
-//       default: 0,
-//       min: 0,
-//       max: 100,
-//     },
-//     isCompleted: {
-//       type: Boolean,
-//       default: false,
-//     },
-//     completedAt: {
-//       type: Date,
-//       default: null,
-//     },
-//   },
-//   { timestamps: true }
-// );
-// progressSchema.index({ student: 1, course: 1 }, { unique: true });
-// progressSchema.methods.addCompletedLesson = async function (lessonId: string) {
-//   if (!this.completedLessons.some((l: any) => l.toString() === lessonId)) {
-//     this.completedLessons.push(lessonId);
-//     await this.save();
-//   }
-//   return this;
-// };
-// const Progress = model<IProgress>("Progress", progressSchema);
-// export default Progress;
 const Agt_model_1 = __importDefault(require("../agt/Agt.model"));
 const mongoose_1 = require("mongoose");
 const progressSchema = new mongoose_1.Schema({

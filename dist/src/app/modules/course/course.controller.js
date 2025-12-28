@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteCourse = exports.updateCourse = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
+exports.getLessonContent = exports.getCourseCurriculum = exports.deleteCourse = exports.updateCourse = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
 const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const CourseService = __importStar(require("./course.service"));
@@ -134,5 +134,27 @@ exports.deleteCourse = (0, catchAsync_1.catchAsync)(async (req, res) => {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Course deleted successfully",
+    });
+});
+//============ Additional  functions ===========
+exports.getCourseCurriculum = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const { courseId } = req.params;
+    const userId = req.user?._id;
+    const result = await CourseService.getCurriculumFromDB(courseId, userId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Curriculum fetched successfully",
+        data: result,
+    });
+});
+exports.getLessonContent = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const { lessonId } = req.params;
+    const result = await CourseService.getLessonContentFromDB(lessonId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Lesson content fetched successfully",
+        data: result,
     });
 });

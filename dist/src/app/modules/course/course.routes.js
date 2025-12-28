@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const CourseController = __importStar(require("./course.controller"));
 const multer_config_1 = require("../../config/multer.config");
+const CheckAuth_1 = require("../../middleware/CheckAuth");
 const router = (0, express_1.Router)();
 // Public routes
 router.get("/", CourseController.getAllCourses);
@@ -43,6 +44,8 @@ router.get("/", CourseController.getAllCourses);
 router.post("/", multer_config_1.multerUpload.single("file"), CourseController.createCourse);
 router.get("/my-course/:id", CourseController.getCourseById);
 router.get("/:slug", CourseController.getCourseBySlug);
+router.get("/:courseId/curriculum", (0, CheckAuth_1.checkAuth)(), CourseController.getCourseCurriculum);
+router.get("/lessons/:lessonId", (0, CheckAuth_1.checkAuth)(), CourseController.getLessonContent);
 router.put("/:id", multer_config_1.multerUpload.single("file"), CourseController.updateCourse);
 router.delete("/:id", CourseController.deleteCourse);
 exports.default = router;

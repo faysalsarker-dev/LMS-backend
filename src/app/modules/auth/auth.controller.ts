@@ -129,7 +129,7 @@ forgetPassword: catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     success: true,
     statusCode: 200,
-    message: "Your profile Retrieved Successfully",
+    message: "Password reset link sent to email",
     data: result
   });
 }),
