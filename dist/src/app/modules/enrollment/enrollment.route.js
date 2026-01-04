@@ -40,10 +40,17 @@ const express_1 = __importDefault(require("express"));
 const EnrollmentController = __importStar(require("./enrollment.controller"));
 const CheckAuth_1 = require("../../middleware/CheckAuth");
 const router = express_1.default.Router();
-router.post("/", (0, CheckAuth_1.checkAuth)(), EnrollmentController.createEnrollment);
-router.get("/", (0, CheckAuth_1.checkAuth)(), EnrollmentController.getAllEnrollments);
-router.get("/:id", (0, CheckAuth_1.checkAuth)(), EnrollmentController.getEnrollmentById);
-router.patch("/:id", (0, CheckAuth_1.checkAuth)(), EnrollmentController.updateEnrollment);
-router.delete("/:id", (0, CheckAuth_1.checkAuth)(), EnrollmentController.deleteEnrollment);
+router.get("/analytics/total-earnings", (0, CheckAuth_1.checkAuth)(), EnrollmentController.getTotalEarningsController);
+router.get("/analytics/monthly-earnings/:year", (0, CheckAuth_1.checkAuth)(), EnrollmentController.getMonthlyEarningsController);
+// Create enrollment (Student enrolls in course)
+router.post("/", (0, CheckAuth_1.checkAuth)(), EnrollmentController.createEnrollmentController);
+// Get all enrollments (Admin - with filters)
+router.get("/", (0, CheckAuth_1.checkAuth)(), EnrollmentController.getAllEnrollmentsController);
+// Get enrollment by ID
+router.get("/:id", (0, CheckAuth_1.checkAuth)(), EnrollmentController.getEnrollmentByIdController);
+// Update enrollment
+router.patch("/:id", (0, CheckAuth_1.checkAuth)(), EnrollmentController.updateEnrollmentController);
+// Delete enrollment
+router.delete("/:id", (0, CheckAuth_1.checkAuth)(), EnrollmentController.deleteEnrollmentController);
 const EnrollmentRoutes = router;
 exports.default = EnrollmentRoutes;

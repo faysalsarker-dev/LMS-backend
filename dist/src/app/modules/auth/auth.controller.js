@@ -93,7 +93,7 @@ exports.AuthController = {
         (0, sendResponse_1.default)(res, {
             success: true,
             statusCode: 200,
-            message: "Your profile Retrieved Successfully",
+            message: "Password reset link sent to email",
             data: result
         });
     }),

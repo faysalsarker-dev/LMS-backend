@@ -5,12 +5,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const Agt_model_1 = __importDefault(require("../agt/Agt.model"));
 const mongoose_1 = require("mongoose");
+const quizResultSchema = new mongoose_1.Schema({
+    lesson: { type: mongoose_1.Schema.Types.ObjectId, ref: "Lesson", required: true },
+    passed: { type: Boolean, required: true },
+    attemptedAt: { type: Date, default: Date.now },
+}, { _id: false });
 const progressSchema = new mongoose_1.Schema({
     student: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     course: { type: mongoose_1.Schema.Types.ObjectId, ref: "Course", required: true },
     completedLessons: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Lesson" }],
     assignmentSubmissions: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "AssignmentSubmission", default: null }],
     avgMarks: { type: Number, default: 0 },
+    quizResults: { type: [quizResultSchema], default: [] },
     progressPercentage: { type: Number, default: 0, min: 0, max: 100 },
     isCompleted: { type: Boolean, default: false },
     completedAt: { type: Date, default: null },

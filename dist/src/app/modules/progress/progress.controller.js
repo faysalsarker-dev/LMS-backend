@@ -38,7 +38,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleGetStudentProgress = exports.handleMarkLessonComplete = void 0;
+exports.handleGetStudentProgress = exports.handleQuizLessonComplete = exports.handleMarkLessonComplete = void 0;
 const progressService = __importStar(require("./progress.service"));
 const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
@@ -49,6 +49,17 @@ exports.handleMarkLessonComplete = (0, catchAsync_1.catchAsync)(async (req, res)
     const studentId = req.user._id;
     const { courseId, lessonId } = req.body;
     const updatedProgress = await progressService.markLessonAsComplete(studentId, courseId, lessonId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Lesson marked as complete successfully",
+        data: updatedProgress,
+    });
+});
+exports.handleQuizLessonComplete = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const studentId = req.user._id;
+    const { courseId, lessonId, passed } = req.body;
+    const updatedProgress = await progressService.markQuizAsComplete(studentId, courseId, lessonId, passed);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,

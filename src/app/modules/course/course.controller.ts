@@ -146,3 +146,16 @@ export const getLessonContent = catchAsync(async (req: Request, res: Response) =
     data: result,
   });
 });
+
+export const getMyEnrolledCourses = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?._id;
+
+  const result = await CourseService.getMyEnrolledCourses(userId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "My enrolled courses fetched successfully",
+    data: result,
+  });
+});

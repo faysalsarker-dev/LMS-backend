@@ -36,13 +36,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLessonContentFromDB = exports.getCurriculumFromDB = exports.deleteCourse = exports.updateCourse = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
+exports.getMyEnrolledCourses = exports.getLessonContentFromDB = exports.getCurriculumFromDB = exports.deleteCourse = exports.updateCourse = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const Course_model_1 = __importDefault(require("./Course.model"));
 const Category_model_1 = require("../category/Category.model");
 const progress_model_1 = __importDefault(require("../progress/progress.model"));
 const ApiError_1 = require("../../errors/ApiError");
 const Lesson_model_1 = __importDefault(require("../lesson/Lesson.model"));
+const User_model_1 = __importDefault(require("../auth/User.model"));
 const createCourse = async (data) => {
     const session = await mongoose_1.default.startSession();
     session.startTransaction();
@@ -171,26 +172,50 @@ const getCurriculumFromDB = async (courseId, userId) => {
         })
             .lean(),
         progress_model_1.default.findOne({ student: userId, course: courseId })
-            .select("completedLessons")
+            .select("completedLessons quizResults")
             .lean(),
     ]);
     if (!course) {
         throw new ApiError_1.ApiError(404, "Course not found");
     }
-    console.log("User ID for progress lookup:", course);
     const completedIds = new Set(progress?.completedLessons?.map((id) => id.toString()) || []);
+    const quizResultsMap = new Map(progress?.quizResults?.map((qr) => [
+        qr.lesson.toString(),
+        qr.passed
+    ]) || []);
     // Formatting the curriculum structure
+    // const curriculum = course?.milestones?.map((milestone: any) => ({
+    //   _id: milestone._id,
+    //   title: milestone.title,
+    //   order: milestone.order,
+    //   lessons: milestone.lesson?.map((lesson: any) => ({
+    //     _id: lesson._id,
+    //     title: lesson.title,
+    //     order: lesson.order,
+    //     contentType: lesson.contentType,
+    //     isCompleted: completedIds.has(lesson._id.toString()),
+    //   })),
+    // }));
     const curriculum = course?.milestones?.map((milestone) => ({
         _id: milestone._id,
         title: milestone.title,
         order: milestone.order,
-        lessons: milestone.lesson?.map((lesson) => ({
-            _id: lesson._id,
-            title: lesson.title,
-            order: lesson.order,
-            contentType: lesson.contentType,
-            isCompleted: completedIds.has(lesson._id.toString()),
-        })),
+        lessons: milestone.lesson?.map((lesson) => {
+            const baseLesson = {
+                _id: lesson._id,
+                title: lesson.title,
+                order: lesson.order,
+                type: lesson.type,
+                isCompleted: completedIds.has(lesson._id.toString()),
+            };
+            if (lesson.type === "quiz") {
+                return {
+                    ...baseLesson,
+                    passed: quizResultsMap.get(lesson._id.toString()) ?? null,
+                };
+            }
+            return baseLesson;
+        }),
     }));
     return {
         _id: course._id,
@@ -209,3 +234,34 @@ const getLessonContentFromDB = async (lessonId) => {
     return lesson;
 };
 exports.getLessonContentFromDB = getLessonContentFromDB;
+const getMyEnrolledCourses = async (userId) => {
+    const user = await User_model_1.default.findById(userId).select("courses").lean();
+    if (!user) {
+        throw new ApiError_1.ApiError(404, "User not found");
+    }
+    if (!user.courses || user.courses.length === 0) {
+        return [];
+    }
+    const [courses, progressList] = await Promise.all([
+        Course_model_1.default.find({ _id: { $in: user.courses } })
+            .select("title slug description thumbnail")
+            .lean(),
+        progress_model_1.default.find({
+            student: userId,
+            course: { $in: user.courses },
+        })
+            .select("course progressPercentage")
+            .lean(),
+    ]);
+    const progressMap = new Map(progressList.map((p) => [p.course.toString(), p.progressPercentage]));
+    const enrolledCourses = courses.map((course) => ({
+        _id: course._id,
+        title: course.title,
+        slug: course.slug,
+        description: course.description,
+        thumbnail: course.thumbnail,
+        progress: progressMap.get(course._id.toString()) || 0,
+    }));
+    return enrolledCourses;
+};
+exports.getMyEnrolledCourses = getMyEnrolledCourses;

@@ -13,7 +13,7 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors({ origin: ["https://lms-web-app-sigma.vercel.app","http://localhost:5173","https://lms.bonikjewellers.com"], credentials: true }));
+app.use(cors({ origin: ["https://lms-web-app-sigma.vercel.app","http://localhost:5173","https://lms.bonikjewellers.com" , "http://192.168.0.127:5173"], credentials: true }));
 
 app.use("/api/v1", router)
 

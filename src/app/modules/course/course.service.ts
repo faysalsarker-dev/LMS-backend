@@ -6,6 +6,7 @@ import { Category } from "../category/Category.model";
 import Progress from "../progress/progress.model";
 import { ApiError } from "../../errors/ApiError";
 import Lesson from "../lesson/Lesson.model";
+import User from "../auth/User.model";
 
 
 
@@ -181,7 +182,7 @@ console.log("Fetching curriculum for courseId:", courseId, "and userId:", userId
       .lean(),
      
     Progress.findOne({ student: userId, course: courseId })
-      .select("completedLessons")
+      .select("completedLessons quizResults")
       .lean(),
   ]);
 
@@ -191,25 +192,59 @@ console.log("Fetching curriculum for courseId:", courseId, "and userId:", userId
     throw new ApiError(404, "Course not found");
   }
 
-console.log("User ID for progress lookup:",course )
 
   const completedIds = new Set(
     progress?.completedLessons?.map((id) => id.toString()) || []
   );
 
+
+    const quizResultsMap = new Map(
+    progress?.quizResults?.map((qr: any) => [
+      qr.lesson.toString(),
+      qr.passed
+    ]) || []
+  );
+
   // Formatting the curriculum structure
+  // const curriculum = course?.milestones?.map((milestone: any) => ({
+  //   _id: milestone._id,
+  //   title: milestone.title,
+  //   order: milestone.order,
+  //   lessons: milestone.lesson?.map((lesson: any) => ({
+  //     _id: lesson._id,
+  //     title: lesson.title,
+  //     order: lesson.order,
+  //     contentType: lesson.contentType,
+  //     isCompleted: completedIds.has(lesson._id.toString()),
+  //   })),
+  // }));
+
+
   const curriculum = course?.milestones?.map((milestone: any) => ({
     _id: milestone._id,
     title: milestone.title,
     order: milestone.order,
-    lessons: milestone.lesson?.map((lesson: any) => ({
-      _id: lesson._id,
-      title: lesson.title,
-      order: lesson.order,
-      contentType: lesson.contentType,
-      isCompleted: completedIds.has(lesson._id.toString()),
-    })),
+    lessons: milestone.lesson?.map((lesson: any) => {
+      const baseLesson = {
+        _id: lesson._id,
+        title: lesson.title,
+        order: lesson.order,
+        type: lesson.type, 
+        isCompleted: completedIds.has(lesson._id.toString()),
+      };
+
+     
+      if (lesson.type === "quiz") {
+        return {
+          ...baseLesson,
+          passed: quizResultsMap.get(lesson._id.toString()) ?? null,
+        };
+      }
+
+      return baseLesson;
+    }),
   }));
+
 
   return {
     _id: course._id,
@@ -228,4 +263,45 @@ export const getLessonContentFromDB = async (lessonId: string) => {
   }
 
   return lesson;
+};
+
+
+
+export const getMyEnrolledCourses = async (userId: string) => {
+  const user = await User.findById(userId).select("courses").lean();
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (!user.courses || user.courses.length === 0) {
+    return [];
+  }
+
+  const [courses, progressList] = await Promise.all([
+    Course.find({ _id: { $in: user.courses } })
+      .select("title slug description thumbnail")
+      .lean(),
+
+    Progress.find({
+      student: userId,
+      course: { $in: user.courses },
+    })
+      .select("course progressPercentage")
+      .lean(),
+  ]);
+
+  const progressMap = new Map(
+    progressList.map((p) => [p.course.toString(), p.progressPercentage])
+  );
+  const enrolledCourses = courses.map((course) => ({
+    _id: course._id,
+    title: course.title,
+    slug: course.slug,
+    description: course.description,
+    thumbnail: course.thumbnail,
+    progress: progressMap.get(course._id.toString()) || 0,
+  }));
+
+  return enrolledCourses;
 };

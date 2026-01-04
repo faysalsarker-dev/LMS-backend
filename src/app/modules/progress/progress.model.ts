@@ -1,8 +1,25 @@
 
 
 import AssignmentSubmission from "../agt/Agt.model";
-import { IProgress } from "./progress.interface";
+import { IProgress, IQuizResult } from "./progress.interface";
 import { Schema, model, Types } from "mongoose";
+
+
+
+
+const quizResultSchema = new Schema<IQuizResult>(
+  {
+    lesson: { type: Schema.Types.ObjectId, ref: "Lesson", required: true },
+    passed: { type: Boolean, required: true },
+    attemptedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+
+
+
+
 
 const progressSchema = new Schema<IProgress>(
   {
@@ -11,6 +28,7 @@ const progressSchema = new Schema<IProgress>(
     completedLessons: [{ type: Schema.Types.ObjectId, ref: "Lesson" }],
     assignmentSubmissions: [{ type: Schema.Types.ObjectId, ref: "AssignmentSubmission" ,default :null}],
     avgMarks: { type: Number, default: 0 },
+    quizResults: { type: [quizResultSchema], default: [] },
     progressPercentage: { type: Number, default: 0, min: 0, max: 100 },
     isCompleted: { type: Boolean, default: false },
     completedAt: { type: Date, default: null },
@@ -63,3 +81,5 @@ progressSchema.methods.updateWithAssignment = async function (submissionId: stri
 
 const Progress = model<IProgress>("Progress", progressSchema);
 export default Progress;
+
+

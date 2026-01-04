@@ -1,57 +1,30 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteEnrollment = exports.updateEnrollment = exports.getEnrollmentById = exports.getAllEnrollments = exports.createEnrollment = void 0;
+exports.getMonthlyEarningsController = exports.getTotalEarningsController = exports.deleteEnrollmentController = exports.updateEnrollmentController = exports.getEnrollmentByIdController = exports.getAllEnrollmentsController = exports.createEnrollmentController = void 0;
 const http_status_1 = __importDefault(require("http-status"));
-const EnrollmentService = __importStar(require("./enrollment.service"));
 const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const ApiError_1 = require("../../errors/ApiError");
-exports.createEnrollment = (0, catchAsync_1.catchAsync)(async (req, res) => {
+const enrollment_service_1 = require("./enrollment.service");
+exports.createEnrollmentController = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const userId = req.user._id;
     if (!userId) {
-        throw new ApiError_1.ApiError(401, 'user not found');
+        throw new ApiError_1.ApiError(401, "User not found");
     }
     const payload = {
-        ...req.body,
-        user: userId
+        user: userId,
+        course: req.body.course,
+        originalPrice: req.body.originalPrice,
+        discountAmount: req.body.discountAmount || 0,
+        finalAmount: req.body.finalAmount,
+        promoCode: req.body.promoCode,
+        paymentMethod: req.body.paymentMethod,
+        transactionId: req.body.transactionId,
     };
-    const result = await EnrollmentService.createEnrollment(payload);
+    const result = await (0, enrollment_service_1.createEnrollment)(payload);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.CREATED,
         success: true,
@@ -59,8 +32,13 @@ exports.createEnrollment = (0, catchAsync_1.catchAsync)(async (req, res) => {
         data: result,
     });
 });
-exports.getAllEnrollments = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    const result = await EnrollmentService.getAllEnrollments();
+exports.getAllEnrollmentsController = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const filters = {
+        paymentStatus: req.query.paymentStatus,
+        startDate: req.query.startDate ? new Date(req.query.startDate) : undefined,
+        endDate: req.query.endDate ? new Date(req.query.endDate) : undefined,
+    };
+    const result = await (0, enrollment_service_1.getAllEnrollments)(filters);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -68,8 +46,8 @@ exports.getAllEnrollments = (0, catchAsync_1.catchAsync)(async (req, res) => {
         data: result,
     });
 });
-exports.getEnrollmentById = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    const result = await EnrollmentService.getEnrollmentById(req.params.id);
+exports.getEnrollmentByIdController = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const result = await (0, enrollment_service_1.getEnrollmentById)(req.params.id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -77,8 +55,8 @@ exports.getEnrollmentById = (0, catchAsync_1.catchAsync)(async (req, res) => {
         data: result,
     });
 });
-exports.updateEnrollment = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    const result = await EnrollmentService.updateEnrollment(req.params.id, req.body);
+exports.updateEnrollmentController = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const result = await (0, enrollment_service_1.updateEnrollment)(req.params.id, req.body);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -86,12 +64,32 @@ exports.updateEnrollment = (0, catchAsync_1.catchAsync)(async (req, res) => {
         data: result,
     });
 });
-exports.deleteEnrollment = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    const result = await EnrollmentService.deleteEnrollment(req.params.id);
+exports.deleteEnrollmentController = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    await (0, enrollment_service_1.deleteEnrollment)(req.params.id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Enrollment deleted successfully",
+        data: null,
+    });
+});
+// Analytics controllers
+exports.getTotalEarningsController = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const result = await (0, enrollment_service_1.getTotalEarnings)();
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Total earnings fetched successfully",
+        data: result,
+    });
+});
+exports.getMonthlyEarningsController = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const year = parseInt(req.params.year) || new Date().getFullYear();
+    const result = await (0, enrollment_service_1.getMonthlyEarnings)(year);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Monthly earnings fetched successfully",
         data: result,
     });
 });
