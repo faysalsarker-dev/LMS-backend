@@ -85,6 +85,7 @@ import sendResponse from "../../utils/sendResponse";
  */
 export const handleMarkLessonComplete = catchAsync(async (req: Request, res: Response) => {
   const studentId = req.user._id;
+
   const { courseId, lessonId } = req.body;
 
 
@@ -100,9 +101,10 @@ export const handleMarkLessonComplete = catchAsync(async (req: Request, res: Res
 
 export const handleQuizLessonComplete = catchAsync(async (req: Request, res: Response) => {
   const studentId = req.user._id;
+  console.log(studentId,'student id');
   const { courseId, lessonId, passed } = req.body;
 
-
+console.log(passed,'passed');
   const updatedProgress = await progressService.markQuizAsComplete(studentId, courseId, lessonId, passed);
 
   sendResponse(res, {

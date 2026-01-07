@@ -163,7 +163,6 @@ export const deleteCourse = async (id: string): Promise<ICourse | null> => {
 
 // =========== Additional  functions ===========
 export const getCurriculumFromDB = async (courseId: string, userId: string) => {
-console.log("Fetching curriculum for courseId:", courseId, "and userId:", userId);
   const [course, progress] = await Promise.all([
     Course.findById(courseId)
       .select("title slug milestones")
@@ -205,20 +204,7 @@ console.log("Fetching curriculum for courseId:", courseId, "and userId:", userId
     ]) || []
   );
 
-  // Formatting the curriculum structure
-  // const curriculum = course?.milestones?.map((milestone: any) => ({
-  //   _id: milestone._id,
-  //   title: milestone.title,
-  //   order: milestone.order,
-  //   lessons: milestone.lesson?.map((lesson: any) => ({
-  //     _id: lesson._id,
-  //     title: lesson.title,
-  //     order: lesson.order,
-  //     contentType: lesson.contentType,
-  //     isCompleted: completedIds.has(lesson._id.toString()),
-  //   })),
-  // }));
-
+ 
 
   const curriculum = course?.milestones?.map((milestone: any) => ({
     _id: milestone._id,

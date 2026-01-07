@@ -9,6 +9,11 @@ router.post(
   checkAuth(),
   progressController.handleMarkLessonComplete,
 );
+router.post(
+  "/complete-quiz",
+  checkAuth(),
+  progressController.handleQuizLessonComplete,
+);
 
 router.get(
   "/:courseId",

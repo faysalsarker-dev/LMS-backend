@@ -21,7 +21,7 @@ multerUpload.single("file"),
 );
 
 
-router.get("/my-enrolled-courses", CourseController.getMyEnrolledCourses);
+router.get("/my-enrolled-courses",checkAuth(),  CourseController.getMyEnrolledCourses);
 router.get("/my-course/:id", CourseController.getCourseById);
 router.get("/:slug", CourseController.getCourseBySlug);
 router.get(

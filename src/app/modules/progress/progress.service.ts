@@ -154,6 +154,7 @@ export const markQuizAsComplete = async (
   await updateProgressPercentage(progress, courseId);
   await progress.save();
 
+  console.log(progress,'progress');
   return progress;
 };
 

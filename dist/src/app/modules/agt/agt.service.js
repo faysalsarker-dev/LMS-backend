@@ -26,6 +26,51 @@ exports.AssignmentSubmissionService = {
             throw new ApiError_1.ApiError(404, "Submission not found");
         return submission;
     },
+    //  async getAllSubmissions(query: any = {}) {
+    //     const page = parseInt(query.page as string) || 1;
+    //     const limit = parseInt(query.limit as string) || 10;
+    //     const skip = (page - 1) * limit;
+    //     const filter: any = {};
+    //     // Filter by status
+    //     if (query.status) filter.status = query.status;
+    //     // Filter by submissionType
+    //     if (query.submissionType) filter.submissionType = query.submissionType;
+    //     // Filter by course
+    //     if (query.course) filter.course = query.course;
+    //     // Filter by lesson
+    //     if (query.lesson) filter.lesson = query.lesson;
+    //     // Search by student name or email
+    //     const search = query.search ? query.search.trim() : null;
+    //     let submissionsQuery = AssignmentSubmission.find(filter)
+    //       .populate("student", "name email")
+    //       .populate("lesson", "title assignment")
+    //       .populate("course", "title")
+    //       .sort({ submittedAt: -1 })
+    //       .skip(skip)
+    //       .limit(limit);
+    //     if (search) {
+    //       submissionsQuery = submissionsQuery.where({
+    //         $or: [
+    //           { "student.name": { $regex: search, $options: "i" } },
+    //           { "student.email": { $regex: search, $options: "i" } },
+    //         ],
+    //       });
+    //     }
+    //     const [submissions, total] = await Promise.all([
+    //       submissionsQuery.exec(),
+    //       AssignmentSubmission.countDocuments(filter),
+    //     ]);
+    // console.log(submissions);
+    //     return {
+    //       submissions,
+    //       pagination: {
+    //         total,
+    //         page,
+    //         limit,
+    //         totalPages: Math.ceil(total / limit),
+    //       },
+    //     };
+    //   },
     async getAllSubmissions(query = {}) {
         const page = parseInt(query.page) || 1;
         const limit = parseInt(query.limit) || 10;
@@ -37,11 +82,11 @@ exports.AssignmentSubmissionService = {
         // Filter by submissionType
         if (query.submissionType)
             filter.submissionType = query.submissionType;
-        // Filter by course
-        if (query.course)
+        // Filter by course (exclude "all")
+        if (query.course && query.course !== 'all')
             filter.course = query.course;
-        // Filter by lesson
-        if (query.lesson)
+        // Filter by lesson (exclude "all")
+        if (query.lesson && query.lesson !== 'all')
             filter.lesson = query.lesson;
         // Search by student name or email
         const search = query.search ? query.search.trim() : null;
@@ -64,6 +109,7 @@ exports.AssignmentSubmissionService = {
             submissionsQuery.exec(),
             Agt_model_1.default.countDocuments(filter),
         ]);
+        console.log(submissions);
         return {
             submissions,
             pagination: {

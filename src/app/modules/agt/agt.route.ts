@@ -26,5 +26,6 @@ router.patch("/review/:id", checkAuth(), AssignmentSubmissionController.adminRev
 
 router.patch("/:id", checkAuth(), multerUpload.single("file"), AssignmentSubmissionController.updateSubmission);
 router.delete("/:id", checkAuth(), AssignmentSubmissionController.deleteSubmission);
+router.get("/lesson-assignment/:id", checkAuth(), AssignmentSubmissionController.getStudentAssignmentByLesson);
 
 export default router;

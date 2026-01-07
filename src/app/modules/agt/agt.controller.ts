@@ -47,6 +47,18 @@ getAllSubmissions: catchAsync(async (req: Request, res: Response) => {
   });
 }),
 
+getStudentAssignmentByLesson: catchAsync(async (req: Request, res: Response) => {
+  const studentId = req.user._id;
+  const result = await AssignmentSubmissionService.getStudentAssignmentByLesson(studentId, req.params.lessonId);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Submissions retrieved successfully",
+    data: result,
+  
+  });
+}),
+
 
 
 
