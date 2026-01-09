@@ -5,16 +5,14 @@ import AssignmentSubmission from "./Agt.model";
 
 export const AssignmentSubmissionService = {
   async createSubmission(data: Partial<IAssignmentSubmission>) {
-
-    console.log(data);
     const existing = await AssignmentSubmission.findOne({
       student: data.student,
       lesson: data.lesson,
     });
-
     if (existing) throw new ApiError(400, "Submission already exists");
-
-    return AssignmentSubmission.create(data);
+    const result = await AssignmentSubmission.create(data);
+    console.log(result,"created submission");
+    return result;
   },
 
   async getSubmissionById(id: string) {
@@ -40,10 +38,10 @@ async getAllSubmissions(query: any = {}) {
     const filter: any = {};
 
     // Filter by status
-    if (query.status) filter.status = query.status;
+    if (query.status && query.status !== 'all') filter.status = query.status;
 
     // Filter by submissionType
-    if (query.submissionType) filter.submissionType = query.submissionType;
+    if (query.submissionType && query.submissionType !== 'all') filter.submissionType = query.submissionType;
 
     // Filter by course (exclude "all")
     if (query.course && query.course !== 'all') filter.course = query.course;
@@ -54,6 +52,9 @@ async getAllSubmissions(query: any = {}) {
     // Search by student name or email
     const search = query.search ? query.search.trim() : null;
 
+
+
+    console.log(filter,'filter');
     let submissionsQuery = AssignmentSubmission.find(filter)
       .populate("student", "name email")
       .populate("lesson", "title assignment")
@@ -76,7 +77,7 @@ async getAllSubmissions(query: any = {}) {
       AssignmentSubmission.countDocuments(filter),
     ]);
     
-    console.log(submissions);
+    console.log(submissions,'dataa');
     
     return {
       submissions,

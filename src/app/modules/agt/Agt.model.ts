@@ -15,8 +15,8 @@ const assignmentSubmissionSchema = new Schema<IAssignmentSubmission>(
       required: true,
     },
 
-    file: {
-      url: { type: String, required: function() { return this.submissionType === "file"; } },
+    fileUrl: {
+      type: String,
     },
 
     textResponse: { type: String, default: null },

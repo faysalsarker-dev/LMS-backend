@@ -7,9 +7,7 @@ export interface IAssignmentSubmission {
 
   submissionType: "link" | "text" | "file";
 
-  file?: {
-    url: string;
-  };
+ fileUrl?: string;
 
   textResponse?: string | null;
 

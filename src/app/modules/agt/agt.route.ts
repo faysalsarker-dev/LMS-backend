@@ -1,7 +1,7 @@
 import express from "express";
 import { checkAuth } from "../../middleware/CheckAuth";
 import { AssignmentSubmissionController } from "./agt.controller";
-import { multerUpload } from "../../config/multer.config";
+import { multerUpload, multerVideoUpload } from "../../config/multer.config";
 
 
 const router = express.Router();
@@ -12,7 +12,7 @@ const router = express.Router();
 router.post(
   "/",
   checkAuth(),
-  multerUpload.single("file"),
+ multerVideoUpload.single("file"),
   AssignmentSubmissionController.createSubmission
 );
 
