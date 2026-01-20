@@ -182,6 +182,14 @@ async updateProfile(userId: string, updates: Partial<IUser>) {
 },
 
 
+async updateUser(userId: string, updates: Partial<IUser>) {
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError(404, "User not found");
+  const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true });
+  return updatedUser;
+},
+
+
 
 
 async getMe(

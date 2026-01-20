@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMyEnrolledCourses = exports.getLessonContent = exports.getCourseCurriculum = exports.deleteCourse = exports.updateCourse = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
+exports.getMyWishlistCourses = exports.getMyEnrolledCourses = exports.getLessonContent = exports.getCourseCurriculum = exports.deleteCourse = exports.updateCourse = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
 const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const CourseService = __importStar(require("./course.service"));
@@ -165,6 +165,16 @@ exports.getMyEnrolledCourses = (0, catchAsync_1.catchAsync)(async (req, res) => 
         statusCode: 200,
         success: true,
         message: "My enrolled courses fetched successfully",
+        data: result,
+    });
+});
+exports.getMyWishlistCourses = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const userId = req.user?._id;
+    const result = await CourseService.getMyWishlistCourses(userId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "My wishlist courses fetched successfully",
         data: result,
     });
 });

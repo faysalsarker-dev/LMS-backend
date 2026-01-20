@@ -9,10 +9,11 @@ const agt_service_1 = require("./agt.service");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const http_status_1 = __importDefault(require("http-status"));
 exports.AssignmentSubmissionController = {
-    // ---------------------------
-    // Create submission (Student)
-    // ---------------------------
     createSubmission: (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const file = req.file;
+        if (file) {
+            req.body.fileUrl = file.path;
+        }
         const data = { ...req.body, student: req.user._id };
         const submission = await agt_service_1.AssignmentSubmissionService.createSubmission(data);
         (0, sendResponse_1.default)(res, {
@@ -45,6 +46,16 @@ exports.AssignmentSubmissionController = {
             message: "Submissions retrieved successfully",
             data: result.submissions,
             meta: result.pagination,
+        });
+    }),
+    getStudentAssignmentByLesson: (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const studentId = req.user._id;
+        const result = await agt_service_1.AssignmentSubmissionService.getStudentAssignmentByLesson(studentId, req.params.id);
+        (0, sendResponse_1.default)(res, {
+            success: true,
+            statusCode: http_status_1.default.OK,
+            message: "Submissions retrieved successfully",
+            data: result,
         });
     }),
     // ---------------------------
@@ -81,7 +92,7 @@ exports.AssignmentSubmissionController = {
             success: true,
             statusCode: http_status_1.default.OK,
             message: "Submission reviewed successfully",
-            data: submission,
+            data: null,
         });
     }),
 };

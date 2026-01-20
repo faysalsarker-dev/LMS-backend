@@ -7,9 +7,11 @@ import { Types } from "mongoose";
 // Create promo (User can create only ONE)
 // --------------------------
 const createPromo = async (data: IPromoCode) => {
+  console.log(data);
   const exist = await PromoCode.findOne({ createdBy: data.createdBy, isDeleted: false });
   if (exist) throw new ApiError(400, "User already contain a promo");
   const promo = await PromoCode.create({ ...data });
+  console.log(promo);
   return promo;
 };
 
@@ -94,14 +96,14 @@ const getAllPromosAdmin = async (query: any) => {
 
   if (isActive !== undefined) filter.isActive = isActive;
 
-  const promos = await PromoCode.find(filter)
+  const promos = await PromoCode.find()
     .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
     .skip(skip)
     .limit(Number(limit))
     .populate("createdBy", "name email");
 
   const total = await PromoCode.countDocuments(filter);
-
+console.log(promos,'promos');
   return {
     data: promos,
     meta: {
@@ -180,81 +182,6 @@ const avgDiscount = discountResult[0]?.avgDiscount ?? 0;
   };
 };
 
-// Service 2: Get monthly usage chart data with filters
-// const getPromoMonthlyChart = async (query: any) => {
-//   const {
-//     year = new Date().getFullYear(),
-//     status, // active | inactive
-//     code,
-//   } = query;
-
-//   // Base filter
-//   const matchFilter: any = {
-//     isDeleted: false,
-//     createdAt: {
-//       $gte: new Date(`${year}-01-01T00:00:00.000Z`),
-//       $lte: new Date(`${year}-12-31T23:59:59.999Z`)
-//     }
-//   };
-
-//   // Filter by status
-//   if (status) {
-//     matchFilter.isActive = status === "active";
-//   }
-
-//   // Filter by code
-//   if (code) {
-//     matchFilter.code = { $regex: code, $options: "i" };
-//   }
-
-//   // MONTHLY CHART PIPELINE
-//   const monthlyData = await PromoCode.aggregate([
-//     { $match: matchFilter },
-
-//     // flatten usedBy array so we can count usage per month
-//     { $unwind: { path: "$usedBy", preserveNullAndEmptyArrays: true } },
-
-//     {
-//       $group: {
-//         _id: {
-//           month: { $month: "$createdAt" }
-//         },
-//         promoCount: { $sum: 1 },
-//         usage: {
-//           $sum: {
-//             $cond: [
-//               { $gte: ["$usedBy.usedAt", new Date(`${year}-01-01`)] },
-//               1,
-//               0
-//             ]
-//           }
-//         }
-//       }
-//     },
-
-//     { $sort: { "_id.month": 1 } }
-//   ]);
-
-//   const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-//   const chartData = monthNames.map((month, idx) => {
-//     const m = monthlyData.find(x => x._id.month === idx + 1);
-//     return {
-//       month,
-//       usage: m?.usage ?? 0,
-//       promoCount: m?.promoCount ?? 0
-//     };
-//   });
-
-//   return {
-//     year: Number(year),
-//     chartData,
-//     filters: {
-//       status: status ?? null,
-//       code: code ?? null
-//     }
-//   };
-// };
 
 
 
@@ -262,103 +189,6 @@ interface MonthlyChartData {
   month: string;
   used: number;
 }
-
-/**
- * Get monthly promo code usage chart data
- * @param query - Contains year, status (active/inactive), and optional code filter
- * @returns Array of 12 months with usage counts
- */
-//  const getPromoMonthlyChart = async (query: any): Promise<MonthlyChartData[]> => {
-//   const {
-//     year = new Date().getFullYear(),
-//     status, // "active" | "inactive"
-//     code,
-//   } = query;
-
-//   // Create date range for the specified year
-//   const start = new Date(year, 0, 1); // January 1st, local time
-//   const end = new Date(year, 11, 31, 23, 59, 59, 999); // December 31st, local time
-
-//   // Build the initial match conditions
-//   const initialMatch: any = {
-//     isDeleted: false,
-//   };
-
-//   // Add status filter if provided
-//   if (status === "active") {
-//     initialMatch.isActive = true;
-//   } else if (status === "inactive") {
-//     initialMatch.isActive = false;
-//   }
-
-//   // Add code filter if provided
-//   if (code) {
-//     initialMatch.code = code;
-//   }
-
-//   const pipeline: any[] = [
-//     // First match: filter promo codes
-//     { $match: initialMatch },
-
-//     // Unwind the usedBy array to process each usage separately
-//     {
-//       $unwind: {
-//         path: "$usedBy",
-//         preserveNullAndEmptyArrays: false,
-//       },
-//     },
-
-//     // Second match: filter by date range
-//     {
-//       $match: {
-//         "usedBy.usedAt": { $gte: start, $lte: end },
-//       },
-//     },
-
-//     // Group by month
-//     {
-//       $group: {
-//         _id: { $month: "$usedBy.usedAt" },
-//         usageCount: { $sum: 1 },
-//       },
-//     },
-
-//     // Sort by month
-//     { $sort: { _id: 1 } },
-//   ];
-
-//   // Execute aggregation
-//   const result = await PromoCode.aggregate(pipeline);
-
-//   console.log(result);
-//   // Month names for chart display
-//   const monthNames = [
-//     "Jan",
-//     "Feb",
-//     "Mar",
-//     "Apr",
-//     "May",
-//     "Jun",
-//     "Jul",
-//     "Aug",
-//     "Sep",
-//     "Oct",
-//     "Nov",
-//     "Dec",
-//   ];
-
-//   // Build complete 12-month array with zero values for months without data
-//   return monthNames.map((monthName, index) => {
-//     const monthNumber = index + 1;
-//     const data = result.find((x) => x._id === monthNumber);
-
-//     console.log(data);
-//     return {
-//       month: monthName,
-//       used: data?.usageCount || 0,
-//     };
-//   });
-// };
 
 
 
@@ -518,7 +348,6 @@ const redeemPromoService = async ({
   orderAmount: number;
 }) => {
   const promo = await PromoCode.findOne({ code: code.trim().toUpperCase() });
-
   if (!promo) throw new ApiError(404, "Promo code not found");
 
   // --- Check active ---

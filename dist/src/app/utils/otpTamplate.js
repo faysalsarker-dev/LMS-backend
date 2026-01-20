@@ -2,9 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = OTPEmail;
 function OTPEmail(otp) {
-    const primaryColor = '#6a45ff';
-    const backgroundColor = '#f7f7f7'; // Equivalent to oklch(0.967 0 0)
-    const textColor = '#252429';
+    const primaryColor = '#35be98';
+    const backgroundColor = '#f7f7f7';
+    const textColor = '#eeedf1';
     const lightTextColor = '#646368';
     return `
   <!DOCTYPE html>

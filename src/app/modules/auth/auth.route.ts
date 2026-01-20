@@ -20,6 +20,7 @@ router.post("/forget-password",AuthController.forgetPassword);
 router.put("/reset-password",AuthController.resetPassword);
 router.put("/update-password",checkAuth(), AuthController.updatePassword);
 router.put("/update",checkAuth(),multerUpload.single("file"),AuthController.updateProfile);
-router.delete("/update",checkAuth(),AuthController.deleteUser);
+router.put("/update-user/:id",checkAuth([UserRoles.ADMIN,UserRoles.SUPER_ADMIN]),AuthController.updateUser);
+router.delete("/delete/:id",checkAuth([UserRoles.SUPER_ADMIN]),AuthController.deleteUser);
 
 export default router;

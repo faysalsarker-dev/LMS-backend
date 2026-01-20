@@ -11,7 +11,7 @@ const router = express_1.default.Router();
 // ---------------------------
 // Student routes
 // ---------------------------
-router.post("/", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerUpload.single("file"), agt_controller_1.AssignmentSubmissionController.createSubmission);
+router.post("/", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerVideoUpload.single("file"), agt_controller_1.AssignmentSubmissionController.createSubmission);
 router.get("/:id", (0, CheckAuth_1.checkAuth)(), agt_controller_1.AssignmentSubmissionController.getSubmission);
 router.get("/", (0, CheckAuth_1.checkAuth)(), agt_controller_1.AssignmentSubmissionController.getAllSubmissions);
 // ---------------------------
@@ -20,4 +20,5 @@ router.get("/", (0, CheckAuth_1.checkAuth)(), agt_controller_1.AssignmentSubmiss
 router.patch("/review/:id", (0, CheckAuth_1.checkAuth)(), agt_controller_1.AssignmentSubmissionController.adminReview);
 router.patch("/:id", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerUpload.single("file"), agt_controller_1.AssignmentSubmissionController.updateSubmission);
 router.delete("/:id", (0, CheckAuth_1.checkAuth)(), agt_controller_1.AssignmentSubmissionController.deleteSubmission);
+router.get("/lesson-assignment/:id", (0, CheckAuth_1.checkAuth)(), agt_controller_1.AssignmentSubmissionController.getStudentAssignmentByLesson);
 exports.default = router;

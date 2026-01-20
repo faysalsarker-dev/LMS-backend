@@ -28,7 +28,8 @@ const CourseSchema: Schema<ICourse> = new Schema(
     totalLectures: { type: Number, default: 0 },
     certificateAvailable: { type: Boolean, default: false },
     resources: [{ type: String }],
-    isFeatured:{type:Boolean,default:false}
+    isFeatured:{type:Boolean,default:false},
+    certificateTemplate: { type: String, default: null },
   
   },
   { timestamps: true }

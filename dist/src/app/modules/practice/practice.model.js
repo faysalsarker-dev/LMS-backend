@@ -38,47 +38,61 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const slugify_1 = __importDefault(require("slugify"));
-const CourseSchema = new mongoose_1.Schema({
-    title: { type: String, required: true, trim: true },
+const PracticeItemSchema = new mongoose_1.Schema({
+    content: { type: String, required: true, trim: true },
+    pronunciation: { type: String, trim: true },
+    audioUrl: { type: String },
+    imageUrl: { type: String },
+    description: { type: String, maxlength: 500 },
+    order: { type: Number, required: true, default: 0 }
+}, { _id: false });
+const PracticeSchema = new mongoose_1.Schema({
+    title: { type: String, required: true, trim: true, maxlength: 200 },
     slug: { type: String, unique: true, lowercase: true, trim: true },
-    description: { type: String, trim: true, maxlength: 4000 },
-    instructor: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: false },
-    milestones: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Milestone", default: [] }],
-    category: { type: mongoose_1.Schema.Types.ObjectId, ref: "Category", required: true },
-    thumbnail: { type: String, default: null },
+    description: { type: String, trim: true, maxlength: 2000 },
+    type: {
+        type: String,
+        enum: ['pronunciation', 'vocabulary', 'grammar', 'exercise', 'quiz', 'other'],
+        default: 'other',
+        required: true
+    },
+    category: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Category' },
+    items: [PracticeItemSchema],
+    difficulty: {
+        type: String,
+        enum: ['Beginner', 'Intermediate', 'Advanced'],
+        default: 'Beginner'
+    },
+    estimatedTime: { type: String, default: '' },
     tags: [{ type: String, trim: true, index: true }],
-    skills: [{ type: String }],
-    level: { type: String, enum: ["Beginner", "Intermediate", "Advanced"], default: "Beginner" },
-    prerequisites: [{ type: String }],
-    requirements: [{ type: String }],
-    price: { type: Number, default: 0 },
-    currency: { type: String, default: "USD" },
-    isDiscounted: { type: Boolean, default: false },
-    discountPrice: { type: Number, default: 0 },
-    status: { type: String, enum: ["draft", "published", "archived"], default: "draft" },
-    averageRating: { type: Number, default: 0 },
-    totalEnrolled: { type: Number, default: 0 },
-    enrolledStudents: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "User" }],
-    duration: { type: String, default: "" },
-    totalLectures: { type: Number, default: 0 },
-    certificateAvailable: { type: Boolean, default: false },
-    resources: [{ type: String }],
-    isFeatured: { type: Boolean, default: false },
-    certificateTemplate: { type: String, default: null },
+    thumbnail: { type: String },
+    isActive: { type: Boolean, default: true },
+    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
+    totalItems: { type: Number, default: 0 },
+    usageCount: { type: Number, default: 0 }
 }, { timestamps: true });
-// 🔹 Pre-save hook to generate unique slug
-CourseSchema.pre("save", async function (next) {
-    if (!this.isModified("title"))
+// Auto-generate slug from title
+PracticeSchema.pre('save', async function (next) {
+    if (!this.isModified('title'))
         return next();
     let baseSlug = (0, slugify_1.default)(this.title, { lower: true, strict: true });
     let slug = baseSlug;
     let count = 1;
-    // Ensure slug is unique
-    while (await mongoose_1.default.models.Course.findOne({ slug })) {
+    while (await mongoose_1.default.models.Practice.findOne({ slug, _id: { $ne: this._id } })) {
         slug = `${baseSlug}-${count++}`;
     }
     this.slug = slug;
     next();
 });
-const Course = mongoose_1.default.model("Course", CourseSchema);
-exports.default = Course;
+// Auto-update totalItems count
+PracticeSchema.pre('save', function (next) {
+    this.totalItems = this.items.length;
+    next();
+});
+// Indexes for performance
+PracticeSchema.index({ slug: 1 });
+PracticeSchema.index({ type: 1, isActive: 1 });
+PracticeSchema.index({ category: 1 });
+PracticeSchema.index({ tags: 1 });
+const Practice = mongoose_1.default.model('Practice', PracticeSchema);
+exports.default = Practice;

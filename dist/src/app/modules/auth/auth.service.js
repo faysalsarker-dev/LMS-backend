@@ -127,6 +127,13 @@ exports.userService = {
         }
         return updatedUser;
     },
+    async updateUser(userId, updates) {
+        const user = await User_model_1.default.findById(userId);
+        if (!user)
+            throw new ApiError_1.ApiError(404, "User not found");
+        const updatedUser = await User_model_1.default.findByIdAndUpdate(userId, updates, { new: true });
+        return updatedUser;
+    },
     async getMe(userId, includeCourses = false, includeWishlist = false) {
         let query = User_model_1.default.findById(userId);
         if (includeCourses) {

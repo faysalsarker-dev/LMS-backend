@@ -1,19 +1,65 @@
+import mongoose from "mongoose";
 import { ApiError } from "../../errors/ApiError";
 import Progress from "../progress/progress.model";
 import { IAssignmentSubmission } from "./agt.interface";
 import AssignmentSubmission from "./Agt.model";
 
 export const AssignmentSubmissionService = {
-  async createSubmission(data: Partial<IAssignmentSubmission>) {
-    const existing = await AssignmentSubmission.findOne({
-      student: data.student,
-      lesson: data.lesson,
+  // async createSubmission(data: Partial<IAssignmentSubmission>) {
+  //   const existing = await AssignmentSubmission.findOne({
+  //     student: data.student,
+  //     lesson: data.lesson,
+  //   });
+  //   if (existing) throw new ApiError(400, "Submission already exists");
+  //   const result = await AssignmentSubmission.create(data);
+  //   console.log(result,"created submission");
+  //   return result;
+  // },
+
+
+async createSubmission(data: Partial<IAssignmentSubmission>) {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    const existing = await AssignmentSubmission.findOne(
+      {
+        student: data.student,
+        lesson: data.lesson,
+      },
+      null,
+      { session }
+    );
+
+    if (existing) {
+      throw new ApiError(400, "Submission already exists");
+    }
+    const [submission] = await AssignmentSubmission.create([data], {
+      session,
     });
-    if (existing) throw new ApiError(400, "Submission already exists");
-    const result = await AssignmentSubmission.create(data);
-    console.log(result,"created submission");
-    return result;
-  },
+    const progress = await Progress.findOne(
+      {
+        student: data.student,
+        course: data.course,
+      },
+      null,
+      { session }
+    );
+    if (!progress) {
+      throw new ApiError(404, "Progress not found for this course");
+    }
+    await progress.updateWithAssignment(submission._id.toString());
+    await session.commitTransaction();
+    session.endSession();
+
+    return submission;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+},
+
+
 
   async getSubmissionById(id: string) {
     const submission = await AssignmentSubmission.findById(id)
@@ -53,8 +99,6 @@ async getAllSubmissions(query: any = {}) {
     const search = query.search ? query.search.trim() : null;
 
 
-
-    console.log(filter,'filter');
     let submissionsQuery = AssignmentSubmission.find(filter)
       .populate("student", "name email")
       .populate("lesson", "title assignment")
@@ -77,7 +121,6 @@ async getAllSubmissions(query: any = {}) {
       AssignmentSubmission.countDocuments(filter),
     ]);
     
-    console.log(submissions,'dataa');
     
     return {
       submissions,
@@ -113,37 +156,130 @@ async getAllSubmissions(query: any = {}) {
   // -----------------------
   // Admin review (give marks/feedback)
   // -----------------------
-  async reviewSubmission(
-    id: string,
-    marks: number,
-    feedback: string,
-    status: "reviewed" | "graded" = "graded"
-  ) {
-    const submission = await AssignmentSubmission.findById(id);
-    if (!submission) throw new ApiError(404, "Submission not found");
+  // async reviewSubmission(
+  //   id: string,
+  //   marks: number,
+  //   feedback: string,
+  //   status: "reviewed" | "graded" = "graded"
+  // ) {
+  //   const submission = await AssignmentSubmission.findById(id);
+  //   if (!submission) throw new ApiError(404, "Submission not found");
+
+  //   submission.result = marks;
+  //   submission.feedback = feedback;
+  //   submission.status = status;
+    
+  //   await submission.save();
+
+
+  //   const progress = await Progress.findOne({
+  //     student: submission.student,
+  //     course: submission.course,
+  //   });
+
+  //   if (progress && status === "graded") {
+  //     await progress.updateWithAssignment(submission._id.toString());
+  //   }
+
+
+
+
+  //   return submission;
+  // },
+
+
+
+
+// async reviewSubmission(
+//   id: string,
+//   marks: number,
+//   feedback: string,
+//   status: "reviewed" | "graded" = "graded"
+// ) {
+//   const session = await mongoose.startSession();
+
+//   try {
+//     session.startTransaction();
+
+//     const submission = await AssignmentSubmission.findById(id).session(session);
+//     if (!submission) {
+//       throw new ApiError(404, "Submission not found");
+//     }
+
+//     submission.result = marks;
+//     submission.feedback = feedback;
+//     submission.status = status;
+
+//     await submission.save({ session });
+
+//     if (status === "graded") {
+//       const progress = await Progress.findOne({
+//         student: submission.student,
+//         course: submission.course,
+//       }).session(session);
+
+//       if (progress) {
+//         await progress.updateWithAssignment(
+//           submission._id.toString(),
+//         );
+//       }
+//     }
+
+//     await session.commitTransaction();
+//     session.endSession();
+
+//     return submission;
+//   } catch (error) {
+//     await session.abortTransaction();
+//     session.endSession();
+//     throw error;
+//   }
+// },
+
+async reviewSubmission(
+  id: string,
+  marks: number,
+  feedback: string,
+  status: "reviewed" | "graded" = "graded"
+) {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const submission = await AssignmentSubmission.findById(id).session(session);
+    if (!submission) {
+      throw new ApiError(404, "Submission not found");
+    }
 
     submission.result = marks;
     submission.feedback = feedback;
     submission.status = status;
-    await submission.save();
 
+    await submission.save({ session });
 
-    const progress = await Progress.findOne({
-      student: submission.student,
-      course: submission.course,
-    });
+    if (status === "graded") {
+      const progress = await Progress.findOne({
+        student: submission.student,
+        course: submission.course,
+      }).session(session);
 
-    if (progress && status === "graded") {
-      await progress.updateWithAssignment(submission._id.toString());
+      if (progress) {
+        await progress.recalculateFromSubmissions();
+      }
     }
 
-
-
+    await session.commitTransaction();
+    session.endSession();
 
     return submission;
-  },
-
-
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+}
+,
 
 async getStudentAssignmentByLesson(
   studentId: string,
@@ -157,8 +293,7 @@ async getStudentAssignmentByLesson(
     .populate('student', 'name email') 
     .populate('lesson', 'title')     
     .lean();                          
-console.log(submission);
-  // Returns null if not submitted
+
   return submission;
 }
 

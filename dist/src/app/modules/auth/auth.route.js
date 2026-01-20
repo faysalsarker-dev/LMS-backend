@@ -19,5 +19,6 @@ router.post("/forget-password", auth_controller_1.AuthController.forgetPassword)
 router.put("/reset-password", auth_controller_1.AuthController.resetPassword);
 router.put("/update-password", (0, CheckAuth_1.checkAuth)(), auth_controller_1.AuthController.updatePassword);
 router.put("/update", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerUpload.single("file"), auth_controller_1.AuthController.updateProfile);
-router.delete("/update", (0, CheckAuth_1.checkAuth)(), auth_controller_1.AuthController.deleteUser);
+router.put("/update-user/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), auth_controller_1.AuthController.updateUser);
+router.delete("/delete/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.SUPER_ADMIN]), auth_controller_1.AuthController.deleteUser);
 exports.default = router;

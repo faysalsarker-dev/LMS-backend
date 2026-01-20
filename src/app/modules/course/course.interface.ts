@@ -29,6 +29,7 @@ export interface ICourse extends Document {
   isFeatured:boolean;
   createdAt: Date;
   updatedAt: Date;
+  certificateTemplate?: string;
 }
 
 

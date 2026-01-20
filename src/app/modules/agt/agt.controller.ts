@@ -97,6 +97,7 @@ getStudentAssignmentByLesson: catchAsync(async (req: Request, res: Response) => 
   // ---------------------------
   adminReview: catchAsync(async (req: Request, res: Response) => {
     const { marks, feedback, status } = req.body;
+
     const submission = await AssignmentSubmissionService.reviewSubmission(
       req.params.id,
       marks,
@@ -107,7 +108,7 @@ getStudentAssignmentByLesson: catchAsync(async (req: Request, res: Response) => 
       success: true,
       statusCode: StatusCodes.OK,
       message: "Submission reviewed successfully",
-      data: submission,
+      data: null,
     });
   }),
 };

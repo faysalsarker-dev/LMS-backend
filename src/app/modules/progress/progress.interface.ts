@@ -17,4 +17,5 @@ quizResults: IQuizResult[];
   isCompleted: boolean;
   completedAt?: Date;
   updateWithAssignment(assignmentId: string): Promise<void>;
+  recalculateFromSubmissions(): Promise<void>;
 }

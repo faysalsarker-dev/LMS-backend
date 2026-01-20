@@ -129,11 +129,13 @@ exports.checkPromo = (0, catchAsync_1.catchAsync)(async (req, res) => {
 exports.redeemPromo = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const userId = req.user?._id;
     const { code, orderAmount } = req.body;
-    const result = await promo_service_1.PromoService.validatePromoService({
+    console.log(code, orderAmount, 'redeem controller');
+    const result = await promo_service_1.PromoService.redeemPromoService({
         code,
         userId,
         orderAmount,
     });
+    console.log(result, 'redeem');
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,

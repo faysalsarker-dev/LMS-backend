@@ -3,6 +3,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import { userService } from "./auth.service";
 import sendResponse from "../../utils/sendResponse";
 import { setCookie } from './../../utils/setCookie';
+import { ApiError } from "../../errors/ApiError";
 
 
 export const AuthController = {
@@ -42,13 +43,13 @@ export const AuthController = {
 
     res.clearCookie("accessToken", {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax"
+        secure: true,
+        sameSite: "none"
     })
     res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax"
+        secure: true,
+        sameSite: "none"
     })
 
 
@@ -178,12 +179,36 @@ getNewAccessToken: catchAsync(async (req: Request, res: Response) => {
   
   updateProfile: catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
+
+
+    console.log(userId)
     const payload ={
       ...req.body,
       profile:req.file?.path
     }
 
+  if (payload.address) {
+    try {
+      payload.address = JSON.parse(payload.address);
+    } catch {
+      throw new ApiError(400, "Invalid address format");
+    }
+  }
     const user = await userService.updateProfile(userId,payload);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Profile updated successfully",
+      data: user,
+    });
+  }),
+
+
+  updateUser: catchAsync(async (req: Request, res: Response) => {
+    const userId = req.params.id;
+    const payload = req.body;
+    const user = await userService.updateUser(userId,payload);
 
     sendResponse(res, {
       statusCode: 200,

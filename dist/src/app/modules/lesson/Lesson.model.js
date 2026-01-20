@@ -119,14 +119,6 @@ lessonSchema.pre("save", async function (next) {
 // ---------------------------
 lessonSchema.pre("validate", function (next) {
     const l = this;
-    // Quiz lessons must have questions
-    // if (l.type === "quiz" && (!l.questions || l.questions.length === 0)) {
-    //   return next(new Error("Quiz lessons must contain at least one question."));
-    // }
-    // ---------------------------
-    // Type-Based Validation
-    // ---------------------------
-    // Parse questions if it's a string (coming from FormData)
     if (l.type === "quiz") {
         let questionsArray = l.questions;
         if (typeof questionsArray === "string") {
@@ -149,6 +141,13 @@ lessonSchema.pre("validate", function (next) {
     // Audio lessons must have audio
     if (l.type === "audio" && !l.audio) {
         return next(new Error("Audio lessons must have an audio resource."));
+    }
+    if (l.type === "assignment") {
+        if (!l.assignment ||
+            typeof l.assignment !== "object" ||
+            !l.assignment.instruction) {
+            return next(new Error("Assignment instruction is required."));
+        }
     }
     // Remove irrelevant fields to avoid anomalies
     if (l.type !== "quiz")

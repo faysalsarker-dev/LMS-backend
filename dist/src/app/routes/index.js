@@ -11,12 +11,12 @@ const lesson_route_1 = __importDefault(require("../modules/lesson/lesson.route")
 const progress_route_1 = __importDefault(require("../modules/progress/progress.route"));
 const enrollment_route_1 = __importDefault(require("../modules/enrollment/enrollment.route"));
 const auth_route_1 = __importDefault(require("../modules/auth/auth.route"));
-const appConfig_routes_1 = __importDefault(require("../modules/appSetting/appConfig.routes"));
 const category_routes_1 = __importDefault(require("../modules/category/category.routes"));
 const overview_routes_1 = __importDefault(require("../modules/overview/overview.routes"));
 const testimonial_routes_1 = __importDefault(require("../modules/testimonial/testimonial.routes"));
 const agt_route_1 = __importDefault(require("../modules/agt/agt.route"));
 const promo_routes_1 = __importDefault(require("../modules/promoCode/promo.routes"));
+const practice_routes_1 = __importDefault(require("../modules/practice/practice.routes"));
 exports.router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -64,8 +64,8 @@ const moduleRoutes = [
         route: overview_routes_1.default
     },
     {
-        path: "/app-config",
-        route: appConfig_routes_1.default
+        path: "/practice",
+        route: practice_routes_1.default
     },
 ];
 moduleRoutes.forEach((route) => {

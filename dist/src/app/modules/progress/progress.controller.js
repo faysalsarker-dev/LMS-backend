@@ -58,7 +58,9 @@ exports.handleMarkLessonComplete = (0, catchAsync_1.catchAsync)(async (req, res)
 });
 exports.handleQuizLessonComplete = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const studentId = req.user._id;
+    console.log(studentId, 'student id');
     const { courseId, lessonId, passed } = req.body;
+    console.log(passed, 'passed');
     const updatedProgress = await progressService.markQuizAsComplete(studentId, courseId, lessonId, passed);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,

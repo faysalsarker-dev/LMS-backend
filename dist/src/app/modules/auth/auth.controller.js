@@ -8,6 +8,7 @@ const catchAsync_1 = require("../../utils/catchAsync");
 const auth_service_1 = require("./auth.service");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const setCookie_1 = require("./../../utils/setCookie");
+const ApiError_1 = require("../../errors/ApiError");
 exports.AuthController = {
     register: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const user = await auth_service_1.userService.register(req.body);
@@ -32,13 +33,13 @@ exports.AuthController = {
     logout: (0, catchAsync_1.catchAsync)(async (_req, res) => {
         res.clearCookie("accessToken", {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax"
+            secure: true,
+            sameSite: "none"
         });
         res.clearCookie("refreshToken", {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax"
+            secure: true,
+            sameSite: "none"
         });
         (0, sendResponse_1.default)(res, {
             statusCode: 200,
@@ -130,11 +131,31 @@ exports.AuthController = {
     }),
     updateProfile: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const userId = req.user._id;
+        console.log(userId);
         const payload = {
             ...req.body,
             profile: req.file?.path
         };
+        if (payload.address) {
+            try {
+                payload.address = JSON.parse(payload.address);
+            }
+            catch {
+                throw new ApiError_1.ApiError(400, "Invalid address format");
+            }
+        }
         const user = await auth_service_1.userService.updateProfile(userId, payload);
+        (0, sendResponse_1.default)(res, {
+            statusCode: 200,
+            success: true,
+            message: "Profile updated successfully",
+            data: user,
+        });
+    }),
+    updateUser: (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const userId = req.params.id;
+        const payload = req.body;
+        const user = await auth_service_1.userService.updateUser(userId, payload);
         (0, sendResponse_1.default)(res, {
             statusCode: 200,
             success: true,

@@ -14,7 +14,7 @@ const progressSchema = new mongoose_1.Schema({
     student: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     course: { type: mongoose_1.Schema.Types.ObjectId, ref: "Course", required: true },
     completedLessons: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Lesson" }],
-    assignmentSubmissions: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "AssignmentSubmission", default: null }],
+    assignmentSubmissions: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "AssignmentSubmission" }],
     avgMarks: { type: Number, default: 0 },
     quizResults: { type: [quizResultSchema], default: [] },
     progressPercentage: { type: Number, default: 0, min: 0, max: 100 },
@@ -56,6 +56,20 @@ progressSchema.methods.updateWithAssignment = async function (submissionId) {
         this.isCompleted = true;
     await this.save();
     return this;
+};
+progressSchema.methods.recalculateFromSubmissions = async function () {
+    const submissions = await Agt_model_1.default.find({
+        _id: { $in: this.assignmentSubmissions },
+        status: "graded",
+    });
+    if (submissions.length) {
+        const total = submissions.reduce((sum, s) => sum + (s.result || 0), 0);
+        this.avgMarks = total / submissions.length;
+    }
+    else {
+        this.avgMarks = 0;
+    }
+    await this.save();
 };
 const Progress = (0, mongoose_1.model)("Progress", progressSchema);
 exports.default = Progress;

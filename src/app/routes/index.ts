@@ -5,12 +5,12 @@ import LessonRoute from "../modules/lesson/lesson.route"
 import UserProgressRoutes from "../modules/progress/progress.route"
 import EnrollmentRoutes from "../modules/enrollment/enrollment.route"
 import UserRoute from "../modules/auth/auth.route"
-import AppConfig from "../modules/appSetting/appConfig.routes"
 import Category from '../modules/category/category.routes'
 import OverView from '../modules/overview/overview.routes'
 import TestimonialRoutes  from "../modules/testimonial/testimonial.routes"
 import Assignment  from "../modules/agt/agt.route"
 import Promo  from "../modules/promoCode/promo.routes"
+import practiceRoutes   from "../modules/practice/practice.routes"
 export const router = Router()
 
 interface ModuleRoute {
@@ -65,9 +65,10 @@ const moduleRoutes: ModuleRoute[] = [
        route: OverView
    },
    {
-       path: "/app-config",
-       route: AppConfig
+       path: "/practice",
+       route: practiceRoutes 
    },
+
 ]
 
 moduleRoutes.forEach((route) => {

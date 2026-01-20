@@ -159,3 +159,16 @@ export const getMyEnrolledCourses = catchAsync(async (req: Request, res: Respons
     data: result,
   });
 });
+
+export const getMyWishlistCourses = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?._id;
+
+  const result = await CourseService.getMyWishlistCourses(userId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "My wishlist courses fetched successfully",
+    data: result,
+  });
+});

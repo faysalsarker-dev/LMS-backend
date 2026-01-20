@@ -4,18 +4,52 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AssignmentSubmissionService = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
 const ApiError_1 = require("../../errors/ApiError");
 const progress_model_1 = __importDefault(require("../progress/progress.model"));
 const Agt_model_1 = __importDefault(require("./Agt.model"));
 exports.AssignmentSubmissionService = {
+    // async createSubmission(data: Partial<IAssignmentSubmission>) {
+    //   const existing = await AssignmentSubmission.findOne({
+    //     student: data.student,
+    //     lesson: data.lesson,
+    //   });
+    //   if (existing) throw new ApiError(400, "Submission already exists");
+    //   const result = await AssignmentSubmission.create(data);
+    //   console.log(result,"created submission");
+    //   return result;
+    // },
     async createSubmission(data) {
-        const existing = await Agt_model_1.default.findOne({
-            student: data.student,
-            lesson: data.lesson,
-        });
-        if (existing)
-            throw new ApiError_1.ApiError(400, "Submission already exists");
-        return Agt_model_1.default.create(data);
+        const session = await mongoose_1.default.startSession();
+        try {
+            session.startTransaction();
+            const existing = await Agt_model_1.default.findOne({
+                student: data.student,
+                lesson: data.lesson,
+            }, null, { session });
+            if (existing) {
+                throw new ApiError_1.ApiError(400, "Submission already exists");
+            }
+            const [submission] = await Agt_model_1.default.create([data], {
+                session,
+            });
+            const progress = await progress_model_1.default.findOne({
+                student: data.student,
+                course: data.course,
+            }, null, { session });
+            if (!progress) {
+                throw new ApiError_1.ApiError(404, "Progress not found for this course");
+            }
+            await progress.updateWithAssignment(submission._id.toString());
+            await session.commitTransaction();
+            session.endSession();
+            return submission;
+        }
+        catch (error) {
+            await session.abortTransaction();
+            session.endSession();
+            throw error;
+        }
     },
     async getSubmissionById(id) {
         const submission = await Agt_model_1.default.findById(id)
@@ -26,61 +60,16 @@ exports.AssignmentSubmissionService = {
             throw new ApiError_1.ApiError(404, "Submission not found");
         return submission;
     },
-    //  async getAllSubmissions(query: any = {}) {
-    //     const page = parseInt(query.page as string) || 1;
-    //     const limit = parseInt(query.limit as string) || 10;
-    //     const skip = (page - 1) * limit;
-    //     const filter: any = {};
-    //     // Filter by status
-    //     if (query.status) filter.status = query.status;
-    //     // Filter by submissionType
-    //     if (query.submissionType) filter.submissionType = query.submissionType;
-    //     // Filter by course
-    //     if (query.course) filter.course = query.course;
-    //     // Filter by lesson
-    //     if (query.lesson) filter.lesson = query.lesson;
-    //     // Search by student name or email
-    //     const search = query.search ? query.search.trim() : null;
-    //     let submissionsQuery = AssignmentSubmission.find(filter)
-    //       .populate("student", "name email")
-    //       .populate("lesson", "title assignment")
-    //       .populate("course", "title")
-    //       .sort({ submittedAt: -1 })
-    //       .skip(skip)
-    //       .limit(limit);
-    //     if (search) {
-    //       submissionsQuery = submissionsQuery.where({
-    //         $or: [
-    //           { "student.name": { $regex: search, $options: "i" } },
-    //           { "student.email": { $regex: search, $options: "i" } },
-    //         ],
-    //       });
-    //     }
-    //     const [submissions, total] = await Promise.all([
-    //       submissionsQuery.exec(),
-    //       AssignmentSubmission.countDocuments(filter),
-    //     ]);
-    // console.log(submissions);
-    //     return {
-    //       submissions,
-    //       pagination: {
-    //         total,
-    //         page,
-    //         limit,
-    //         totalPages: Math.ceil(total / limit),
-    //       },
-    //     };
-    //   },
     async getAllSubmissions(query = {}) {
         const page = parseInt(query.page) || 1;
         const limit = parseInt(query.limit) || 10;
         const skip = (page - 1) * limit;
         const filter = {};
         // Filter by status
-        if (query.status)
+        if (query.status && query.status !== 'all')
             filter.status = query.status;
         // Filter by submissionType
-        if (query.submissionType)
+        if (query.submissionType && query.submissionType !== 'all')
             filter.submissionType = query.submissionType;
         // Filter by course (exclude "all")
         if (query.course && query.course !== 'all')
@@ -109,7 +98,6 @@ exports.AssignmentSubmissionService = {
             submissionsQuery.exec(),
             Agt_model_1.default.countDocuments(filter),
         ]);
-        console.log(submissions);
         return {
             submissions,
             pagination: {
@@ -137,21 +125,104 @@ exports.AssignmentSubmissionService = {
     // -----------------------
     // Admin review (give marks/feedback)
     // -----------------------
+    // async reviewSubmission(
+    //   id: string,
+    //   marks: number,
+    //   feedback: string,
+    //   status: "reviewed" | "graded" = "graded"
+    // ) {
+    //   const submission = await AssignmentSubmission.findById(id);
+    //   if (!submission) throw new ApiError(404, "Submission not found");
+    //   submission.result = marks;
+    //   submission.feedback = feedback;
+    //   submission.status = status;
+    //   await submission.save();
+    //   const progress = await Progress.findOne({
+    //     student: submission.student,
+    //     course: submission.course,
+    //   });
+    //   if (progress && status === "graded") {
+    //     await progress.updateWithAssignment(submission._id.toString());
+    //   }
+    //   return submission;
+    // },
+    // async reviewSubmission(
+    //   id: string,
+    //   marks: number,
+    //   feedback: string,
+    //   status: "reviewed" | "graded" = "graded"
+    // ) {
+    //   const session = await mongoose.startSession();
+    //   try {
+    //     session.startTransaction();
+    //     const submission = await AssignmentSubmission.findById(id).session(session);
+    //     if (!submission) {
+    //       throw new ApiError(404, "Submission not found");
+    //     }
+    //     submission.result = marks;
+    //     submission.feedback = feedback;
+    //     submission.status = status;
+    //     await submission.save({ session });
+    //     if (status === "graded") {
+    //       const progress = await Progress.findOne({
+    //         student: submission.student,
+    //         course: submission.course,
+    //       }).session(session);
+    //       if (progress) {
+    //         await progress.updateWithAssignment(
+    //           submission._id.toString(),
+    //         );
+    //       }
+    //     }
+    //     await session.commitTransaction();
+    //     session.endSession();
+    //     return submission;
+    //   } catch (error) {
+    //     await session.abortTransaction();
+    //     session.endSession();
+    //     throw error;
+    //   }
+    // },
     async reviewSubmission(id, marks, feedback, status = "graded") {
-        const submission = await Agt_model_1.default.findById(id);
-        if (!submission)
-            throw new ApiError_1.ApiError(404, "Submission not found");
-        submission.result = marks;
-        submission.feedback = feedback;
-        submission.status = status;
-        await submission.save();
-        const progress = await progress_model_1.default.findOne({
-            student: submission.student,
-            course: submission.course,
-        });
-        if (progress && status === "graded") {
-            await progress.updateWithAssignment(submission._id.toString());
+        const session = await mongoose_1.default.startSession();
+        try {
+            session.startTransaction();
+            const submission = await Agt_model_1.default.findById(id).session(session);
+            if (!submission) {
+                throw new ApiError_1.ApiError(404, "Submission not found");
+            }
+            submission.result = marks;
+            submission.feedback = feedback;
+            submission.status = status;
+            await submission.save({ session });
+            if (status === "graded") {
+                const progress = await progress_model_1.default.findOne({
+                    student: submission.student,
+                    course: submission.course,
+                }).session(session);
+                if (progress) {
+                    await progress.recalculateFromSubmissions();
+                }
+            }
+            await session.commitTransaction();
+            session.endSession();
+            return submission;
         }
-        return submission;
+        catch (error) {
+            await session.abortTransaction();
+            session.endSession();
+            throw error;
+        }
     },
+    async getStudentAssignmentByLesson(studentId, lessonId) {
+        // Find one submission for this student & lesson
+        const submission = await Agt_model_1.default.findOne({
+            student: studentId,
+            lesson: lessonId,
+        })
+            .populate('student', 'name email')
+            .populate('lesson', 'title')
+            .lean();
+        return submission;
+    }
 };

@@ -172,18 +172,116 @@ export const markQuizAsComplete = async (
 /**
  * Gets a student's progress for a specific course.
  */
+
+// export const getStudentProgress = async (
+//   studentId: string,
+//   courseId: string
+// ): Promise<any> => {
+//   const progress = await Progress.findOne({
+//     student: new Types.ObjectId(studentId),
+//     course: new Types.ObjectId(courseId),
+//   })
+//     .populate("completedLessons", "_id title")
+//     .populate({
+//       path: "assignmentSubmissions",
+//       select: "lesson result feedback status submittedAt",
+//       populate: { path: "lesson", select: "title" }
+//     });
+
+//   if (!progress) {
+//     throw new ApiError(404, "Progress not found for this student and course");
+//   }
+
+//   // 2. Calculate Quiz Statistics
+//   const totalQuizzes = progress.quizResults.length;
+//   const passedCount = progress.quizResults.filter(q => q.passed === true).length;
+//   const failedCount = totalQuizzes - passedCount;
+
+//   // 3. Transform data for the Student Overview
+//   return {
+//     overview: {
+//       progressPercentage: progress.progressPercentage,
+//       isCompleted: progress.isCompleted,
+//       completedAt: progress.completedAt,
+//       totalLessonsCompleted: progress.completedLessons.length,
+//     },
+//     quizStats: {
+//       totalAttempted: totalQuizzes,
+//       passed: passedCount,
+//       failed: failedCount,
+//     },
+//     assignmentStats: {
+//       avgMarks: progress.avgMarks,
+//       submissions: progress.assignmentSubmissions.map((sub: any) => ({
+//         lessonName: sub.lesson?.title || "Assignment",
+//         status: sub.status,
+//         marks: sub.result,
+//         feedback: sub.feedback,
+//         submittedAt: sub.submittedAt
+//       }))
+//     }
+//   };
+// };
+
+
 export const getStudentProgress = async (
   studentId: string,
-  courseId: string,
-): Promise<IProgress | null> => {
+  courseId: string
+): Promise<any> => {
+  // Fetch progress with populated data
   const progress = await Progress.findOne({
-    student: studentId,
-    course: courseId,
-  }).populate("completedLessons", "_id");
+    student: new Types.ObjectId(studentId),
+    course: new Types.ObjectId(courseId),
+  })
+    .populate("completedLessons", "_id title")
+    .populate({
+      path: "assignmentSubmissions",
+      select: "lesson result feedback status submittedAt",
+      populate: { 
+        path: "lesson", 
+        select: "title assignment" // Add assignment field to get maxMarks
+      }
+    });
 
   if (!progress) {
-    throw new ApiError(404,"Progress not found for this student and course");
+    throw new ApiError(404, "Progress not found for this student and course");
   }
 
-  return progress;
+  const course = await Course.findById(courseId).select("totalLectures").lean();
+  
+  if (!course) {
+    throw new ApiError(404, "Course not found");
+  }
+
+  // Calculate Quiz Statistics
+  const totalQuizzes = progress.quizResults.length;
+  const passedCount = progress.quizResults.filter(q => q.passed === true).length;
+  const failedCount = totalQuizzes - passedCount;
+
+  // Transform data for the Student Overview
+  return {
+    overview: {
+      progressPercentage: progress.progressPercentage,
+      isCompleted: progress.isCompleted,
+      completedAt: progress.completedAt,
+      totalLessonsCompleted: progress.completedLessons.length,
+      totalLessons: course.totalLectures,
+    },
+    quizStats: {
+      totalAttempted: totalQuizzes,
+      passed: passedCount,
+      failed: failedCount,
+    },
+    assignmentStats: {
+      avgMarks: progress.avgMarks,
+      submissions: progress.assignmentSubmissions.map((sub: any) => ({
+        lessonName: sub.lesson?.title || "Assignment",
+        status: sub.status,
+        marks: sub.result,
+        maxMarks: sub.lesson?.assignment?.maxMarks || null, 
+        feedback: sub.feedback,
+        date: sub.submittedAt
+      }))
+    }
+  };
 };

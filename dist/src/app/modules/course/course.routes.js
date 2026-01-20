@@ -42,7 +42,8 @@ const router = (0, express_1.Router)();
 router.get("/", CourseController.getAllCourses);
 // Protected routes
 router.post("/", multer_config_1.multerUpload.single("file"), CourseController.createCourse);
-router.get("/my-enrolled-courses", CourseController.getMyEnrolledCourses);
+router.get("/my-enrolled-courses", (0, CheckAuth_1.checkAuth)(), CourseController.getMyEnrolledCourses);
+router.get("/my-wishlist-courses", (0, CheckAuth_1.checkAuth)(), CourseController.getMyWishlistCourses);
 router.get("/my-course/:id", CourseController.getCourseById);
 router.get("/:slug", CourseController.getCourseBySlug);
 router.get("/:courseId/curriculum", (0, CheckAuth_1.checkAuth)(), CourseController.getCourseCurriculum);

@@ -291,3 +291,16 @@ export const getMyEnrolledCourses = async (userId: string) => {
 
   return enrolledCourses;
 };
+
+export const getMyWishlistCourses = async (userId: string) => {
+  const user = await User.findById(userId)
+    .select('wishlist')
+    .populate('wishlist')
+    .lean();
+
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  return user.wishlist;
+};

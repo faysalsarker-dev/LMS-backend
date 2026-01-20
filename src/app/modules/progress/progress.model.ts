@@ -26,7 +26,7 @@ const progressSchema = new Schema<IProgress>(
     student: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
     completedLessons: [{ type: Schema.Types.ObjectId, ref: "Lesson" }],
-    assignmentSubmissions: [{ type: Schema.Types.ObjectId, ref: "AssignmentSubmission" ,default :null}],
+    assignmentSubmissions: [{ type: Schema.Types.ObjectId, ref: "AssignmentSubmission"}],
     avgMarks: { type: Number, default: 0 },
     quizResults: { type: [quizResultSchema], default: [] },
     progressPercentage: { type: Number, default: 0, min: 0, max: 100 },
@@ -78,6 +78,28 @@ progressSchema.methods.updateWithAssignment = async function (submissionId: stri
   await this.save();
   return this;
 };
+
+progressSchema.methods.recalculateFromSubmissions = async function () {
+  const submissions = await AssignmentSubmission.find({
+    _id: { $in: this.assignmentSubmissions },
+    status: "graded",
+  });
+
+  if (submissions.length) {
+    const total = submissions.reduce(
+      (sum, s) => sum + (s.result || 0),
+      0
+    );
+    this.avgMarks = total / submissions.length;
+  } else {
+    this.avgMarks = 0;
+  }
+
+  await this.save();
+};
+
+
+
 
 const Progress = model<IProgress>("Progress", progressSchema);
 export default Progress;

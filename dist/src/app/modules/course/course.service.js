@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMyEnrolledCourses = exports.getLessonContentFromDB = exports.getCurriculumFromDB = exports.deleteCourse = exports.updateCourse = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
+exports.getMyWishlistCourses = exports.getMyEnrolledCourses = exports.getLessonContentFromDB = exports.getCurriculumFromDB = exports.deleteCourse = exports.updateCourse = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const Course_model_1 = __importDefault(require("./Course.model"));
 const Category_model_1 = require("../category/Category.model");
@@ -154,7 +154,6 @@ const deleteCourse = async (id) => {
 exports.deleteCourse = deleteCourse;
 // =========== Additional  functions ===========
 const getCurriculumFromDB = async (courseId, userId) => {
-    console.log("Fetching curriculum for courseId:", courseId, "and userId:", userId);
     const [course, progress] = await Promise.all([
         Course_model_1.default.findById(courseId)
             .select("title slug milestones")
@@ -183,19 +182,6 @@ const getCurriculumFromDB = async (courseId, userId) => {
         qr.lesson.toString(),
         qr.passed
     ]) || []);
-    // Formatting the curriculum structure
-    // const curriculum = course?.milestones?.map((milestone: any) => ({
-    //   _id: milestone._id,
-    //   title: milestone.title,
-    //   order: milestone.order,
-    //   lessons: milestone.lesson?.map((lesson: any) => ({
-    //     _id: lesson._id,
-    //     title: lesson.title,
-    //     order: lesson.order,
-    //     contentType: lesson.contentType,
-    //     isCompleted: completedIds.has(lesson._id.toString()),
-    //   })),
-    // }));
     const curriculum = course?.milestones?.map((milestone) => ({
         _id: milestone._id,
         title: milestone.title,
@@ -265,3 +251,14 @@ const getMyEnrolledCourses = async (userId) => {
     return enrolledCourses;
 };
 exports.getMyEnrolledCourses = getMyEnrolledCourses;
+const getMyWishlistCourses = async (userId) => {
+    const user = await User_model_1.default.findById(userId)
+        .select('wishlist')
+        .populate('wishlist')
+        .lean();
+    if (!user) {
+        throw new ApiError_1.ApiError(404, 'User not found');
+    }
+    return user.wishlist;
+};
+exports.getMyWishlistCourses = getMyWishlistCourses;
