@@ -1,10 +1,10 @@
 import { Document, Types } from 'mongoose';
 
 export interface IPracticeItem {
-  content: string; // e.g., "A", "B", "Apple"
-  pronunciation?: string; // Phonetic text: /eɪ/, /biː/
-  audioUrl?: string; // URL to audio file
-  imageUrl?: string; // Optional image
+  content: string; 
+  pronunciation?: string; 
+  audioUrl?: string;
+  imageUrl?: string;
   description?: string;
   order: number;
 }
@@ -14,17 +14,13 @@ export interface IPractice extends Document {
   title: string; // e.g., "English Alphabet Pronunciation"
   slug: string;
   description?: string;
-  type: 'pronunciation' | 'vocabulary' | 'grammar' | 'exercise' | 'quiz' | 'other';
-  category?: Types.ObjectId; // Reference to Category
-  items: IPracticeItem[]; // Array of practice items
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
-  estimatedTime?: string; // e.g., "15 minutes"
-  tags?: string[];
+  
+  course: Types.ObjectId; 
+  items: IPracticeItem[]; 
   thumbnail?: string;
   isActive: boolean;
-  createdBy?: Types.ObjectId; // Admin/Instructor who created it
   totalItems: number;
-  usageCount: number; // Track how many courses use this
+  usageCount: number; 
   createdAt: Date;
   updatedAt: Date;
 }

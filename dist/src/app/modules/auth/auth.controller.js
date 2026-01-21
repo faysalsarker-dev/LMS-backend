@@ -116,7 +116,7 @@ exports.AuthController = {
             statusCode: 200,
             success: true,
             message: "Token refreshed successfully",
-            data: { accessToken },
+            data: null,
         });
     }),
     updatePassword: (0, catchAsync_1.catchAsync)(async (req, res) => {

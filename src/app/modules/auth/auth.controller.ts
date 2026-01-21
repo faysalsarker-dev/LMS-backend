@@ -159,7 +159,7 @@ getNewAccessToken: catchAsync(async (req: Request, res: Response) => {
       statusCode: 200,
       success: true,
       message: "Token refreshed successfully",
-      data: { accessToken },
+      data: null,
     });
   }),
 

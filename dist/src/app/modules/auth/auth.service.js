@@ -69,6 +69,7 @@ exports.userService = {
     },
     async login(email, password, remember) {
         const user = await User_model_1.default.findOne({ email }).select("+password");
+        console.log(user, 'user');
         if (!user)
             throw new ApiError_1.ApiError(401, "Invalid credentials");
         if (user && !user.isVerified)
@@ -76,8 +77,8 @@ exports.userService = {
         const isMatch = await user.comparePassword(password);
         if (!isMatch)
             throw new ApiError_1.ApiError(401, "Invalid credentials");
-        const refreshToken = (0, jwt_1.generateToken)({ id: user._id, ...user }, config_1.default.jwt.refresh_expires_in);
-        const accessToken = (0, jwt_1.generateToken)({ id: user._id, ...user }, config_1.default.jwt.access_expires_in);
+        const refreshToken = (0, jwt_1.generateToken)({ id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email }, config_1.default.jwt.refresh_expires_in);
+        const accessToken = (0, jwt_1.generateToken)({ id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email }, config_1.default.jwt.access_expires_in);
         await user.save();
         return { user, accessToken, refreshToken };
     },
@@ -86,11 +87,11 @@ exports.userService = {
     },
     async refreshToken(token) {
         const payload = (0, jwt_1.verifyToken)(token);
-        const user = await User_model_1.default.findById(payload?._doc?._id);
+        const user = await User_model_1.default.findById(payload?._id);
         if (!user) {
             throw new ApiError_1.ApiError(401, "Invalid refresh token");
         }
-        const accessToken = (0, jwt_1.generateToken)({ id: user._id, ...user }, config_1.default.jwt.access_expires_in);
+        const accessToken = (0, jwt_1.generateToken)({ id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email }, config_1.default.jwt.access_expires_in);
         return { accessToken };
     },
     /** 🔹 Update user password */

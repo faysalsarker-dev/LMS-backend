@@ -15,9 +15,7 @@ class PracticeService {
     const {
       page = 1,
       limit = 10,
-      type,
-      difficulty,
-      category,
+      course,
       isActive,
       search,
       sortBy = 'createdAt',
@@ -26,9 +24,9 @@ class PracticeService {
 
     const filter: any = {};
 
-    if (type) filter.type = type;
-    if (difficulty) filter.difficulty = difficulty;
-    if (category) filter.category = new Types.ObjectId(category);
+    
+ 
+    if (course && course !== 'all') filter.course = new Types.ObjectId(course);
     if (isActive !== undefined) filter.isActive = isActive === 'true';
     if (search) {
       filter.$or = [
@@ -42,8 +40,7 @@ class PracticeService {
     const sortOptions: any = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
     const practices = await Practice.find(filter)
-      .populate('category', 'name')
-      .populate('createdBy', 'name email')
+      .populate('course', 'name')
       .sort(sortOptions)
       .skip(skip)
       .limit(Number(limit))
@@ -69,8 +66,7 @@ class PracticeService {
     const practice = await Practice.findOne(
       isObjectId ? { _id: identifier } : { slug: identifier }
     )
-      .populate('category', 'name')
-      .populate('createdBy', 'name email');
+      .populate('course', 'name')
 
     if (!practice) {
       throw new ApiError(404, 'Practice not found');
@@ -86,8 +82,7 @@ class PracticeService {
       { $set: data },
       { new: true, runValidators: true }
     )
-      .populate('category', 'name')
-      .populate('createdBy', 'name email');
+      .populate('course', 'name')
 
     if (!practice) {
       throw new ApiError(404, 'Practice not found');

@@ -50,24 +50,10 @@ const PracticeSchema = new mongoose_1.Schema({
     title: { type: String, required: true, trim: true, maxlength: 200 },
     slug: { type: String, unique: true, lowercase: true, trim: true },
     description: { type: String, trim: true, maxlength: 2000 },
-    type: {
-        type: String,
-        enum: ['pronunciation', 'vocabulary', 'grammar', 'exercise', 'quiz', 'other'],
-        default: 'other',
-        required: true
-    },
-    category: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Category' },
+    course: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Course' },
     items: [PracticeItemSchema],
-    difficulty: {
-        type: String,
-        enum: ['Beginner', 'Intermediate', 'Advanced'],
-        default: 'Beginner'
-    },
-    estimatedTime: { type: String, default: '' },
-    tags: [{ type: String, trim: true, index: true }],
     thumbnail: { type: String },
     isActive: { type: Boolean, default: true },
-    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
     totalItems: { type: Number, default: 0 },
     usageCount: { type: Number, default: 0 }
 }, { timestamps: true });
@@ -91,8 +77,7 @@ PracticeSchema.pre('save', function (next) {
 });
 // Indexes for performance
 PracticeSchema.index({ slug: 1 });
-PracticeSchema.index({ type: 1, isActive: 1 });
-PracticeSchema.index({ category: 1 });
-PracticeSchema.index({ tags: 1 });
+PracticeSchema.index({ isActive: 1 });
+PracticeSchema.index({ course: 1 });
 const Practice = mongoose_1.default.model('Practice', PracticeSchema);
 exports.default = Practice;

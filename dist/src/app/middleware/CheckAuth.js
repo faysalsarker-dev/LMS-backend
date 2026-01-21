@@ -1,5 +1,4 @@
 "use strict";
-// import { NextFunction, Request, Response } from "express";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkAuth = void 0;
 const ApiError_1 = require("../errors/ApiError");
@@ -26,10 +25,10 @@ const checkAuth = (authRoles) => async (req, res, next) => {
         if (!verifiedToken) {
             throw new ApiError_1.ApiError(401, "Invalid token");
         }
-        if (authRoles && !authRoles.includes(verifiedToken._doc.role)) {
+        if (authRoles && !authRoles.includes(verifiedToken.role)) {
             throw new ApiError_1.ApiError(403, "You are not authorized to access this resource");
         }
-        req.user = verifiedToken._doc;
+        req.user = verifiedToken;
         next();
     }
     catch (error) {

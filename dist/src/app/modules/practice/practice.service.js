@@ -14,14 +14,10 @@ class PracticeService {
     }
     // Get all practices with filters and pagination
     async getAllPractices(query) {
-        const { page = 1, limit = 10, type, difficulty, category, isActive, search, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+        const { page = 1, limit = 10, course, isActive, search, sortBy = 'createdAt', sortOrder = 'desc' } = query;
         const filter = {};
-        if (type)
-            filter.type = type;
-        if (difficulty)
-            filter.difficulty = difficulty;
-        if (category)
-            filter.category = new mongoose_1.Types.ObjectId(category);
+        if (course && course !== 'all')
+            filter.course = new mongoose_1.Types.ObjectId(course);
         if (isActive !== undefined)
             filter.isActive = isActive === 'true';
         if (search) {
@@ -34,8 +30,7 @@ class PracticeService {
         const skip = (Number(page) - 1) * Number(limit);
         const sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
         const practices = await practice_model_1.default.find(filter)
-            .populate('category', 'name')
-            .populate('createdBy', 'name email')
+            .populate('course', 'name')
             .sort(sortOptions)
             .skip(skip)
             .limit(Number(limit))
@@ -55,8 +50,7 @@ class PracticeService {
     async getPracticeById(identifier) {
         const isObjectId = mongoose_1.Types.ObjectId.isValid(identifier);
         const practice = await practice_model_1.default.findOne(isObjectId ? { _id: identifier } : { slug: identifier })
-            .populate('category', 'name')
-            .populate('createdBy', 'name email');
+            .populate('course', 'name');
         if (!practice) {
             throw new ApiError_1.ApiError(404, 'Practice not found');
         }
@@ -65,8 +59,7 @@ class PracticeService {
     // Update practice
     async updatePractice(id, data) {
         const practice = await practice_model_1.default.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true })
-            .populate('category', 'name')
-            .populate('createdBy', 'name email');
+            .populate('course', 'name');
         if (!practice) {
             throw new ApiError_1.ApiError(404, 'Practice not found');
         }
