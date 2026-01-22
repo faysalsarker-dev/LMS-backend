@@ -65,7 +65,6 @@ export const getAllLessons = async (params: GetAllLessonsParams) => {
     limit = 10,
     type
   } = params;
-
   // Build filter object
   const filter: any = {};
 
@@ -84,7 +83,7 @@ export const getAllLessons = async (params: GetAllLessonsParams) => {
   }
 
  if(type && type !== 'all'){
-  filter.contentType = type
+  filter.type = type
  }
 
   if (status && status !== 'all') {

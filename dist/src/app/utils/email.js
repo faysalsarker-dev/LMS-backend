@@ -22,7 +22,7 @@ const sendOtpEmail = async (to, otp) => {
     const mailOptions = {
         from: `"EduPlatform" <${config_1.default.user}>`,
         to,
-        subject: "Your OTP Code - EduPlatform",
+        subject: "Your OTP Code - Humanistic Language Center",
         html: (0, otpTamplate_1.default)(otp)
     };
     await transporter.sendMail(mailOptions);
@@ -32,7 +32,7 @@ const sendLinkEmail = async (to, link) => {
     const mailOptions = {
         from: `"Reset Password" <${config_1.default.user}>`,
         to,
-        subject: "Your OTP Code - EduPlatform",
+        subject: "Your OTP Code - Humanistic Language Center",
         html: (0, ResetPasswordEmail_1.default)(link)
     };
     await transporter.sendMail(mailOptions);

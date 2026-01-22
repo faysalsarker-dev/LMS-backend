@@ -37,7 +37,13 @@ export const createCourse = async (data: Partial<ICourse>): Promise<ICourse> => 
 
 
 export const getCourseBySlug = async (slug: string): Promise<ICourse | null> => {
-  return Course.findOne({ slug }).populate("category").populate("milestones");
+ return Course.findOne({ slug }).populate("category","title ").populate({
+  path: "milestones",
+  match: { status: "active" },  
+  options: { sort: { order: 1 } },
+  select: "title order status",
+});
+
 };
 
 
@@ -88,6 +94,8 @@ export const getAllCourses = async (
     category,
   } = filters;
 
+
+
   const query: Record<string, any> = {};
 
   // 🎯 Filtering
@@ -111,13 +119,14 @@ export const getAllCourses = async (
     sortOptions.createdAt = -1;
   }
 
+
+
   // 📄 Pagination
   const skip = (Number(page) - 1) * Number(limit);
 
   // 🧵 Parallel queries
   const [data, total] = await Promise.all([
     Course.find(query)
-      .populate("instructor", "name email")
       .populate("milestones")
       .populate("category")
       .sort(sortOptions)

@@ -3,26 +3,47 @@ import * as LessonService from "./lesson.service";
 import { catchAsync } from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import  httpStatus  from 'http-status';
+import { ApiError } from "../../errors/ApiError";
 
 
-// Create
-export const createLessonController = catchAsync(async (req: Request, res: Response) => {
-  
-  if (req.body.videoSourceType === "upload" && req.file?.path) {
-    req.body.videoUrl = req.file.path;
+
+export const createLessonController = catchAsync(
+  async (req: Request, res: Response) => {
+
+    if (req.body.type === "video") {
+      const finalVideoUrl = req.file?.path || req.body.videoUrl;
+
+      if (!finalVideoUrl) {
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "Video file or video URL is required"
+        );
+      }
+
+      req.body.video = {
+        url: finalVideoUrl,
+        duration: req.body.videoDuration
+          ? Number(req.body.videoDuration)
+          : null,
+      };
+
+      // cleanup temp fields
+      delete req.body.videoUrl;
+      delete req.body.videoDuration;
+    }
+
+    const lesson = await LessonService.createLesson(req.body);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Lesson Created successfully",
+      data: lesson,
+    });
   }
+);
 
 
-   const lesson = await LessonService.createLesson(req.body);
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Lesson Created successfully",
-    data: lesson,
-  });
-
-});
 
 // Get All
 export const getAllLessonsController = catchAsync(async (req: Request, res: Response) => {

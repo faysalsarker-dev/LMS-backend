@@ -20,7 +20,7 @@ export const sendOtpEmail = async (to: string, otp: string): Promise<void> => {
   const mailOptions = {
     from: `"EduPlatform" <${config.user}>`,
     to,
-    subject: "Your OTP Code - EduPlatform",
+    subject: "Your OTP Code - Humanistic Language Center",
     html:OTPEmail(otp)
   };
 
@@ -32,7 +32,7 @@ export const sendLinkEmail = async (to: string, link: string): Promise<void> => 
   const mailOptions = {
     from: `"Reset Password" <${config.user}>`,
     to,
-    subject: "Your OTP Code - EduPlatform",
+    subject: "Your OTP Code - Humanistic Language Center",
     html:ResetPasswordEmail(link)
   };
 

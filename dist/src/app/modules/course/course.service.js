@@ -65,7 +65,12 @@ const createCourse = async (data) => {
 };
 exports.createCourse = createCourse;
 const getCourseBySlug = async (slug) => {
-    return Course_model_1.default.findOne({ slug }).populate("category").populate("milestones");
+    return Course_model_1.default.findOne({ slug }).populate("category", "title ").populate({
+        path: "milestones",
+        match: { status: "active" },
+        options: { sort: { order: 1 } },
+        select: "title order status",
+    });
 };
 exports.getCourseBySlug = getCourseBySlug;
 const getCourseById = async (id) => {
@@ -119,7 +124,6 @@ const getAllCourses = async (filters) => {
     // 🧵 Parallel queries
     const [data, total] = await Promise.all([
         Course_model_1.default.find(query)
-            .populate("instructor", "name email")
             .populate("milestones")
             .populate("category")
             .sort(sortOptions)
