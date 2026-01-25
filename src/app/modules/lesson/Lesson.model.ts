@@ -27,7 +27,6 @@ const transcriptSchema = new Schema(
 const audioSchema = new Schema<IAudio>(
   {
     url: { type: String, required: true },
-    duration: { type: Number, default: null },
     transcripts: { type: [transcriptSchema], default: [] },
   },
   { _id: false }

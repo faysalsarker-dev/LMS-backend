@@ -10,27 +10,65 @@ import { ApiError } from "../../errors/ApiError";
 export const createLessonController = catchAsync(
   async (req: Request, res: Response) => {
 
-    if (req.body.type === "video") {
-      const finalVideoUrl = req.file?.path || req.body.videoUrl;
 
-      if (!finalVideoUrl) {
+// Type definition for files
+const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+if (req.body.type === "video") {
+  // Get video file from files object instead of req.file
+  const videoFile = files?.video?.[0];
+  const finalVideoUrl = videoFile?.path || req.body.videoUrl;
+
+  if (!finalVideoUrl) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Video file or video URL is required"
+    );
+  }
+
+  req.body.video = {
+    url: finalVideoUrl,
+    duration: req.body.videoDuration
+      ? Number(req.body.videoDuration)
+      : null,
+  };
+
+  // cleanup temp fields
+  delete req.body.videoUrl;
+  delete req.body.videoDuration;
+ }else if (req.body.type === "quiz" && req.body.questions) {
+  let questions = req.body.questions;
+  questions = JSON.parse(questions);
+  const audioFile = files?.audioFile?.[0];
+  questions = questions.map((question: any, index: number) => {
+    if (question.type === "audio") {
+      const finalAudioUrl = audioFile?.path || question.audioUrl;
+      if (!finalAudioUrl) {
         throw new ApiError(
           httpStatus.BAD_REQUEST,
-          "Video file or video URL is required"
+          `Audio URL is required for question ${index + 1}`
         );
       }
-
-      req.body.video = {
-        url: finalVideoUrl,
-        duration: req.body.videoDuration
-          ? Number(req.body.videoDuration)
-          : null,
-      };
-
-      // cleanup temp fields
-      delete req.body.videoUrl;
-      delete req.body.videoDuration;
+      question.audio = finalAudioUrl;
+      delete question.audioUrl;
+      delete question.audioFile;
     }
+    return question;
+  });
+
+  console.log(questions, 'questions after processing audio at the end of logic..........');
+  req.body.questions = questions;
+} else if(req.body.type === "audio") {
+    const audioFile = files?.audioFile?.[0];
+    const finalAudioUrl = audioFile?.path || req.body.audioUrl;
+    req.body.audio = {
+      url: finalAudioUrl,
+      transcripts:JSON.parse(req.body.transcripts) 
+    };
+
+}
+
+
 
     const lesson = await LessonService.createLesson(req.body);
 

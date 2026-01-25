@@ -129,6 +129,9 @@ export const markQuizAsComplete = async (
   if (!progress) {
     throw new ApiError(404, "Student is not enrolled in this course");
   }
+  if (!passed) {
+    throw new ApiError(400, "Quiz not complete. Cannot mark lesson as complete.");
+  }
 
   // Check if quiz result already exists
   const existingIndex = progress.quizResults.findIndex(
@@ -153,8 +156,6 @@ export const markQuizAsComplete = async (
 
   await updateProgressPercentage(progress, courseId);
   await progress.save();
-
-  console.log(progress,'progress');
   return progress;
 };
 

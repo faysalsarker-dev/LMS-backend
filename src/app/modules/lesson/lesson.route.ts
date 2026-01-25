@@ -6,7 +6,11 @@ const router = express.Router();
 
 // CRUD
 router.post("/",
-multerVideoUpload.single("video"),
+// multerVideoUpload.single("video"),
+ multerVideoUpload.fields([
+    { name: "video", maxCount: 1 },
+    { name: "audioFile", maxCount: 1 },
+  ]),
     
     LessonController.createLessonController);
 router.get("/", LessonController.getAllLessonsController);
