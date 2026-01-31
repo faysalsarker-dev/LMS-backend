@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { IUser } from "./auth.interface";
+import { IUser, SessionExpired } from "./auth.interface";
 import User from "./User.model";
 import { ApiError } from "../../errors/ApiError";
 import config from "../../config/config";
@@ -10,6 +10,8 @@ import { JwtPayload } from "jsonwebtoken";
 import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 import { Request } from "express";
 import mongoose, { Query } from "mongoose";
+import { generateSessionToken } from "../../utils/sessionToken";
+import { clearAuthCookies } from "../../utils/setCookie";
 
 export const userService = {
   async register(data: Partial<IUser>) {
@@ -82,7 +84,6 @@ export const userService = {
 
   async login(email: string, password: string, remember: boolean) {
     const user = await User.findOne({ email }).select("+password");
-    console.log(user,'user')
     if (!user) throw new ApiError(401, "Invalid credentials");
     if (user && !user.isVerified)
       throw new ApiError(401, "Account is not verified");
@@ -90,28 +91,37 @@ export const userService = {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) throw new ApiError(401, "Invalid credentials");
 
+  const sessionToken = generateSessionToken();
+
+user.sessionToken = sessionToken;
+  await user.save();
+
     const refreshToken = generateToken(
-      { id: user._id, _id:user._id , role: user.role , profile:user.profile , name:user.name ,email:user.email },
+      { id: user._id, _id:user._id , role: user.role , profile:user.profile , name:user.name ,email:user.email ,sessionToken },
       config.jwt.refresh_expires_in
     );
 
     const accessToken = generateToken(
-      { id: user._id, _id:user._id , role: user.role , profile:user.profile , name:user.name ,email:user.email },
+      { id: user._id, _id:user._id , role: user.role , profile:user.profile , name:user.name ,email:user.email ,sessionToken },
       config.jwt.access_expires_in
     );
 
-    await user.save();
 
     return { user, accessToken, refreshToken };
   },
 
-  async logout(userId: string) {
-    return User.findByIdAndUpdate(
-      userId,
-      { currentToken: null, refreshToken: null },
-      { new: true }
-    );
-  },
+
+
+
+async logout(userId: string) {
+  return User.findByIdAndUpdate(
+    userId,
+    { sessionToken: null },
+    { new: true }
+  );
+},
+
+
 
   async refreshToken(token: string) {
     const payload = verifyToken(token) as JwtPayload;
@@ -122,7 +132,7 @@ export const userService = {
     }
 
     const accessToken = generateToken(
-      { id: user._id, _id:user._id , role: user.role , profile:user.profile , name:user.name ,email:user.email },
+      { id: user._id, _id:user._id , role: user.role , profile:user.profile , name:user.name ,email:user.email ,sessionToken: user.sessionToken },
       config.jwt.access_expires_in
     );
 
@@ -191,31 +201,6 @@ async updateUser(userId: string, updates: Partial<IUser>) {
 },
 
 
-
-
-async getMe(
-  userId: string,
-  includeCourses = false,
-  includeWishlist = false
-): Promise<IUser & Document> {
-  let query: Query<IUser & Document | null, IUser & Document> = User.findById(userId);
-
-if (includeCourses) {
-  query = query.populate({
-    path: "courses",
-    select: "-milestone",
-  }) as typeof query;
-
-}  if (includeWishlist) query = query.populate({
-    path: "wishlist",
-    select: "-milestone",
-  }) as typeof query;
-
-  const user = await query.exec();
-
-  if (!user) throw new ApiError(404, "User not found");
-  return user;
-},
 
 
 
@@ -289,6 +274,30 @@ const [users, total] = await Promise.all([
       data: users,
     };
   },
+
+
+
+
+
+async getMe(
+  userId: string,
+  sessionToken: string,
+): Promise<any> {
+  const user = await User.findById(userId).select("+sessionToken");
+
+  if (!user) throw new ApiError(404, "User not found");
+  
+  if (user.sessionToken !== sessionToken) {
+    // await User.findByIdAndUpdate(userId, { sessionToken: null });
+    
+    return {
+      logout: true,
+      message: "Session expired. Logged in from another device."
+    };
+  }
+
+  return user;
+},
 
 
 async addToWishlist(id: string, courseId: string) {

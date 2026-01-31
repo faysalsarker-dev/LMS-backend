@@ -54,7 +54,7 @@ const getAllLessons = async (params) => {
         ];
     }
     if (type && type !== 'all') {
-        filter.contentType = type;
+        filter.type = type;
     }
     if (status && status !== 'all') {
         filter.status = status;

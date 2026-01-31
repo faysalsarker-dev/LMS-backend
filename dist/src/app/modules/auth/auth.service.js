@@ -69,7 +69,6 @@ exports.userService = {
     },
     async login(email, password, remember) {
         const user = await User_model_1.default.findOne({ email }).select("+password");
-        console.log(user, 'user');
         if (!user)
             throw new ApiError_1.ApiError(401, "Invalid credentials");
         if (user && !user.isVerified)

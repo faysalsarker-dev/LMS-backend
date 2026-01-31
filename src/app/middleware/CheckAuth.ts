@@ -12,6 +12,7 @@ export const checkAuth =
       const accessToken = req.cookies.accessToken;
 
       if (!accessToken) {
+        console.log("No access token found in cookies",req.originalUrl);
         throw new ApiError(401, "No token provided");
       }
 

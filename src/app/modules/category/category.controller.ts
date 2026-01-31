@@ -30,6 +30,15 @@ if(req.file){
       data: categories,
     });
   }),
+  getAllForSelecting: catchAsync(async (_req: Request, res: Response) => {
+    const categories = await CategoryService.getAllCategoriesForSelecting();
+    sendResponse(res, {
+      statusCode:200,
+      success: true,
+      message: "Categories retrieved successfully",
+      data: categories,
+    });
+  }),
 
   getById: catchAsync(async (req: Request, res: Response) => {
     const category = await CategoryService.getCategoryById(req.params.id);

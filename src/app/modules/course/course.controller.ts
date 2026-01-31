@@ -4,6 +4,7 @@ import sendResponse from "../../utils/sendResponse";
 import * as CourseService from './course.service';
 import  httpStatus  from 'http-status';
 import { ICourseFilters } from "./course.interface";
+import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 
 
 // Create Course
@@ -75,6 +76,18 @@ export const getAllCourses = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+export const getAllCoursesForSelecting = catchAsync(async (req: Request, res: Response) => {
+
+  const result = await CourseService.getAllCoursesForSelecting();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Courses fetched successfully",
+    data: result,
+  });
+});
+
 // Update Course
 export const updateCourse = catchAsync(async (req: Request, res: Response) => {
 
@@ -102,6 +115,12 @@ const payload = {
 // Delete Course
 export const deleteCourse = catchAsync(async (req: Request, res: Response) => {
   const course = await CourseService.deleteCourse(req.params.id);
+
+  await deleteImageFromCLoudinary(course?.thumbnail as string)
+
+
+
+
   if (!course) {
     return sendResponse(res, {
       statusCode: httpStatus.NOT_FOUND,

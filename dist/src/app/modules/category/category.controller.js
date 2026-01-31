@@ -29,6 +29,15 @@ exports.CategoryController = {
             data: categories,
         });
     }),
+    getAllForSelecting: (0, catchAsync_1.catchAsync)(async (_req, res) => {
+        const categories = await category_service_1.CategoryService.getAllCategoriesForSelecting();
+        (0, sendResponse_1.default)(res, {
+            statusCode: 200,
+            success: true,
+            message: "Categories retrieved successfully",
+            data: categories,
+        });
+    }),
     getById: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const category = await category_service_1.CategoryService.getCategoryById(req.params.id);
         (0, sendResponse_1.default)(res, {

@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMyWishlistCourses = exports.getMyEnrolledCourses = exports.getLessonContentFromDB = exports.getCurriculumFromDB = exports.deleteCourse = exports.updateCourse = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
+exports.getMyWishlistCourses = exports.getMyEnrolledCourses = exports.getLessonContentFromDB = exports.getCurriculumFromDB = exports.deleteCourse = exports.updateCourse = exports.getAllCoursesForSelecting = exports.getAllCourses = exports.getCourseById = exports.getCourseBySlug = exports.createCourse = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const Course_model_1 = __importDefault(require("./Course.model"));
 const Category_model_1 = require("../category/Category.model");
@@ -144,6 +144,12 @@ const getAllCourses = async (filters) => {
     };
 };
 exports.getAllCourses = getAllCourses;
+const getAllCoursesForSelecting = async () => {
+    const result = await Course_model_1.default.find({ status: 'published' }).select('_id title slug')
+        .lean();
+    return result;
+};
+exports.getAllCoursesForSelecting = getAllCoursesForSelecting;
 const updateCourse = async (id, data) => {
     if (!mongoose_1.Types.ObjectId.isValid(id))
         return null;

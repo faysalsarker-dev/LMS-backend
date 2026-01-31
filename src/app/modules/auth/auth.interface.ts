@@ -31,7 +31,13 @@ export interface IUser extends Document {
  }
   otp?: string;
   otpExpiry?: Date;
-
+sessionToken?: string;
 
   comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+
+export interface SessionExpired {
+  logout: true;
+  message: string;
 }

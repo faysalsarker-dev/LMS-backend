@@ -6,7 +6,6 @@ export const setCookie = (res: Response, accessToken: string, refreshToken?: str
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: 15 * 60 * 1000, 
     });
   }
 
@@ -15,7 +14,6 @@ export const setCookie = (res: Response, accessToken: string, refreshToken?: str
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: 30 * 24 * 60 * 60 * 1000, 
     });
   }
 };
@@ -23,6 +21,14 @@ export const setCookie = (res: Response, accessToken: string, refreshToken?: str
 
 
 export const clearAuthCookies = (res: Response) => {
-  res.clearCookie("accessToken");
-  res.clearCookie("refreshToken");
+    res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none"
+    })
+    res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none"
+    })
 };

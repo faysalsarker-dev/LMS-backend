@@ -40,6 +40,7 @@ const CheckAuth_1 = require("../../middleware/CheckAuth");
 const router = (0, express_1.Router)();
 // Public routes
 router.get("/", CourseController.getAllCourses);
+router.get("/select", CourseController.getAllCoursesForSelecting);
 // Protected routes
 router.post("/", multer_config_1.multerUpload.single("file"), CourseController.createCourse);
 router.get("/my-enrolled-courses", (0, CheckAuth_1.checkAuth)(), CourseController.getMyEnrolledCourses);

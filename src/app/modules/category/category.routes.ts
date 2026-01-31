@@ -6,6 +6,7 @@ const router = Router();
 
 router.post("/",multerUpload.single('file') ,CategoryController.create);
 router.get("/", CategoryController.getAll);
+router.get("/select", CategoryController.getAllForSelecting);
 router.get("/:id", CategoryController.getById);
 router.put("/:id",multerUpload.single('file'),CategoryController.update);
 router.delete("/:id", CategoryController.delete);

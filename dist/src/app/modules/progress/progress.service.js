@@ -78,6 +78,9 @@ const markQuizAsComplete = async (studentId, courseId, lessonId, passed) => {
     if (!progress) {
         throw new ApiError_1.ApiError(404, "Student is not enrolled in this course");
     }
+    if (!passed) {
+        throw new ApiError_1.ApiError(400, "Quiz not complete. Cannot mark lesson as complete.");
+    }
     // Check if quiz result already exists
     const existingIndex = progress.quizResults.findIndex((qr) => qr.lesson.toString() === lessonId);
     const result = {
@@ -96,7 +99,6 @@ const markQuizAsComplete = async (studentId, courseId, lessonId, passed) => {
     }
     await updateProgressPercentage(progress, courseId);
     await progress.save();
-    console.log(progress, 'progress');
     return progress;
 };
 exports.markQuizAsComplete = markQuizAsComplete;

@@ -12,6 +12,7 @@ const router = Router();
 
 // Public routes
 router.get("/", CourseController.getAllCourses);
+router.get("/select", CourseController.getAllCoursesForSelecting);
 
 // Protected routes
 router.post(

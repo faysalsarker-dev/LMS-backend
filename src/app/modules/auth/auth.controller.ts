@@ -2,8 +2,9 @@ import { Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
 import { userService } from "./auth.service";
 import sendResponse from "../../utils/sendResponse";
-import { setCookie } from './../../utils/setCookie';
+import { clearAuthCookies, setCookie } from './../../utils/setCookie';
 import { ApiError } from "../../errors/ApiError";
+import { isSessionExpired } from "../../utils/sessionToken";
 
 
 export const AuthController = {
@@ -39,48 +40,40 @@ export const AuthController = {
   }),
 
 
-  logout: catchAsync(async (_req: Request, res: Response) => {
+logout: catchAsync(async (req: Request, res: Response) => {
+  const result = await userService.logout(req.user._id);
+  if (!result) {
+    clearAuthCookies(res);
+    throw new ApiError(404, "User not found");
+  }
 
-    res.clearCookie("accessToken", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none"
-    })
-    res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none"
-    })
+  clearAuthCookies(res);
+  
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Logged out successfully",
+  });
+}),
 
-
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: "Logged out successfully",
-    });
-  }),
 
 
 me: catchAsync(async (req: Request, res: Response) => {
- 
-    const userId = req.user._id.toString();
-    const { courses, wishlist } = req.query;
+  const userId = req.user._id;
+  const sessionToken = req.user.sessionToken;
 
-    const result = await userService.getMe(
-      userId,
-      courses === 'true',
-      wishlist === 'true'
-    );
-
-    sendResponse(res, {
-      success: true,
-      statusCode: 200,
-      message: "Your profile retrieved successfully",
-      data: result,
-    });
-  
+  const result = await userService.getMe(userId, sessionToken);
+  if (isSessionExpired(result)) {
+    clearAuthCookies(res);
+    throw new ApiError(401, result.message);
+  }
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Your profile retrieved successfully",
+    data: result,
+  });
 }),
-
 
 
 sendOtp: catchAsync(async (req: Request, res: Response) => {
@@ -179,9 +172,6 @@ getNewAccessToken: catchAsync(async (req: Request, res: Response) => {
   
   updateProfile: catchAsync(async (req: Request, res: Response) => {
     const userId = req.user._id;
-
-
-    console.log(userId)
     const payload ={
       ...req.body,
       profile:req.file?.path

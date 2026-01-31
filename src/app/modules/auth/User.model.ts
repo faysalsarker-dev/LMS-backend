@@ -1,6 +1,6 @@
 import { model, Schema } from "mongoose";
 import { IUser } from "./auth.interface";
-import  bcrypt  from 'bcryptjs';
+import bcrypt from "bcryptjs";
 
 const userSchema = new Schema<IUser>(
   {
@@ -17,29 +17,28 @@ const userSchema = new Schema<IUser>(
       required: true,
       match: [/^\+?[0-9]{7,15}$/, "Invalid phone number"],
     },
-    password: { type: String, required: true, minlength: 6 , select: false},
+    password: { type: String, required: true, minlength: 6, select: false },
     role: {
       type: String,
-      enum: ["student", "instructor", "admin","super_admin"],
+      enum: ["student", "instructor", "admin", "super_admin"],
       default: "student",
     },
     isActive: { type: Boolean, default: true },
     isVerified: { type: Boolean, default: false },
-    profile: { type: String ,default:null},
-courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
-wishlist: [{ type: Schema.Types.ObjectId, ref: "Course" }],
+    profile: { type: String, default: null },
+    courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
+    wishlist: [{ type: Schema.Types.ObjectId, ref: "Course" }],
 
-address:{
-  country:{type: String,default:null},
-  city:{type: String,default:null}
-},
+    address: {
+      country: { type: String, default: null },
+      city: { type: String, default: null },
+    },
 
     otp: { type: String, select: false },
     otpExpiry: { type: Date, select: false },
-
-
+     sessionToken: { type: String, default: null, select: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 userSchema.pre("save", async function (next) {
@@ -50,7 +49,7 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.methods.comparePassword = async function (
-  candidatePassword: string
+  candidatePassword: string,
 ): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };

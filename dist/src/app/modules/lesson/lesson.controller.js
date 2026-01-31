@@ -41,10 +41,53 @@ const LessonService = __importStar(require("./lesson.service"));
 const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const http_status_1 = __importDefault(require("http-status"));
-// Create
+const ApiError_1 = require("../../errors/ApiError");
 exports.createLessonController = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    if (req.body.videoSourceType === "upload" && req.file?.path) {
-        req.body.videoUrl = req.file.path;
+    // Type definition for files
+    const files = req.files;
+    if (req.body.type === "video") {
+        // Get video file from files object instead of req.file
+        const videoFile = files?.video?.[0];
+        const finalVideoUrl = videoFile?.path || req.body.videoUrl;
+        if (!finalVideoUrl) {
+            throw new ApiError_1.ApiError(http_status_1.default.BAD_REQUEST, "Video file or video URL is required");
+        }
+        req.body.video = {
+            url: finalVideoUrl,
+            duration: req.body.videoDuration
+                ? Number(req.body.videoDuration)
+                : null,
+        };
+        // cleanup temp fields
+        delete req.body.videoUrl;
+        delete req.body.videoDuration;
+    }
+    else if (req.body.type === "quiz" && req.body.questions) {
+        let questions = req.body.questions;
+        questions = JSON.parse(questions);
+        const audioFile = files?.audioFile?.[0];
+        questions = questions.map((question, index) => {
+            if (question.type === "audio") {
+                const finalAudioUrl = audioFile?.path || question.audioUrl;
+                if (!finalAudioUrl) {
+                    throw new ApiError_1.ApiError(http_status_1.default.BAD_REQUEST, `Audio URL is required for question ${index + 1}`);
+                }
+                question.audio = finalAudioUrl;
+                delete question.audioUrl;
+                delete question.audioFile;
+            }
+            return question;
+        });
+        console.log(questions, 'questions after processing audio at the end of logic..........');
+        req.body.questions = questions;
+    }
+    else if (req.body.type === "audio") {
+        const audioFile = files?.audioFile?.[0];
+        const finalAudioUrl = audioFile?.path || req.body.audioUrl;
+        req.body.audio = {
+            url: finalAudioUrl,
+            transcripts: JSON.parse(req.body.transcripts)
+        };
     }
     const lesson = await LessonService.createLesson(req.body);
     (0, sendResponse_1.default)(res, {

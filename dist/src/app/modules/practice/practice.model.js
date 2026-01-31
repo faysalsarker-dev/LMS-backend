@@ -41,43 +41,46 @@ const slugify_1 = __importDefault(require("slugify"));
 const PracticeItemSchema = new mongoose_1.Schema({
     content: { type: String, required: true, trim: true },
     pronunciation: { type: String, trim: true },
-    audioUrl: { type: String },
+    audioUrl: { type: String, required: true },
     imageUrl: { type: String },
-    description: { type: String, maxlength: 500 },
-    order: { type: Number, required: true, default: 0 }
-}, { _id: false });
+    order: { type: Number, default: 0 }
+}, { _id: true });
 const PracticeSchema = new mongoose_1.Schema({
     title: { type: String, required: true, trim: true, maxlength: 200 },
-    slug: { type: String, unique: true, lowercase: true, trim: true },
+    slug: { type: String, unique: true, lowercase: true, index: true },
     description: { type: String, trim: true, maxlength: 2000 },
-    course: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Course' },
+    course: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'Course',
+        required: [true, 'Practice task must belong to a course'],
+        index: true
+    },
     items: [PracticeItemSchema],
     thumbnail: { type: String },
-    isActive: { type: Boolean, default: true },
-    totalItems: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true, index: true },
     usageCount: { type: Number, default: 0 }
-}, { timestamps: true });
-// Auto-generate slug from title
-PracticeSchema.pre('save', async function (next) {
-    if (!this.isModified('title'))
-        return next();
-    let baseSlug = (0, slugify_1.default)(this.title, { lower: true, strict: true });
-    let slug = baseSlug;
-    let count = 1;
-    while (await mongoose_1.default.models.Practice.findOne({ slug, _id: { $ne: this._id } })) {
-        slug = `${baseSlug}-${count++}`;
+}, {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+PracticeSchema.virtual('totalItems').get(function () {
+    return this.items ? this.items.length : 0;
+});
+PracticeSchema.pre('validate', async function (next) {
+    if (this.isModified('title')) {
+        let baseSlug = (0, slugify_1.default)(this.title, { lower: true, strict: true });
+        let slug = baseSlug;
+        let count = 1;
+        while (await mongoose_1.default.models.Practice.findOne({ slug, _id: { $ne: this._id } })) {
+            slug = `${baseSlug}-${count++}`;
+        }
+        this.slug = slug;
     }
-    this.slug = slug;
     next();
 });
-// Auto-update totalItems count
-PracticeSchema.pre('save', function (next) {
-    this.totalItems = this.items.length;
-    next();
-});
-// Indexes for performance
-PracticeSchema.index({ slug: 1 });
-PracticeSchema.index({ isActive: 1 });
-PracticeSchema.index({ course: 1 });
+PracticeSchema.statics.findByCourse = function (courseId) {
+    return this.find({ course: courseId, isActive: true }).sort('createdAt');
+};
 const Practice = mongoose_1.default.model('Practice', PracticeSchema);
 exports.default = Practice;

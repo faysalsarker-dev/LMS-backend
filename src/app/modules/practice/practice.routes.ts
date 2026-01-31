@@ -1,21 +1,95 @@
 import express from 'express';
-import practiceController from './practice.controller';
-// import { authenticate, authorize } from '../../middlewares/auth'; // Your auth middleware
+import { PracticeController } from './practice.controller';
+import { checkAuth } from '../../middleware/CheckAuth';
+import { UserRoles } from '../auth/auth.interface';
+import { multerUpload } from '../../config/multer.config';
 
 const router = express.Router();
 
-// Public routes
-router.get('/', practiceController.getAllPractices);
-router.get('/:id', practiceController.getPractice);
+// Practice CRUD
+router.post(
+  '/',
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  multerUpload.single('file'),
+  PracticeController.createPractice
+);
 
-// Admin routes (add your auth middleware)
-router.post('/', /* authenticate, authorize('admin'), */ practiceController.createPractice);
-router.patch('/:id', /* authenticate, authorize('admin'), */ practiceController.updatePractice);
-router.delete('/:id', /* authenticate, authorize('admin'), */ practiceController.deletePractice);
+router.get(
+  '/',
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  PracticeController.getAllPractices
+);
+router.get(
+  '/student',
+  checkAuth([UserRoles.STUDENT,UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  PracticeController.getUserPractices
+);
 
-// Practice items management
-router.post('/:id/items', /* authenticate, authorize('admin'), */ practiceController.addItems);
-router.delete('/:id/items/:itemIndex', /* authenticate, authorize('admin'), */ practiceController.removeItem);
-router.patch('/:id/items/:itemIndex', /* authenticate, authorize('admin'), */ practiceController.updateItem);
+router.patch(
+  '/:id',
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  multerUpload.single('file'),
+  PracticeController.updatePractice
+);
+
+router.delete(
+  '/:id',
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  PracticeController.deletePractice
+);
+
+router.get(
+  '/:slug/student',
+  checkAuth(),
+  PracticeController.getPracticeByIdForUser
+);
+
+
+
+
+router.get(
+  '/:id',
+  checkAuth(),
+  PracticeController.getSinglePractice
+);
+
+
+// ============== NEW: Practice Item Management Routes ==============
+
+// Add item to practice
+router.post(
+  '/items',
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  multerUpload.fields([
+    { name: 'audio', maxCount: 1 },
+    { name: 'image', maxCount: 1 },
+  ]),
+  PracticeController.addItemToPractice
+);
+
+// Update practice item
+router.patch(
+  '/:practiceId/items/:itemId',
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  multerUpload.fields([
+    { name: 'audio', maxCount: 1 },
+    { name: 'image', maxCount: 1 },
+  ]),
+  PracticeController.updatePracticeItem
+);
+
+// Delete practice item
+router.delete(
+  '/:practiceId/items/:itemId',
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  PracticeController.deletePracticeItem
+);
+
+// Reorder practice items
+router.patch(
+  '/:practiceId/items/reorder',
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  PracticeController.reorderPracticeItems
+);
 
 export default router;

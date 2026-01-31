@@ -7,6 +7,7 @@ const checkAuth = (authRoles) => async (req, res, next) => {
     try {
         const accessToken = req.cookies.accessToken;
         if (!accessToken) {
+            console.log("No access token found in cookies", req.originalUrl);
             throw new ApiError_1.ApiError(401, "No token provided");
         }
         let verifiedToken;

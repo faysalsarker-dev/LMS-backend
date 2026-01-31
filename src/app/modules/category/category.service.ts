@@ -1,3 +1,4 @@
+import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 import { ICategory } from "./category.interface";
 import { Category } from "./Category.model";
 
@@ -10,6 +11,9 @@ export const CategoryService = {
   async getAllCategories() {
     return await Category.find().sort({ createdAt: -1 });
   },
+  async getAllCategoriesForSelecting() {
+    return await Category.find().sort({ createdAt: -1 }).select('_id title ');
+  },
 
   async getCategoryById(id: string) {
     return await Category.findById(id);
@@ -20,6 +24,10 @@ export const CategoryService = {
   },
 
   async deleteCategory(id: string) {
-    return await Category.findByIdAndDelete(id);
+    const category = await Category.findByIdAndDelete(id);
+
+      await deleteImageFromCLoudinary(category?.thumbnail as string)
+    return category;
+
   },
 };

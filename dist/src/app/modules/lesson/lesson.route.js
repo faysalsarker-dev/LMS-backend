@@ -41,7 +41,12 @@ const LessonController = __importStar(require("./lesson.controller"));
 const multer_config_1 = require("../../config/multer.config");
 const router = express_1.default.Router();
 // CRUD
-router.post("/", multer_config_1.multerVideoUpload.single("video"), LessonController.createLessonController);
+router.post("/", 
+// multerVideoUpload.single("video"),
+multer_config_1.multerVideoUpload.fields([
+    { name: "video", maxCount: 1 },
+    { name: "audioFile", maxCount: 1 },
+]), LessonController.createLessonController);
 router.get("/", LessonController.getAllLessonsController);
 router.get("/:id", LessonController.getSingleLessonController);
 router.patch("/:id", LessonController.updateLessonController);

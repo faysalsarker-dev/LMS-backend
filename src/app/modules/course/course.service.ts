@@ -148,6 +148,13 @@ export const getAllCourses = async (
   };
 };
 
+export const getAllCoursesForSelecting = async () => {
+
+const result = await Course.find({status:'published'}).select('_id title slug')
+.lean();
+return result;
+};
+
 
 
 

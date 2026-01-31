@@ -3,123 +3,173 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const practice_model_1 = __importDefault(require("./practice.model"));
-const mongoose_1 = require("mongoose");
+exports.PracticeService = void 0;
 const ApiError_1 = require("../../errors/ApiError");
-class PracticeService {
-    // Create new practice
-    async createPractice(data) {
-        const practice = await practice_model_1.default.create(data);
-        return practice;
-    }
-    // Get all practices with filters and pagination
-    async getAllPractices(query) {
-        const { page = 1, limit = 10, course, isActive, search, sortBy = 'createdAt', sortOrder = 'desc' } = query;
-        const filter = {};
-        if (course && course !== 'all')
-            filter.course = new mongoose_1.Types.ObjectId(course);
-        if (isActive !== undefined)
-            filter.isActive = isActive === 'true';
-        if (search) {
-            filter.$or = [
-                { title: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
-                { tags: { $in: [new RegExp(search, 'i')] } }
-            ];
-        }
-        const skip = (Number(page) - 1) * Number(limit);
-        const sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
-        const practices = await practice_model_1.default.find(filter)
-            .populate('course', 'name')
-            .sort(sortOptions)
+const practice_model_1 = __importDefault(require("./practice.model"));
+const mongoose_1 = __importDefault(require("mongoose"));
+const createPractice = async (payload) => {
+    return practice_model_1.default.create(payload);
+};
+const getAllPractices = async (options = {}) => {
+    const { courseId, isActive, sortBy = 'createdAt', sortOrder = 'desc', page = 1, limit = 10, } = options;
+    const filters = {};
+    if (courseId)
+        filters.course = courseId;
+    if (typeof isActive === 'boolean')
+        filters.isActive = isActive;
+    const sort = {
+        [sortBy]: sortOrder === 'asc' ? 1 : -1,
+    };
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+        practice_model_1.default.find()
+            .sort(sort)
             .skip(skip)
-            .limit(Number(limit))
-            .lean();
-        const total = await practice_model_1.default.countDocuments(filter);
-        return {
-            practices,
-            meta: {
-                page: Number(page),
-                limit: Number(limit),
-                total,
-                totalPages: Math.ceil(total / Number(limit))
-            }
-        };
+            .limit(limit)
+            .populate('course', 'title'),
+        practice_model_1.default.countDocuments(filters),
+    ]);
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+            totalPage: Math.ceil(total / limit),
+        },
+        data,
+    };
+};
+const getPracticeById = async (id) => {
+    const practice = await practice_model_1.default.findById(id).populate('course');
+    if (!practice) {
+        throw new ApiError_1.ApiError(404, 'Practice not found');
     }
-    // Get single practice by ID or slug
-    async getPracticeById(identifier) {
-        const isObjectId = mongoose_1.Types.ObjectId.isValid(identifier);
-        const practice = await practice_model_1.default.findOne(isObjectId ? { _id: identifier } : { slug: identifier })
-            .populate('course', 'name');
-        if (!practice) {
-            throw new ApiError_1.ApiError(404, 'Practice not found');
-        }
-        return practice;
+    return practice;
+};
+const updatePractice = async (id, payload) => {
+    const updated = await practice_model_1.default.findByIdAndUpdate(id, payload, {
+        new: true,
+        runValidators: true,
+    });
+    if (!updated)
+        throw new ApiError_1.ApiError(404, 'Practice not found');
+    return updated;
+};
+const deletePractice = async (id) => {
+    const deleted = await practice_model_1.default.findByIdAndDelete(id);
+    if (!deleted)
+        throw new ApiError_1.ApiError(404, 'Practice not found');
+};
+// ============== NEW: Item Management Methods ==============
+const addItemToPractice = async (practiceId, itemData) => {
+    // Validate practiceId
+    if (!mongoose_1.default.Types.ObjectId.isValid(practiceId)) {
+        throw new ApiError_1.ApiError(400, 'Invalid practice ID');
     }
-    // Update practice
-    async updatePractice(id, data) {
-        const practice = await practice_model_1.default.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true })
-            .populate('course', 'name');
-        if (!practice) {
-            throw new ApiError_1.ApiError(404, 'Practice not found');
-        }
-        return practice;
+    // Find the practice
+    const practice = await practice_model_1.default.findById(practiceId);
+    if (!practice) {
+        throw new ApiError_1.ApiError(404, 'Practice not found');
     }
-    // Delete practice
-    async deletePractice(id) {
-        const practice = await practice_model_1.default.findById(id);
-        if (!practice) {
-            throw new ApiError_1.ApiError(404, 'Practice not found');
-        }
-        // Check if practice is being used in any courses
-        if (practice.usageCount > 0) {
-            throw new ApiError_1.ApiError(400, `Cannot delete practice. It is currently used in ${practice.usageCount} course(s)`);
-        }
-        await practice_model_1.default.findByIdAndDelete(id);
+    // Calculate the order for the new item (last position)
+    const order = practice.items.length > 0
+        ? Math.max(...practice.items.map(item => item.order || 0)) + 1
+        : 1;
+    // Create the new item
+    const newItem = {
+        content: itemData.content,
+        pronunciation: itemData.pronunciation,
+        audioUrl: itemData.audioUrl,
+        imageUrl: itemData.imageUrl,
+        order: order
+    };
+    // Push the new item to the practice
+    practice.items.push(newItem);
+    // Save the practice
+    await practice.save();
+    // Return the newly added item (last item in array)
+    return practice.items[practice.items.length - 1];
+};
+const updatePracticeItem = async (practiceId, itemId, updateData) => {
+    // Validate IDs
+    if (!mongoose_1.default.Types.ObjectId.isValid(practiceId)) {
+        throw new ApiError_1.ApiError(400, 'Invalid practice ID');
     }
-    // Add items to practice
-    async addItemsToPractice(id, items) {
-        const practice = await practice_model_1.default.findById(id);
-        if (!practice) {
-            throw new ApiError_1.ApiError(404, 'Practice not found');
-        }
-        practice.items.push(...items);
-        await practice.save();
-        return practice;
+    if (!mongoose_1.default.Types.ObjectId.isValid(itemId)) {
+        throw new ApiError_1.ApiError(400, 'Invalid item ID');
     }
-    // Remove item from practice
-    async removeItemFromPractice(practiceId, itemIndex) {
-        const practice = await practice_model_1.default.findById(practiceId);
-        if (!practice) {
-            throw new ApiError_1.ApiError(404, 'Practice not found');
-        }
-        if (itemIndex < 0 || itemIndex >= practice.items.length) {
-            throw new ApiError_1.ApiError(400, 'Invalid item index');
-        }
-        practice.items.splice(itemIndex, 1);
-        await practice.save();
-        return practice;
+    // Find the practice
+    const practice = await practice_model_1.default.findById(practiceId);
+    if (!practice) {
+        throw new ApiError_1.ApiError(404, 'Practice not found');
     }
-    // Update practice item
-    async updatePracticeItem(practiceId, itemIndex, itemData) {
-        const practice = await practice_model_1.default.findById(practiceId);
-        if (!practice) {
-            throw new ApiError_1.ApiError(404, 'Practice not found');
+    // Find the item index
+    const itemIndex = practice.items.findIndex(item => item._id?.toString() === itemId);
+    if (itemIndex === -1) {
+        throw new ApiError_1.ApiError(404, 'Item not found in practice');
+    }
+    // Update the item fields
+    if (updateData.content !== undefined) {
+        practice.items[itemIndex].content = updateData.content;
+    }
+    if (updateData.pronunciation !== undefined) {
+        practice.items[itemIndex].pronunciation = updateData.pronunciation;
+    }
+    if (updateData.audioUrl !== undefined) {
+        practice.items[itemIndex].audioUrl = updateData.audioUrl;
+    }
+    if (updateData.imageUrl !== undefined) {
+        practice.items[itemIndex].imageUrl = updateData.imageUrl;
+    }
+    if (updateData.order !== undefined) {
+        practice.items[itemIndex].order = updateData.order;
+    }
+    // Save the practice
+    await practice.save();
+    return practice.items[itemIndex];
+};
+const deleteItemFromPractice = async (practiceId, itemId) => {
+    // Validate IDs
+    if (!mongoose_1.default.Types.ObjectId.isValid(practiceId)) {
+        throw new ApiError_1.ApiError(400, 'Invalid practice ID');
+    }
+    if (!mongoose_1.default.Types.ObjectId.isValid(itemId)) {
+        throw new ApiError_1.ApiError(400, 'Invalid item ID');
+    }
+    // Find and update the practice
+    const result = await practice_model_1.default.findByIdAndUpdate(practiceId, { $pull: { items: { _id: itemId } } }, { new: true });
+    if (!result) {
+        throw new ApiError_1.ApiError(404, 'Practice not found');
+    }
+};
+const reorderPracticeItems = async (practiceId, itemOrders) => {
+    // Validate practiceId
+    if (!mongoose_1.default.Types.ObjectId.isValid(practiceId)) {
+        throw new ApiError_1.ApiError(400, 'Invalid practice ID');
+    }
+    // Find the practice
+    const practice = await practice_model_1.default.findById(practiceId);
+    if (!practice) {
+        throw new ApiError_1.ApiError(404, 'Practice not found');
+    }
+    // Update the order of each item
+    itemOrders.forEach(({ itemId, order }) => {
+        const itemIndex = practice.items.findIndex(item => item._id?.toString() === itemId);
+        if (itemIndex !== -1) {
+            practice.items[itemIndex].order = order;
         }
-        if (itemIndex < 0 || itemIndex >= practice.items.length) {
-            throw new ApiError_1.ApiError(400, 'Invalid item index');
-        }
-        practice.items[itemIndex] = { ...practice.items[itemIndex], ...itemData };
-        await practice.save();
-        return practice;
-    }
-    // Increment usage count (called when practice is added to a course)
-    async incrementUsageCount(id) {
-        await practice_model_1.default.findByIdAndUpdate(id, { $inc: { usageCount: 1 } });
-    }
-    // Decrement usage count (called when practice is removed from a course)
-    async decrementUsageCount(id) {
-        await practice_model_1.default.findByIdAndUpdate(id, { $inc: { usageCount: -1 } });
-    }
-}
-exports.default = new PracticeService();
+    });
+    // Save the practice
+    await practice.save();
+};
+exports.PracticeService = {
+    createPractice,
+    getAllPractices,
+    getPracticeById,
+    updatePractice,
+    deletePractice,
+    addItemToPractice,
+    updatePracticeItem,
+    deleteItemFromPractice,
+    reorderPracticeItems,
+};

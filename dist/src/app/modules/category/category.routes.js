@@ -6,6 +6,7 @@ const multer_config_1 = require("../../config/multer.config");
 const router = (0, express_1.Router)();
 router.post("/", multer_config_1.multerUpload.single('file'), category_controller_1.CategoryController.create);
 router.get("/", category_controller_1.CategoryController.getAll);
+router.get("/select", category_controller_1.CategoryController.getAllForSelecting);
 router.get("/:id", category_controller_1.CategoryController.getById);
 router.put("/:id", multer_config_1.multerUpload.single('file'), category_controller_1.CategoryController.update);
 router.delete("/:id", category_controller_1.CategoryController.delete);

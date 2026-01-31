@@ -15,11 +15,11 @@ app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
 app.use((0, cors_1.default)({ origin: ["https://lms-web-app-sigma.vercel.app", "http://localhost:5173", "https://lms.bonikjewellers.com", "http://192.168.0.127:5173"], credentials: true }));
-app.use((req, res, next) => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] ${req.method} ${req.path}`);
-    next();
-});
+// app.use((req: Request, res: Response, next) => {
+//   const timestamp = new Date().toISOString();
+//   console.log(`[${timestamp}] ${req.method} ${req.path}`);
+//   next();
+// });
 app.use("/api/v1", routes_1.router);
 app.get("/", (req, res) => {
     res.status(200).json({

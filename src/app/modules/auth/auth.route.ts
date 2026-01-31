@@ -11,9 +11,31 @@ router.get('/', AuthController.getAll);
 router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
 router.put('/verify-otp', AuthController.verifyOtp);
-router.post('/logout', AuthController.logout);
+router.post('/logout',checkAuth(), AuthController.logout);
 router.put('/addToWishlist',checkAuth(), AuthController.addToWishlist);
+
+
+
+
+
+
+
+
+
 router.get('/me',checkAuth([UserRoles.ADMIN,UserRoles.INSTRUCTOR,UserRoles.SUPER_ADMIN,UserRoles.STUDENT]), AuthController.me);
+
+
+
+
+
+
+
+
+
+
+
+
+
 router.post("/refresh-token", AuthController.getNewAccessToken)
 router.post('/send-otp', AuthController.sendOtp);
 router.post("/forget-password",AuthController.forgetPassword);

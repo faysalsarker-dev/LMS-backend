@@ -52,5 +52,28 @@ CourseSchema.pre("save", async function (next) {
   next();
 });
 
+
+CourseSchema.pre("findOneAndDelete", async function (next) {
+  try {
+    const courseId = this.getQuery()._id;
+    
+    // Get all milestones and their lessons
+    const milestones = await mongoose.model("Milestone").find({ course: courseId });
+    const lessonIds = milestones.flatMap((m: any) => m.lesson || []);
+    
+    // Delete lessons and milestones
+    if (lessonIds.length) await mongoose.model("Lesson").deleteMany({ _id: { $in: lessonIds } });
+    await mongoose.model("Milestone").deleteMany({ course: courseId });
+    
+    next();
+  } catch (error) {
+    next(error as any);
+  }
+});
+
+
+
+
+
 const Course = mongoose.model<ICourse>("Course", CourseSchema);
 export default Course;

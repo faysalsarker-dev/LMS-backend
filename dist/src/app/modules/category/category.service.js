@@ -9,6 +9,9 @@ exports.CategoryService = {
     async getAllCategories() {
         return await Category_model_1.Category.find().sort({ createdAt: -1 });
     },
+    async getAllCategoriesForSelecting() {
+        return await Category_model_1.Category.find().sort({ createdAt: -1 }).select('_id title ');
+    },
     async getCategoryById(id) {
         return await Category_model_1.Category.findById(id);
     },
