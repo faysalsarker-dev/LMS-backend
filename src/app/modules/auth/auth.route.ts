@@ -12,6 +12,7 @@ router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
 router.put('/verify-otp', AuthController.verifyOtp);
 router.post('/logout',checkAuth(), AuthController.logout);
+router.post('/logout-all',AuthController.logoutFromOthers);
 router.put('/addToWishlist',checkAuth(), AuthController.addToWishlist);
 
 

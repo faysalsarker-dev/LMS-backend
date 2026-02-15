@@ -32,10 +32,11 @@ const userSchema = new mongoose_1.Schema({
     wishlist: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Course" }],
     address: {
         country: { type: String, default: null },
-        city: { type: String, default: null }
+        city: { type: String, default: null },
     },
     otp: { type: String, select: false },
     otpExpiry: { type: Date, select: false },
+    sessionToken: { type: String, default: null, select: false },
 }, { timestamps: true });
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password"))

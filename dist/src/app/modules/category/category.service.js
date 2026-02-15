@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CategoryService = void 0;
+const cloudinary_config_1 = require("../../config/cloudinary.config");
 const Category_model_1 = require("./Category.model");
 exports.CategoryService = {
     async createCategory(data) {
@@ -19,6 +20,8 @@ exports.CategoryService = {
         return await Category_model_1.Category.findByIdAndUpdate(id, data, { new: true });
     },
     async deleteCategory(id) {
-        return await Category_model_1.Category.findByIdAndDelete(id);
+        const category = await Category_model_1.Category.findByIdAndDelete(id);
+        await (0, cloudinary_config_1.deleteImageFromCLoudinary)(category?.thumbnail);
+        return category;
     },
 };

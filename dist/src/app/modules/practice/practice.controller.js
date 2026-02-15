@@ -44,6 +44,16 @@ const getAllPractices = (0, catchAsync_1.catchAsync)(async (req, res) => {
         meta,
     });
 });
+const getUserPractices = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const userId = req.user?._id;
+    const practices = await practice_service_1.PracticeService.getUserEnrolledCoursePractices(userId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: 'User practices fetched successfully',
+        data: practices,
+    });
+});
 /* =====================
    GET SINGLE PRACTICE BY ID
 ===================== */
@@ -156,6 +166,16 @@ const deletePracticeItem = (0, catchAsync_1.catchAsync)(async (req, res) => {
         data: null,
     });
 });
+const getPracticeByIdForUser = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const { slug } = req.params;
+    const result = await practice_service_1.PracticeService.getPracticeByIdForUser(slug);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: 'Practice item fetched successfully',
+        data: result,
+    });
+});
 /* =====================
    REORDER PRACTICE ITEMS
 ===================== */
@@ -176,9 +196,11 @@ exports.PracticeController = {
     getSinglePractice,
     updatePractice,
     deletePractice,
+    getUserPractices,
     // Item management
     addItemToPractice,
     updatePracticeItem,
     deletePracticeItem,
     reorderPracticeItems,
+    getPracticeByIdForUser
 };

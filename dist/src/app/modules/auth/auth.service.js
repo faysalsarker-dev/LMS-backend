@@ -13,6 +13,7 @@ const otpGenerator_1 = require("../../utils/otpGenerator");
 const email_1 = require("../../utils/email");
 const cloudinary_config_1 = require("../../config/cloudinary.config");
 const mongoose_1 = __importDefault(require("mongoose"));
+const sessionToken_1 = require("../../utils/sessionToken");
 exports.userService = {
     async register(data) {
         const existing = await User_model_1.default.findOne({ email: data.email });
@@ -76,13 +77,18 @@ exports.userService = {
         const isMatch = await user.comparePassword(password);
         if (!isMatch)
             throw new ApiError_1.ApiError(401, "Invalid credentials");
-        const refreshToken = (0, jwt_1.generateToken)({ id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email }, config_1.default.jwt.refresh_expires_in);
-        const accessToken = (0, jwt_1.generateToken)({ id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email }, config_1.default.jwt.access_expires_in);
+        if (user?.sessionToken) {
+            throw new ApiError_1.ApiError(409, "This account is already logged in on another device. Please logout first.");
+        }
+        const sessionToken = (0, sessionToken_1.generateSessionToken)();
+        user.sessionToken = sessionToken;
         await user.save();
+        const refreshToken = (0, jwt_1.generateToken)({ id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email, sessionToken }, config_1.default.jwt.refresh_expires_in);
+        const accessToken = (0, jwt_1.generateToken)({ id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email, sessionToken }, config_1.default.jwt.access_expires_in);
         return { user, accessToken, refreshToken };
     },
     async logout(userId) {
-        return User_model_1.default.findByIdAndUpdate(userId, { currentToken: null, refreshToken: null }, { new: true });
+        return User_model_1.default.findByIdAndUpdate(userId, { sessionToken: null }, { new: true });
     },
     async refreshToken(token) {
         const payload = (0, jwt_1.verifyToken)(token);
@@ -90,7 +96,7 @@ exports.userService = {
         if (!user) {
             throw new ApiError_1.ApiError(401, "Invalid refresh token");
         }
-        const accessToken = (0, jwt_1.generateToken)({ id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email }, config_1.default.jwt.access_expires_in);
+        const accessToken = (0, jwt_1.generateToken)({ id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email, sessionToken: user.sessionToken }, config_1.default.jwt.access_expires_in);
         return { accessToken };
     },
     /** 🔹 Update user password */
@@ -133,24 +139,6 @@ exports.userService = {
             throw new ApiError_1.ApiError(404, "User not found");
         const updatedUser = await User_model_1.default.findByIdAndUpdate(userId, updates, { new: true });
         return updatedUser;
-    },
-    async getMe(userId, includeCourses = false, includeWishlist = false) {
-        let query = User_model_1.default.findById(userId);
-        if (includeCourses) {
-            query = query.populate({
-                path: "courses",
-                select: "-milestone",
-            });
-        }
-        if (includeWishlist)
-            query = query.populate({
-                path: "wishlist",
-                select: "-milestone",
-            });
-        const user = await query.exec();
-        if (!user)
-            throw new ApiError_1.ApiError(404, "User not found");
-        return user;
     },
     async getAll(req) {
         const { page = "1", limit = "10", search, role, isVerified, isActive, sortBy = "createdAt", sortOrder = "desc", } = req.query;
@@ -198,6 +186,19 @@ exports.userService = {
             },
             data: users,
         };
+    },
+    async getMe(userId, sessionToken) {
+        const user = await User_model_1.default.findById(userId).select("+sessionToken");
+        if (!user)
+            throw new ApiError_1.ApiError(404, "User not found");
+        if (user.sessionToken !== sessionToken) {
+            // await User.findByIdAndUpdate(userId, { sessionToken: null });
+            return {
+                logout: true,
+                message: "Session expired. Logged in from another device."
+            };
+        }
+        return user;
     },
     async addToWishlist(id, courseId) {
         const user = await User_model_1.default.findById(id);

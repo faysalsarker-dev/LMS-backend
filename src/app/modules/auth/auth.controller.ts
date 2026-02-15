@@ -56,6 +56,22 @@ logout: catchAsync(async (req: Request, res: Response) => {
   });
 }),
 
+logoutFromOthers: catchAsync(async (req: Request, res: Response) => {
+console.log(req.body, 'body')
+
+  const result = await userService.logoutFromOthers(req.body.email);
+  if (!result) {
+    clearAuthCookies(res);
+    throw new ApiError(404, "User not found");
+  }
+  
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Logged out successfully",
+  });
+}),
+
 
 
 me: catchAsync(async (req: Request, res: Response) => {

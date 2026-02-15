@@ -7,6 +7,7 @@ exports.PracticeService = void 0;
 const ApiError_1 = require("../../errors/ApiError");
 const practice_model_1 = __importDefault(require("./practice.model"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const User_model_1 = __importDefault(require("../auth/User.model"));
 const createPractice = async (payload) => {
     return practice_model_1.default.create(payload);
 };
@@ -44,6 +45,15 @@ const getPracticeById = async (id) => {
     if (!practice) {
         throw new ApiError_1.ApiError(404, 'Practice not found');
     }
+    return practice;
+};
+const getPracticeByIdForUser = async (slug) => {
+    const practice = await practice_model_1.default.findOne({ slug, isActive: true }).populate('course');
+    if (!practice) {
+        throw new ApiError_1.ApiError(404, 'Practice not found');
+    }
+    practice.usageCount += 1;
+    await practice.save();
     return practice;
 };
 const updatePractice = async (id, payload) => {
@@ -162,6 +172,24 @@ const reorderPracticeItems = async (practiceId, itemOrders) => {
     // Save the practice
     await practice.save();
 };
+const getUserEnrolledCoursePractices = async (userId) => {
+    if (!mongoose_1.default.Types.ObjectId.isValid(userId)) {
+        throw new ApiError_1.ApiError(400, 'Invalid user ID');
+    }
+    const user = await User_model_1.default.findById(userId).select('courses').lean();
+    if (!user || !user.courses || user.courses.length === 0) {
+        return [];
+    }
+    const practices = await practice_model_1.default.find({
+        course: { $in: user.courses },
+        isActive: true
+    })
+        .populate('course', 'title')
+        .select('id title description course createdAt course thumbnail slug')
+        .sort({ createdAt: -1 })
+        .lean();
+    return practices;
+};
 exports.PracticeService = {
     createPractice,
     getAllPractices,
@@ -172,4 +200,6 @@ exports.PracticeService = {
     updatePracticeItem,
     deleteItemFromPractice,
     reorderPracticeItems,
+    getUserEnrolledCoursePractices,
+    getPracticeByIdForUser
 };

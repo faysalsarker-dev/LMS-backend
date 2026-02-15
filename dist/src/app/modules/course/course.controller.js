@@ -41,6 +41,7 @@ const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const CourseService = __importStar(require("./course.service"));
 const http_status_1 = __importDefault(require("http-status"));
+const cloudinary_config_1 = require("../../config/cloudinary.config");
 // Create Course
 exports.createCourse = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const payload = {
@@ -132,6 +133,7 @@ exports.updateCourse = (0, catchAsync_1.catchAsync)(async (req, res) => {
 // Delete Course
 exports.deleteCourse = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const course = await CourseService.deleteCourse(req.params.id);
+    await (0, cloudinary_config_1.deleteImageFromCLoudinary)(course?.thumbnail);
     if (!course) {
         return (0, sendResponse_1.default)(res, {
             statusCode: http_status_1.default.NOT_FOUND,

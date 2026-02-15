@@ -83,13 +83,24 @@ export const userService = {
   },
 
   async login(email: string, password: string, remember: boolean) {
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password +sessionToken");
     if (!user) throw new ApiError(401, "Invalid credentials");
     if (user && !user.isVerified)
       throw new ApiError(401, "Account is not verified");
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) throw new ApiError(401, "Invalid credentials");
+
+if (user?.sessionToken) {
+  throw new ApiError(
+    409,
+    "ALREADY_LOGGED_IN.",
+  );
+}
+
+ 
+
+
 
   const sessionToken = generateSessionToken();
 
@@ -120,6 +131,15 @@ async logout(userId: string) {
     { new: true }
   );
 },
+
+async logoutFromOthers(email: string) {
+  return User.findOneAndUpdate(
+    { email },           // filter by email
+    { sessionToken: null }, // update
+    { new: true }        // return the updated document
+  );
+}
+,
 
 
 

@@ -12,8 +12,10 @@ const router = express_1.default.Router();
 // Practice CRUD
 router.post('/', (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN, auth_interface_1.UserRoles.INSTRUCTOR]), multer_config_1.multerUpload.single('file'), practice_controller_1.PracticeController.createPractice);
 router.get('/', (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN, auth_interface_1.UserRoles.INSTRUCTOR]), practice_controller_1.PracticeController.getAllPractices);
+router.get('/student', (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.STUDENT, auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN, auth_interface_1.UserRoles.INSTRUCTOR]), practice_controller_1.PracticeController.getUserPractices);
 router.patch('/:id', (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN, auth_interface_1.UserRoles.INSTRUCTOR]), multer_config_1.multerUpload.single('file'), practice_controller_1.PracticeController.updatePractice);
 router.delete('/:id', (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN, auth_interface_1.UserRoles.INSTRUCTOR]), practice_controller_1.PracticeController.deletePractice);
+router.get('/:slug/student', (0, CheckAuth_1.checkAuth)(), practice_controller_1.PracticeController.getPracticeByIdForUser);
 router.get('/:id', (0, CheckAuth_1.checkAuth)(), practice_controller_1.PracticeController.getSinglePractice);
 // ============== NEW: Practice Item Management Routes ==============
 // Add item to practice

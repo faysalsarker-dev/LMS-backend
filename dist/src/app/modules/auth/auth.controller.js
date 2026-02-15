@@ -9,6 +9,7 @@ const auth_service_1 = require("./auth.service");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const setCookie_1 = require("./../../utils/setCookie");
 const ApiError_1 = require("../../errors/ApiError");
+const sessionToken_1 = require("../../utils/sessionToken");
 exports.AuthController = {
     register: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const user = await auth_service_1.userService.register(req.body);
@@ -30,17 +31,13 @@ exports.AuthController = {
             data: user,
         });
     }),
-    logout: (0, catchAsync_1.catchAsync)(async (_req, res) => {
-        res.clearCookie("accessToken", {
-            httpOnly: true,
-            secure: true,
-            sameSite: "none"
-        });
-        res.clearCookie("refreshToken", {
-            httpOnly: true,
-            secure: true,
-            sameSite: "none"
-        });
+    logout: (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const result = await auth_service_1.userService.logout(req.user._id);
+        if (!result) {
+            (0, setCookie_1.clearAuthCookies)(res);
+            throw new ApiError_1.ApiError(404, "User not found");
+        }
+        (0, setCookie_1.clearAuthCookies)(res);
         (0, sendResponse_1.default)(res, {
             statusCode: 200,
             success: true,
@@ -48,9 +45,13 @@ exports.AuthController = {
         });
     }),
     me: (0, catchAsync_1.catchAsync)(async (req, res) => {
-        const userId = req.user._id.toString();
-        const { courses, wishlist } = req.query;
-        const result = await auth_service_1.userService.getMe(userId, courses === 'true', wishlist === 'true');
+        const userId = req.user._id;
+        const sessionToken = req.user.sessionToken;
+        const result = await auth_service_1.userService.getMe(userId, sessionToken);
+        if ((0, sessionToken_1.isSessionExpired)(result)) {
+            (0, setCookie_1.clearAuthCookies)(res);
+            throw new ApiError_1.ApiError(401, result.message);
+        }
         (0, sendResponse_1.default)(res, {
             success: true,
             statusCode: 200,
@@ -131,7 +132,6 @@ exports.AuthController = {
     }),
     updateProfile: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const userId = req.user._id;
-        console.log(userId);
         const payload = {
             ...req.body,
             profile: req.file?.path
