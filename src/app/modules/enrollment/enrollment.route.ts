@@ -18,6 +18,23 @@ router.get(
 );
 
 
+router.post(
+  "/success",
+EnrollmentController.paymentSSlSuccessController
+
+);
+router.post(
+  "/cancel",
+
+
+);
+router.post(
+  "/failed",
+
+
+
+);
+
 // Create enrollment (Student enrolls in course)
 router.post("/", checkAuth(), EnrollmentController.createEnrollmentController);
 

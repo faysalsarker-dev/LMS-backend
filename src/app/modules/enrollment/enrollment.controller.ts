@@ -3,7 +3,8 @@ import { catchAsync } from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { Request, Response } from "express";
 import { ApiError } from "../../errors/ApiError";
-import { createEnrollment, deleteEnrollment, getAllEnrollments, getEnrollmentById, getMonthlyEarnings, getTotalEarnings, updateEnrollment } from "./enrollment.service";
+import { createEnrollment, deleteEnrollment, getAllEnrollments, getEnrollmentById, getMonthlyEarnings, getTotalEarnings, handleSuccessPayment, updateEnrollment } from "./enrollment.service";
+import config from "../../config/config";
 
 export const createEnrollmentController = catchAsync(
   async (req: Request, res: Response) => {
@@ -117,5 +118,28 @@ export const getMonthlyEarningsController = catchAsync(
       message: "Monthly earnings fetched successfully",
       data: result,
     });
+  }
+);
+
+
+
+export const paymentSSlSuccessController = catchAsync(
+  async (req: Request, res: Response) => {
+const result = await handleSuccessPayment(req.query);
+
+res.redirect(config.ssl.sslSuccessFrontendUrl)
+
+  }
+);
+
+export const paymentSSlCancelController = catchAsync(
+  async (req: Request, res: Response) => {
+   
+  }
+);
+export const paymentSSlFailedController = catchAsync(
+  async (req: Request, res: Response) => {
+    // Handle payment success logic here
+    res.send("Payment successful");
   }
 );

@@ -6,6 +6,7 @@ import Enrollment from "./Enrollment.model";
 import { IEnrollment } from "./enrollment.interface";
 import { ApiError } from "../../errors/ApiError";
 import PromoCode from "../promoCode/Promo.model";
+import { SSLService } from "../sslCommersz/sslCommersz.service";
 
 // Create enrollment with payment
 export const createEnrollment = async (data: {
@@ -24,14 +25,14 @@ export const createEnrollment = async (data: {
     session.startTransaction();
 
     // Check if already enrolled
-    const existingEnrollment = await Enrollment.findOne({
-      user: data.user,
-      course: data.course,
-    });
+    // const existingEnrollment = await Enrollment.findOne({
+    //   user: data.user,
+    //   course: data.course,
+    // });
 
-    if (existingEnrollment) {
-      throw new ApiError(400, "User is already enrolled in this course");
-    }
+    // if (existingEnrollment) {
+    //   throw new ApiError(400, "User is already enrolled in this course");
+    // }
 
     // Verify course exists
     const course = await Course.findById(data.course).session(session);
@@ -83,7 +84,7 @@ export const createEnrollment = async (data: {
           promoCode: promoCodeId,
           promoCodeUsed: data.promoCode || null,
           paymentMethod: data.paymentMethod,
-          paymentStatus: "completed",
+          paymentStatus: "pending",
           transactionId: data.transactionId,
           paymentDate: new Date(),
           status: "active",
@@ -92,41 +93,58 @@ export const createEnrollment = async (data: {
       { session }
     );
 
-    // Add course to user's courses
-    await User.findByIdAndUpdate(
-      data.user,
-      { $addToSet: { courses: data.course } },
-      { session }
-    );
 
-    // Update course enrollment stats
-    await Course.findByIdAndUpdate(
-      data.course,
-      {
-        $inc: { totalEnrolled: 1 },
-        $addToSet: { enrolledStudents: data.user },
-      },
-      { session }
-    );
 
-    // Create progress document
-    await Progress.create(
-      [
-        {
-          student: data.user,
-          course: data.course,
-          completedLessons: [],
-          quizResults: [],
-          assignmentSubmissions: [],
-          progressPercentage: 0,
-          isCompleted: false,
-        },
-      ],
-      { session }
-    );
+    const paymantData = {
+    amount: parseFloat(enrollment[0].finalAmount.toString()),
+    transactionId: enrollment[0]._id.toString(),
+    name: "Course Purchase",
+    email: "faysalsarker@gmail.com",
+    phoneNumber: "01700000000",
+    address: "123 Main St, City, Country",
+    country: "Bangladesh"
+    }
+
+
+
+    const sslPayment = await SSLService.sslPaymentInit(paymantData);
+
+
+    // // Add course to user's courses
+    // await User.findByIdAndUpdate(
+    //   data.user,
+    //   { $addToSet: { courses: data.course } },
+    //   { session }
+    // );
+
+    // // Update course enrollment stats
+    // await Course.findByIdAndUpdate(
+    //   data.course,
+    //   {
+    //     $inc: { totalEnrolled: 1 },
+    //     $addToSet: { enrolledStudents: data.user },
+    //   },
+    //   { session }
+    // );
+
+    // // Create progress document
+    // await Progress.create(
+    //   [
+    //     {
+    //       student: data.user,
+    //       course: data.course,
+    //       completedLessons: [],
+    //       quizResults: [],
+    //       assignmentSubmissions: [],
+    //       progressPercentage: 0,
+    //       isCompleted: false,
+    //     },
+    //   ],
+    //   { session }
+    // );
 
     await session.commitTransaction();
-    return enrollment[0];
+    return sslPayment.GatewayPageURL;
   } catch (error) {
     await session.abortTransaction();
     throw error;
@@ -134,6 +152,88 @@ export const createEnrollment = async (data: {
     session.endSession();
   }
 };
+
+// Handle successful payment
+export const handleSuccessPayment = async (query: Record<string, any>): Promise<IEnrollment> => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+console.log("Payment Success Query Params:", query);
+    // Main logic here
+
+    await session.commitTransaction();
+    return {} as IEnrollment;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
+
+// Handle failed payment
+export const handleFailedPayment = async (data: {
+  transactionId: string;
+  reason?: string;
+}): Promise<void> => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    // Main logic here
+
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
+
+// Handle cancelled payment
+export const handleCancelledPayment = async (data: {
+  transactionId: string;
+  reason?: string;
+}): Promise<void> => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    // Main logic here
+
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Get all enrollments (Admin)
 export const getAllEnrollments = async (filters?: {
