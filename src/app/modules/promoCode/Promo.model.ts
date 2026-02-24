@@ -1,11 +1,17 @@
-import { Schema, model } from "mongoose";
-import { IPromoCode } from "./promo.interface";
+import { Schema, Types, model } from "mongoose";
+import { IPromoCode, IPromoCodeModel, IUsePromoParams } from "./promo.interface";
+import { ApiError } from "../../errors/ApiError";
 
 const PromoUsageSchema = new Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
+      required: true,
+    },
+    course: {
+      type: Schema.Types.ObjectId,
+      ref: "Course",
       required: true,
     },
     usedAt: {
@@ -26,13 +32,6 @@ const PromoCodeSchema = new Schema<IPromoCode>(
       trim: true,
 index: true,
     },
-
-    description: {
-      type: String,
-      trim: true,
-      default: "",
-    },
-
     discountValue: {
       type: Number,
       required: true,
@@ -46,12 +45,20 @@ index: true,
     },
 
     // --- Creator Info ---
-    createdBy: {
+    owner: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-
+commission: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalEarn: {
+  type: Number,
+  default: 0, 
+},
     // --- Promo Status ---
     isActive: {
       type: Boolean,
@@ -93,13 +100,6 @@ index: true,
       type: [PromoUsageSchema],
       default: [],
     },
-
-    // Order limit
-    minOrderAmount: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
   },
   { timestamps: true }
 );
@@ -120,5 +120,85 @@ PromoCodeSchema.pre("save", function (next) {
 });
 
 
-const PromoCode = model<IPromoCode>("PromoCode", PromoCodeSchema);
+
+
+PromoCodeSchema.statics.usePromo = async function ({
+  promoCode,
+  userId,
+  courseId,
+  price,
+}: IUsePromoParams) {
+  const promo = await this.findOne({ code: promoCode, isActive: true });
+
+  if (!promo) {
+   throw new ApiError(400, "Promo code is invalid, expired, or inactive.");
+  }
+
+  const earnAmount = (price * promo.commission) / 100;
+
+  return await this.findOneAndUpdate(
+    { _id: promo._id },
+    {
+      $inc: {
+        currentUsageCount: 1,
+        totalEarn: earnAmount, 
+      },
+      $push: {
+        usedBy: {
+          user: userId,
+          course: courseId,
+          usedAt: new Date(),
+        },
+      },
+    },
+    { new: true, runValidators: true }
+  );
+};
+
+PromoCodeSchema.statics.validatePromo = async function ({
+  code,
+  userId,
+  originalPrice,
+}) {
+  const promo = await this.findOne({ code: code.trim() });
+  if (!promo || !promo.isActive) {
+    throw new ApiError(400, "Promo code is invalid or inactive.");
+  }
+  const now = new Date();
+  if (now < promo.validFrom || now > promo.expirationDate) {
+    throw new ApiError(400, "This promo code has expired.");
+  }
+
+  if (promo.maxUsageCount && promo.currentUsageCount >= promo.maxUsageCount) {
+    throw new ApiError(400, "This promo code has reached its maximum usage limit.");
+  }
+
+  const userUsageCount = promo.usedBy.filter(
+    (usage: any) => usage.user.toString() === userId.toString()
+  ).length;
+
+  if (userUsageCount >= promo.maxUsagePerUser) {
+    throw new ApiError(400, "You have already used this promo code.");
+  }
+
+  let discountAmount = 0;
+  if (promo.discountType === "percentage") {
+    discountAmount = (originalPrice * promo.discountValue) / 100;
+  } else {
+  
+    discountAmount = Math.min(promo.discountValue, originalPrice);
+  }
+
+  const finalAmount = originalPrice - discountAmount;
+
+  return {
+    isValid: true,
+    discountAmount,
+    finalAmount,
+    promoCode: promo.code 
+  };
+};
+
+
+const PromoCode = model<IPromoCode ,IPromoCodeModel>("PromoCode", PromoCodeSchema);
 export default PromoCode

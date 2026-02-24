@@ -84,7 +84,7 @@ export const userService = {
 
   async login(email: string, password: string, remember: boolean) {
     const user = await User.findOne({ email }).select("+password +sessionToken");
-    if (!user) throw new ApiError(401, "Invalid credentials");
+    if (!user) throw new ApiError(401, "User Not Found");
     if (user && !user.isVerified)
       throw new ApiError(401, "Account is not verified");
 

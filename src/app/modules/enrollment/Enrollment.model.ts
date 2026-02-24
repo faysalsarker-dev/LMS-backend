@@ -8,51 +8,25 @@ const enrollmentSchema = new Schema<IEnrollment>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     course: { type: Schema.Types.ObjectId, ref: "Course", required: true, index: true },
-    
-    // Enrollment status
-    status: {
-      type: String,
-      enum: ["active", "completed", "cancelled"],
-      default: "active",
-    },
     enrolledAt: { type: Date, default: Date.now },
     completedAt: { type: Date, default: null },
-    
-    // Pricing
-    originalPrice: { type: Number, required: true, min: 0 },
-    discountAmount: { type: Number, default: 0, min: 0 },
-    finalAmount: { type: Number, required: true, min: 0 },
     currency: { type: String, default: "USD" },
-    
-    // Promo code
-    promoCode: { type: Schema.Types.ObjectId, ref: "PromoCode", default: null },
-    promoCodeUsed: { type: String, default: null },
-    
-    // Payment
-    paymentMethod: {
-      type: String,
-      enum: ["alipay", "wechat", "stripe", "paypal"],
-      required: true,
-    },
+    amount: { type: Number, required: true },
     paymentStatus: {
       type: String,
       enum: ["pending", "completed", "failed", "refunded"],
       default: "pending",
       index: true,
     },
-    transactionId: { type: String, default: null },
-    paymentDate: { type: Date, default: null },
-    
-    // Refund
+    promoCode: { type: String, default: null },
+    transactionId: { type: String, required: true },
     refundDate: { type: Date, default: null },
-    refundReason: { type: String, default: null },
   },
   { timestamps: true }
 );
 
 // Indexes
 enrollmentSchema.index({ user: 1, course: 1 }, { unique: true });
-enrollmentSchema.index({ paymentStatus: 1, paymentDate: 1 });
 enrollmentSchema.index({ createdAt: 1 }); 
 
 const Enrollment = model<IEnrollment>("Enrollment", enrollmentSchema);

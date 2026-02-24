@@ -7,144 +7,88 @@ import { IEnrollment } from "./enrollment.interface";
 import { ApiError } from "../../errors/ApiError";
 import PromoCode from "../promoCode/Promo.model";
 import { SSLService } from "../sslCommersz/sslCommersz.service";
+import { generateTransactionId } from "../../utils/transactionId";
 
 // Create enrollment with payment
 export const createEnrollment = async (data: {
   user: string;
   course: string;
   originalPrice: number;
-  discountAmount?: number;
-  finalAmount: number;
-  promoCode?: string; 
-  paymentMethod: "alipay" | "wechat" | "stripe" | "paypal";
-  transactionId?: string;
-}): Promise<IEnrollment> => {
+  promoCode?: string;
+}): Promise<string> => { 
   const session = await mongoose.startSession();
 
   try {
     session.startTransaction();
 
-    // Check if already enrolled
-    // const existingEnrollment = await Enrollment.findOne({
-    //   user: data.user,
-    //   course: data.course,
-    // });
+    // 1. Check if already enrolled
+    const existingEnrollment = await Enrollment.findOne({
+      user: data.user,
+      course: data.course,
+      paymentStatus: "completed",
+    }).session(session);
 
-    // if (existingEnrollment) {
-    //   throw new ApiError(400, "User is already enrolled in this course");
-    // }
+    if (existingEnrollment) {
+      throw new ApiError(400, "User is already enrolled in this course");
+    }
 
-    // Verify course exists
+
     const course = await Course.findById(data.course).session(session);
-    if (!course) {
-      throw new ApiError(404, "Course not found");
-    }
+    if (!course) throw new ApiError(404, "Course not found");
 
-    // Handle promo code if provided
-    let promoCodeId = null;
+    const user = await User.findById(data.user).session(session);
+    if (!user) throw new ApiError(404, "User not found");
+
+
+    let finalAmount = course.price; 
+    let appliedPromo = null;
+
     if (data.promoCode) {
-      const promo = await PromoCode.findOne({
+      const validation = await PromoCode.validatePromo({
         code: data.promoCode,
-        isActive: true,
-      }).session(session);
-
-      if (promo) {
-        // Check if user already used this promo
-        const userUsedPromo = promo.usedBy.some(
-          (usage: any) => usage.user.toString() === data.user
-        );
-
-        if (userUsedPromo) {
-          throw new ApiError(400, "You have already used this promo code");
-        }
-
-        // Update promo usage
-        await PromoCode.findByIdAndUpdate(
-          promo._id,
-          {
-            $inc: { currentUsageCount: 1 },
-            $push: { usedBy: { user: data.user, usedAt: new Date() } },
-          },
-          { session }
-        );
-
-        promoCodeId = promo._id;
-      }
+        userId: data.user,
+        originalPrice: course.price,
+      });
+      
+      finalAmount = validation.finalAmount;
+      appliedPromo = validation.promoCode;
     }
 
-    // Create enrollment
-    const enrollment = await Enrollment.create(
+    const transactionId = generateTransactionId();
+
+   await Enrollment.create(
       [
         {
           user: data.user,
           course: data.course,
-          originalPrice: data.originalPrice,
-          discountAmount: data.discountAmount || 0,
-          finalAmount: data.finalAmount,
-          promoCode: promoCodeId,
-          promoCodeUsed: data.promoCode || null,
-          paymentMethod: data.paymentMethod,
+          amount: finalAmount,
+          currency: course.currency || "BDT",
           paymentStatus: "pending",
-          transactionId: data.transactionId,
+          promoCode: appliedPromo,
+          transactionId: transactionId,
           paymentDate: new Date(),
-          status: "active",
         },
       ],
       { session }
     );
 
+   
+    const paymentData = {
+      amount: finalAmount,
+      courseId: course._id.toString(),
+      transactionId: transactionId,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phone || "01700000000",
+      city: user.address?.city || "Dhaka",
+      country: user.address?.country || "Bangladesh",
+    };
 
-
-    const paymantData = {
-    amount: parseFloat(enrollment[0].finalAmount.toString()),
-    transactionId: enrollment[0]._id.toString(),
-    name: "Course Purchase",
-    email: "faysalsarker@gmail.com",
-    phoneNumber: "01700000000",
-    address: "123 Main St, City, Country",
-    country: "Bangladesh"
-    }
-
-
-
-    const sslPayment = await SSLService.sslPaymentInit(paymantData);
-
-
-    // // Add course to user's courses
-    // await User.findByIdAndUpdate(
-    //   data.user,
-    //   { $addToSet: { courses: data.course } },
-    //   { session }
-    // );
-
-    // // Update course enrollment stats
-    // await Course.findByIdAndUpdate(
-    //   data.course,
-    //   {
-    //     $inc: { totalEnrolled: 1 },
-    //     $addToSet: { enrolledStudents: data.user },
-    //   },
-    //   { session }
-    // );
-
-    // // Create progress document
-    // await Progress.create(
-    //   [
-    //     {
-    //       student: data.user,
-    //       course: data.course,
-    //       completedLessons: [],
-    //       quizResults: [],
-    //       assignmentSubmissions: [],
-    //       progressPercentage: 0,
-    //       isCompleted: false,
-    //     },
-    //   ],
-    //   { session }
-    // );
+    const sslPayment = await SSLService.sslPaymentInit(paymentData);
 
     await session.commitTransaction();
     return sslPayment.GatewayPageURL;
+
   } catch (error) {
     await session.abortTransaction();
     throw error;
@@ -155,15 +99,73 @@ export const createEnrollment = async (data: {
 
 // Handle successful payment
 export const handleSuccessPayment = async (query: Record<string, any>): Promise<IEnrollment> => {
+  const {transactionId ,  promoCode} = query; 
+  
   const session = await mongoose.startSession();
-
   try {
     session.startTransaction();
-console.log("Payment Success Query Params:", query);
-    // Main logic here
+
+    // 1. Find the pending enrollment
+    const enrollment = await Enrollment.findOne({ transactionId }).session(session);
+    if (!enrollment) throw new ApiError(404, "Enrollment record not found");
+
+    if (enrollment.paymentStatus === "completed") {
+        return enrollment;
+    }
+    enrollment.paymentStatus = "completed";
+    await enrollment.save({ session });
+
+    await User.findByIdAndUpdate(
+      enrollment.user,
+      { $addToSet: { courses: enrollment.course } },
+      { session }
+    );
+
+
+
+  await Course.findByIdAndUpdate(
+      enrollment.course,
+      {
+        $inc: { totalEnrolled: 1 },
+        $addToSet: { enrolledStudents: enrollment.user },
+      },
+      { session }
+    );
+
+
+
+
+
+    if (promoCode) {
+
+      await PromoCode.usePromo({
+        promoCode: promoCode,
+        userId: enrollment.user,
+        courseId: enrollment.course,
+        price: enrollment.amount,
+      });
+    }
+
+
+  const progress = await Progress.create(
+      [
+        {
+          student: enrollment.user,
+          course: enrollment.course,
+          completedLessons: [],
+          quizResults: [],
+          assignmentSubmissions: [],
+          progressPercentage: 0,
+          isCompleted: false,
+        },
+      ],
+      { session }
+    );
+
+console.log("Enrollment and progress created successfully for transaction:", progress);
 
     await session.commitTransaction();
-    return {} as IEnrollment;
+    return enrollment;
   } catch (error) {
     await session.abortTransaction();
     throw error;
@@ -171,6 +173,11 @@ console.log("Payment Success Query Params:", query);
     session.endSession();
   }
 };
+
+
+
+
+
 
 // Handle failed payment
 export const handleFailedPayment = async (data: {
@@ -182,7 +189,15 @@ export const handleFailedPayment = async (data: {
   try {
     session.startTransaction();
 
-    // Main logic here
+
+
+
+
+
+
+
+
+    
 
     await session.commitTransaction();
   } catch (error) {

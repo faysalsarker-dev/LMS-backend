@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Document, Model, Types } from "mongoose";
 
 export interface IPromoUsage {
   user: Types.ObjectId;
@@ -7,13 +7,14 @@ export interface IPromoUsage {
 
 export interface IPromoCode {
   code: string;
-  description?: string;
+
 
   discountValue: number;
   discountType: "percentage" | "fixed_amount";
 
-  createdBy: Types.ObjectId;
-
+  owner: Types.ObjectId;
+commission: number;
+totalEarn: number;
   isActive: boolean;
 
   validFrom: Date;
@@ -26,8 +27,41 @@ export interface IPromoCode {
 
   usedBy: IPromoUsage[];
 
-  minOrderAmount: number;
 
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+
+
+
+
+export interface IPromoCodeModel extends Model<IPromoCode> {
+  // Your existing method
+  usePromo(params: {
+    promoCode: string;
+    userId: string | Types.ObjectId | any;
+    courseId: string | Types.ObjectId | any;
+    price: number;
+  }): Promise<Document<unknown, {}, IPromoCode> & IPromoCode>;
+
+  // ADD THIS NEW METHOD HERE
+  validatePromo(params: {
+    code: string;
+    userId: string | Types.ObjectId;
+    originalPrice: number;
+  }): Promise<{
+    isValid: boolean;
+    discountAmount: number;
+    finalAmount: number;
+    promoCode: string;
+  }>;
+}
+
+
+export interface IUsePromoParams {
+  promoCode: string;
+  userId: string | Types.ObjectId;
+  courseId: string | Types.ObjectId;
+  price: number;
 }

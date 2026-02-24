@@ -20,9 +20,9 @@ export const createEnrollmentController = catchAsync(
       discountAmount: req.body.discountAmount || 0,
       finalAmount: req.body.finalAmount,
       promoCode: req.body.promoCode,
-      paymentMethod: req.body.paymentMethod,
-      transactionId: req.body.transactionId,
     };
+
+    console.log("Creating enrollment with payload:", payload);
 
     const result = await createEnrollment(payload);
 
