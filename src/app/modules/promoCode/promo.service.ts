@@ -8,7 +8,7 @@ import { Types } from "mongoose";
 // --------------------------
 const createPromo = async (data: IPromoCode) => {
   console.log(data);
-  const exist = await PromoCode.findOne({ createdBy: data.createdBy, isDeleted: false });
+  const exist = await PromoCode.findOne({ owner: data.owner, isDeleted: false });
   if (exist) throw new ApiError(400, "User already contain a promo");
   const promo = await PromoCode.create({ ...data });
   console.log(promo);
@@ -359,13 +359,6 @@ const redeemPromoService = async ({
   if (promo.validFrom > now) throw new ApiError(400, "Promo not active yet");
   if (promo.expirationDate < now) throw new ApiError(400, "Promo has expired");
 
-  // --- Check order amount ---
-  if (orderAmount < promo.minOrderAmount) {
-    throw new ApiError(
-      400,
-      `Minimum order amount is ${promo.minOrderAmount}`
-    );
-  }
 
   // --- Check global usage limit ---
   if (promo.maxUsageCount && promo.currentUsageCount >= promo.maxUsageCount) {
@@ -434,9 +427,6 @@ const validatePromoService = async ({
   if (promo.validFrom > now) throw new ApiError(400, "Promo starts later");
   if (promo.expirationDate < now) throw new ApiError(400, "Promo expired");
 
-  if (orderAmount < promo.minOrderAmount) {
-    throw new ApiError(400, `Minimum order amount: ${promo.minOrderAmount}`);
-  }
 
   if (promo.maxUsageCount && promo.currentUsageCount >= promo.maxUsageCount) {
     throw new ApiError(400, "Promo limit reached");

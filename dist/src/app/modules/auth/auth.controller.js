@@ -44,6 +44,19 @@ exports.AuthController = {
             message: "Logged out successfully",
         });
     }),
+    logoutFromOthers: (0, catchAsync_1.catchAsync)(async (req, res) => {
+        console.log(req.body, 'body');
+        const result = await auth_service_1.userService.logoutFromOthers(req.body.email);
+        if (!result) {
+            (0, setCookie_1.clearAuthCookies)(res);
+            throw new ApiError_1.ApiError(404, "User not found");
+        }
+        (0, sendResponse_1.default)(res, {
+            statusCode: 200,
+            success: true,
+            message: "Logged out successfully",
+        });
+    }),
     me: (0, catchAsync_1.catchAsync)(async (req, res) => {
         const userId = req.user._id;
         const sessionToken = req.user.sessionToken;

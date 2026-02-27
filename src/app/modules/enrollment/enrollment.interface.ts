@@ -7,7 +7,7 @@ export interface IEnrollment {
   completedAt?: Date;
 amount: number;
   currency: string;
-  paymentStatus: "pending" | "completed" | "failed" | "refunded";
+  paymentStatus: "pending" | "completed" | "failed" | "refunded" | "cancelled";
   transactionId: string;
   promoCode?: string;
   refundDate?: Date;

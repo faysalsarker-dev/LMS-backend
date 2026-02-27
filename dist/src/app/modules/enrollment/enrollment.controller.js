@@ -3,12 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMonthlyEarningsController = exports.getTotalEarningsController = exports.deleteEnrollmentController = exports.updateEnrollmentController = exports.getEnrollmentByIdController = exports.getAllEnrollmentsController = exports.createEnrollmentController = void 0;
+exports.paymentSSlFailedController = exports.paymentSSlCancelController = exports.paymentSSlSuccessController = exports.getMonthlyEarningsController = exports.getTotalEarningsController = exports.deleteEnrollmentController = exports.updateEnrollmentController = exports.getEnrollmentByIdController = exports.getAllEnrollmentsController = exports.createEnrollmentController = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const ApiError_1 = require("../../errors/ApiError");
 const enrollment_service_1 = require("./enrollment.service");
+const config_1 = __importDefault(require("../../config/config"));
 exports.createEnrollmentController = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const userId = req.user._id;
     if (!userId) {
@@ -21,9 +22,8 @@ exports.createEnrollmentController = (0, catchAsync_1.catchAsync)(async (req, re
         discountAmount: req.body.discountAmount || 0,
         finalAmount: req.body.finalAmount,
         promoCode: req.body.promoCode,
-        paymentMethod: req.body.paymentMethod,
-        transactionId: req.body.transactionId,
     };
+    console.log("Creating enrollment with payload:", payload);
     const result = await (0, enrollment_service_1.createEnrollment)(payload);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.CREATED,
@@ -92,4 +92,14 @@ exports.getMonthlyEarningsController = (0, catchAsync_1.catchAsync)(async (req, 
         message: "Monthly earnings fetched successfully",
         data: result,
     });
+});
+exports.paymentSSlSuccessController = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const result = await (0, enrollment_service_1.handleSuccessPayment)(req.query);
+    res.redirect(config_1.default.ssl.sslSuccessFrontendUrl);
+});
+exports.paymentSSlCancelController = (0, catchAsync_1.catchAsync)(async (req, res) => {
+});
+exports.paymentSSlFailedController = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    // Handle payment success logic here
+    res.send("Payment successful");
 });

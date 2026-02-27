@@ -69,16 +69,16 @@ exports.userService = {
         return { message: "Account verified successfully", email: user.email };
     },
     async login(email, password, remember) {
-        const user = await User_model_1.default.findOne({ email }).select("+password");
+        const user = await User_model_1.default.findOne({ email }).select("+password +sessionToken");
         if (!user)
-            throw new ApiError_1.ApiError(401, "Invalid credentials");
+            throw new ApiError_1.ApiError(401, "User Not Found");
         if (user && !user.isVerified)
             throw new ApiError_1.ApiError(401, "Account is not verified");
         const isMatch = await user.comparePassword(password);
         if (!isMatch)
             throw new ApiError_1.ApiError(401, "Invalid credentials");
         if (user?.sessionToken) {
-            throw new ApiError_1.ApiError(409, "This account is already logged in on another device. Please logout first.");
+            throw new ApiError_1.ApiError(409, "ALREADY_LOGGED_IN.");
         }
         const sessionToken = (0, sessionToken_1.generateSessionToken)();
         user.sessionToken = sessionToken;
@@ -89,6 +89,12 @@ exports.userService = {
     },
     async logout(userId) {
         return User_model_1.default.findByIdAndUpdate(userId, { sessionToken: null }, { new: true });
+    },
+    async logoutFromOthers(email) {
+        return User_model_1.default.findOneAndUpdate({ email }, // filter by email
+        { sessionToken: null }, // update
+        { new: true } // return the updated document
+        );
     },
     async refreshToken(token) {
         const payload = (0, jwt_1.verifyToken)(token);

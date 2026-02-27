@@ -5,5 +5,5 @@ export const generateTransactionId = () => {
   const randomStr = crypto.randomBytes(3).toString('hex').toUpperCase();
   const date = new Date();
   const timestamp = date.getTime().toString().slice(-4); 
-  return `${brand}-${randomStr}-${timestamp}`;
+  return `TNXOF${brand}-${randomStr}${timestamp}`;
 };

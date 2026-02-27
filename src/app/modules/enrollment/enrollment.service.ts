@@ -147,7 +147,7 @@ export const handleSuccessPayment = async (query: Record<string, any>): Promise<
     }
 
 
-  const progress = await Progress.create(
+ await Progress.create(
       [
         {
           student: enrollment.user,
@@ -162,7 +162,7 @@ export const handleSuccessPayment = async (query: Record<string, any>): Promise<
       { session }
     );
 
-console.log("Enrollment and progress created successfully for transaction:", progress);
+
 
     await session.commitTransaction();
     return enrollment;
@@ -180,53 +180,51 @@ console.log("Enrollment and progress created successfully for transaction:", pro
 
 
 // Handle failed payment
-export const handleFailedPayment = async (data: {
-  transactionId: string;
-  reason?: string;
-}): Promise<void> => {
+export const handleFailedPayment = async (query: Record<string, any>) => {
+  const {transactionId } = query; 
+
   const session = await mongoose.startSession();
 
-  try {
-    session.startTransaction();
 
 
 
 
+  // 1. Find the pending enrollment
+    const enrollment = await Enrollment.findOne({ transactionId }).session(session);
+    if (!enrollment) throw new ApiError(404, "Enrollment record not found");
+
+    if (enrollment.paymentStatus === "failed") {
+        return enrollment;
+    }
+    enrollment.paymentStatus = "failed";
+    await enrollment.save({ session });
 
 
 
 
 
     
+return enrollment;
 
-    await session.commitTransaction();
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  } finally {
-    session.endSession();
-  }
 };
 
 // Handle cancelled payment
-export const handleCancelledPayment = async (data: {
-  transactionId: string;
-  reason?: string;
-}): Promise<void> => {
+export const handleCancelledPayment = async (query: Record<string, any>) => {
   const session = await mongoose.startSession();
+  const {transactionId } = query; 
 
-  try {
-    session.startTransaction();
 
-    // Main logic here
 
-    await session.commitTransaction();
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  } finally {
-    session.endSession();
-  }
+    const enrollment = await Enrollment.findOne({ transactionId });
+    if (!enrollment) throw new ApiError(404, "Enrollment record not found");
+
+    if (enrollment.paymentStatus === "cancelled") {
+        return enrollment;
+    }
+    enrollment.paymentStatus = "cancelled";
+    await enrollment.save({ session });
+    return enrollment;
+
 };
 
 

@@ -11,6 +11,7 @@ router.post('/register', auth_controller_1.AuthController.register);
 router.post('/login', auth_controller_1.AuthController.login);
 router.put('/verify-otp', auth_controller_1.AuthController.verifyOtp);
 router.post('/logout', (0, CheckAuth_1.checkAuth)(), auth_controller_1.AuthController.logout);
+router.post('/logout-all', auth_controller_1.AuthController.logoutFromOthers);
 router.put('/addToWishlist', (0, CheckAuth_1.checkAuth)(), auth_controller_1.AuthController.addToWishlist);
 router.get('/me', (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.INSTRUCTOR, auth_interface_1.UserRoles.SUPER_ADMIN, auth_interface_1.UserRoles.STUDENT]), auth_controller_1.AuthController.me);
 router.post("/refresh-token", auth_controller_1.AuthController.getNewAccessToken);

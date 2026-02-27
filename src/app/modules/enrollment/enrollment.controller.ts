@@ -3,7 +3,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { Request, Response } from "express";
 import { ApiError } from "../../errors/ApiError";
-import { createEnrollment, deleteEnrollment, getAllEnrollments, getEnrollmentById, getMonthlyEarnings, getTotalEarnings, handleSuccessPayment, updateEnrollment } from "./enrollment.service";
+import { createEnrollment, deleteEnrollment, getAllEnrollments, getEnrollmentById, getMonthlyEarnings, getTotalEarnings, handleCancelledPayment, handleFailedPayment, handleSuccessPayment, updateEnrollment } from "./enrollment.service";
 import config from "../../config/config";
 
 export const createEnrollmentController = catchAsync(
@@ -21,8 +21,6 @@ export const createEnrollmentController = catchAsync(
       finalAmount: req.body.finalAmount,
       promoCode: req.body.promoCode,
     };
-
-    console.log("Creating enrollment with payload:", payload);
 
     const result = await createEnrollment(payload);
 
@@ -127,19 +125,24 @@ export const paymentSSlSuccessController = catchAsync(
   async (req: Request, res: Response) => {
 const result = await handleSuccessPayment(req.query);
 
-res.redirect(config.ssl.sslSuccessFrontendUrl)
+res.redirect(`${config.ssl.sslSuccessFrontendUrl}?transactionId=${result.transactionId}&amount=${result.amount}&currency=${result.currency}`);
 
   }
 );
 
 export const paymentSSlCancelController = catchAsync(
   async (req: Request, res: Response) => {
-   
+   const result = await handleCancelledPayment(req.query);
+
+res.redirect(`${config.ssl.sslCancelFrontendUrl}?transactionId=${result.transactionId}&amount=${result.amount}&currency=${result.currency}`);
+
   }
 );
 export const paymentSSlFailedController = catchAsync(
   async (req: Request, res: Response) => {
-    // Handle payment success logic here
-    res.send("Payment successful");
+   const result = await handleFailedPayment(req.query);
+
+res.redirect(`${config.ssl.sslFailedFrontendUrl}?transactionId=${result.transactionId}&amount=${result.amount}&currency=${result.currency}`);
+
   }
 );

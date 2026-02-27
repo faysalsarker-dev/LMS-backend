@@ -12,7 +12,7 @@ const mongoose_1 = require("mongoose");
 // --------------------------
 const createPromo = async (data) => {
     console.log(data);
-    const exist = await Promo_model_1.default.findOne({ createdBy: data.createdBy, isDeleted: false });
+    const exist = await Promo_model_1.default.findOne({ owner: data.owner, isDeleted: false });
     if (exist)
         throw new ApiError_1.ApiError(400, "User already contain a promo");
     const promo = await Promo_model_1.default.create({ ...data });
@@ -264,10 +264,6 @@ const redeemPromoService = async ({ code, userId, orderAmount, }) => {
         throw new ApiError_1.ApiError(400, "Promo not active yet");
     if (promo.expirationDate < now)
         throw new ApiError_1.ApiError(400, "Promo has expired");
-    // --- Check order amount ---
-    if (orderAmount < promo.minOrderAmount) {
-        throw new ApiError_1.ApiError(400, `Minimum order amount is ${promo.minOrderAmount}`);
-    }
     // --- Check global usage limit ---
     if (promo.maxUsageCount && promo.currentUsageCount >= promo.maxUsageCount) {
         throw new ApiError_1.ApiError(400, "Promo usage limit reached");
@@ -310,9 +306,6 @@ const validatePromoService = async ({ code, userId, orderAmount, }) => {
         throw new ApiError_1.ApiError(400, "Promo starts later");
     if (promo.expirationDate < now)
         throw new ApiError_1.ApiError(400, "Promo expired");
-    if (orderAmount < promo.minOrderAmount) {
-        throw new ApiError_1.ApiError(400, `Minimum order amount: ${promo.minOrderAmount}`);
-    }
     if (promo.maxUsageCount && promo.currentUsageCount >= promo.maxUsageCount) {
         throw new ApiError_1.ApiError(400, "Promo limit reached");
     }

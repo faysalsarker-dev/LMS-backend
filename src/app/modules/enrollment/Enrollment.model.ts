@@ -14,7 +14,7 @@ const enrollmentSchema = new Schema<IEnrollment>(
     amount: { type: Number, required: true },
     paymentStatus: {
       type: String,
-      enum: ["pending", "completed", "failed", "refunded"],
+      enum: ["pending", "completed", "failed", "cancelled", "refunded"],
       default: "pending",
       index: true,
     },
@@ -26,7 +26,6 @@ const enrollmentSchema = new Schema<IEnrollment>(
 );
 
 // Indexes
-enrollmentSchema.index({ user: 1, course: 1 }, { unique: true });
 enrollmentSchema.index({ createdAt: 1 }); 
 
 const Enrollment = model<IEnrollment>("Enrollment", enrollmentSchema);
