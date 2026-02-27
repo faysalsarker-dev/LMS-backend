@@ -10,6 +10,6 @@ const generateTransactionId = () => {
     const randomStr = crypto_1.default.randomBytes(3).toString('hex').toUpperCase();
     const date = new Date();
     const timestamp = date.getTime().toString().slice(-4);
-    return `${brand}-${randomStr}-${timestamp}`;
+    return `TNXOF${brand}-${randomStr}${timestamp}`;
 };
 exports.generateTransactionId = generateTransactionId;

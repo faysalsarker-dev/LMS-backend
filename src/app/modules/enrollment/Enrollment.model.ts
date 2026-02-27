@@ -8,8 +8,6 @@ const enrollmentSchema = new Schema<IEnrollment>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     course: { type: Schema.Types.ObjectId, ref: "Course", required: true, index: true },
-    enrolledAt: { type: Date, default: Date.now },
-    completedAt: { type: Date, default: null },
     currency: { type: String, default: "USD" },
     amount: { type: Number, required: true },
     paymentStatus: {

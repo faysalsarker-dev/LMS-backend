@@ -25,12 +25,12 @@ EnrollmentController.paymentSSlSuccessController
 );
 router.post(
   "/cancel",
-
+EnrollmentController.paymentSSlCancelController
 
 );
 router.post(
-  "/failed",
-
+  "/fail",
+EnrollmentController.paymentSSlFailedController
 
 
 );

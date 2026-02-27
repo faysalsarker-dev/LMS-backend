@@ -1,49 +1,51 @@
-import { Router } from 'express';
-import validateRequest from '../../middleware/validateRequest.middleware';
-import { checkAuth } from '../../middleware/CheckAuth';
-import { UserRoles } from './auth.interface';
-import { AuthController } from './auth.controller';
-import { multerUpload } from '../../config/multer.config';
+import { Router } from "express";
+import { checkAuth } from "../../middleware/CheckAuth";
+import { UserRoles } from "./auth.interface";
+import { AuthController } from "./auth.controller";
+import { multerUpload } from "../../config/multer.config";
+import { authRateLimiter } from "../../middleware/rateLimiter";
 
 const router = Router();
 
-router.get('/', AuthController.getAll);
-router.post('/register', AuthController.register);
-router.post('/login', AuthController.login);
-router.put('/verify-otp', AuthController.verifyOtp);
-router.post('/logout',checkAuth(), AuthController.logout);
-router.post('/logout-all',AuthController.logoutFromOthers);
-router.put('/addToWishlist',checkAuth(), AuthController.addToWishlist);
+router.use(authRateLimiter);
 
-
-
-
-
-
-
-
-
-router.get('/me',checkAuth([UserRoles.ADMIN,UserRoles.INSTRUCTOR,UserRoles.SUPER_ADMIN,UserRoles.STUDENT]), AuthController.me);
-
-
-
-
-
-
-
-
-
-
-
-
-
-router.post("/refresh-token", AuthController.getNewAccessToken)
-router.post('/send-otp', AuthController.sendOtp);
-router.post("/forget-password",AuthController.forgetPassword);
-router.put("/reset-password",AuthController.resetPassword);
-router.put("/update-password",checkAuth(), AuthController.updatePassword);
-router.put("/update",checkAuth(),multerUpload.single("file"),AuthController.updateProfile);
-router.put("/update-user/:id",checkAuth([UserRoles.ADMIN,UserRoles.SUPER_ADMIN]),AuthController.updateUser);
-router.delete("/delete/:id",checkAuth([UserRoles.SUPER_ADMIN]),AuthController.deleteUser);
+router.get("/", AuthController.getAll);
+router.post("/register", AuthController.register);
+router.post("/login", AuthController.login);
+router.put("/verify-otp", AuthController.verifyOtp);
+router.post("/logout", checkAuth(), AuthController.logout);
+router.post("/logout-all", AuthController.logoutFromOthers);
+router.put("/addToWishlist", checkAuth(), AuthController.addToWishlist);
+router.get(
+  "/me",
+  checkAuth([
+    UserRoles.ADMIN,
+    UserRoles.INSTRUCTOR,
+    UserRoles.SUPER_ADMIN,
+    UserRoles.STUDENT,
+  ]),
+  AuthController.me,
+);
+router.post("/refresh-token", AuthController.getNewAccessToken);
+router.post("/send-otp", AuthController.sendOtp);
+router.post("/forget-password", AuthController.forgetPassword);
+router.put("/reset-password", AuthController.resetPassword);
+router.put("/update-password", checkAuth(), AuthController.updatePassword);
+router.put(
+  "/update",
+  checkAuth(),
+  multerUpload.single("file"),
+  AuthController.updateProfile,
+);
+router.put(
+  "/update-user/:id",
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN]),
+  AuthController.updateUser,
+);
+router.delete(
+  "/delete/:id",
+  checkAuth([UserRoles.SUPER_ADMIN]),
+  AuthController.deleteUser,
+);
 
 export default router;

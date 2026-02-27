@@ -10,7 +10,7 @@ const enrollmentSchema = new mongoose_1.Schema({
     amount: { type: Number, required: true },
     paymentStatus: {
         type: String,
-        enum: ["pending", "completed", "failed", "refunded"],
+        enum: ["pending", "completed", "failed", "cancelled", "refunded"],
         default: "pending",
         index: true,
     },
@@ -19,7 +19,6 @@ const enrollmentSchema = new mongoose_1.Schema({
     refundDate: { type: Date, default: null },
 }, { timestamps: true });
 // Indexes
-enrollmentSchema.index({ user: 1, course: 1 }, { unique: true });
 enrollmentSchema.index({ createdAt: 1 });
 const Enrollment = (0, mongoose_1.model)("Enrollment", enrollmentSchema);
 exports.default = Enrollment;

@@ -5,6 +5,7 @@ import errorConverter from './app/errors/errorConverter';
 import errorHandler from './app/middleware/errorHandler.middleware';
 import { router } from './app/routes';
 import { globalErrorHandler } from './app/middleware/globalErrorHandler';
+import { globalRateLimiter } from './app/middleware/rateLimiter';
 
 
 
@@ -20,7 +21,7 @@ app.use((req: Request, res: Response, next) => {
   console.log(`[${timestamp}] ${req.method} ${req.path}`);
   next();
 });
-
+app.use(globalRateLimiter);
 
 app.use("/api/v1", router)
 

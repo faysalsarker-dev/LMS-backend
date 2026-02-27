@@ -43,8 +43,8 @@ const router = express_1.default.Router();
 router.get("/analytics/total-earnings", (0, CheckAuth_1.checkAuth)(), EnrollmentController.getTotalEarningsController);
 router.get("/analytics/monthly-earnings/:year", (0, CheckAuth_1.checkAuth)(), EnrollmentController.getMonthlyEarningsController);
 router.post("/success", EnrollmentController.paymentSSlSuccessController);
-router.post("/cancel");
-router.post("/failed");
+router.post("/cancel", EnrollmentController.paymentSSlCancelController);
+router.post("/fail", EnrollmentController.paymentSSlFailedController);
 // Create enrollment (Student enrolls in course)
 router.post("/", (0, CheckAuth_1.checkAuth)(), EnrollmentController.createEnrollmentController);
 // Get all enrollments (Admin - with filters)

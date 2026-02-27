@@ -23,7 +23,6 @@ exports.createEnrollmentController = (0, catchAsync_1.catchAsync)(async (req, re
         finalAmount: req.body.finalAmount,
         promoCode: req.body.promoCode,
     };
-    console.log("Creating enrollment with payload:", payload);
     const result = await (0, enrollment_service_1.createEnrollment)(payload);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.CREATED,
@@ -95,11 +94,13 @@ exports.getMonthlyEarningsController = (0, catchAsync_1.catchAsync)(async (req, 
 });
 exports.paymentSSlSuccessController = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const result = await (0, enrollment_service_1.handleSuccessPayment)(req.query);
-    res.redirect(config_1.default.ssl.sslSuccessFrontendUrl);
+    res.redirect(`${config_1.default.ssl.sslSuccessFrontendUrl}?transactionId=${result.transactionId}&amount=${result.amount}&currency=${result.currency}`);
 });
 exports.paymentSSlCancelController = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const result = await (0, enrollment_service_1.handleCancelledPayment)(req.query);
+    res.redirect(`${config_1.default.ssl.sslCancelFrontendUrl}?transactionId=${result.transactionId}&amount=${result.amount}&currency=${result.currency}`);
 });
 exports.paymentSSlFailedController = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    // Handle payment success logic here
-    res.send("Payment successful");
+    const result = await (0, enrollment_service_1.handleFailedPayment)(req.query);
+    res.redirect(`${config_1.default.ssl.sslFailedFrontendUrl}?transactionId=${result.transactionId}&amount=${result.amount}&currency=${result.currency}`);
 });

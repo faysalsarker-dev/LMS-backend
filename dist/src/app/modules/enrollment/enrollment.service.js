@@ -108,7 +108,7 @@ const handleSuccessPayment = async (query) => {
                 price: enrollment.amount,
             });
         }
-        const progress = await progress_model_1.default.create([
+        await progress_model_1.default.create([
             {
                 student: enrollment.user,
                 course: enrollment.course,
@@ -119,7 +119,6 @@ const handleSuccessPayment = async (query) => {
                 isCompleted: false,
             },
         ], { session });
-        console.log("Enrollment and progress created successfully for transaction:", progress);
         await session.commitTransaction();
         return enrollment;
     }
@@ -133,36 +132,34 @@ const handleSuccessPayment = async (query) => {
 };
 exports.handleSuccessPayment = handleSuccessPayment;
 // Handle failed payment
-const handleFailedPayment = async (data) => {
+const handleFailedPayment = async (query) => {
+    const { transactionId } = query;
     const session = await mongoose_1.default.startSession();
-    try {
-        session.startTransaction();
-        await session.commitTransaction();
+    // 1. Find the pending enrollment
+    const enrollment = await Enrollment_model_1.default.findOne({ transactionId }).session(session);
+    if (!enrollment)
+        throw new ApiError_1.ApiError(404, "Enrollment record not found");
+    if (enrollment.paymentStatus === "failed") {
+        return enrollment;
     }
-    catch (error) {
-        await session.abortTransaction();
-        throw error;
-    }
-    finally {
-        session.endSession();
-    }
+    enrollment.paymentStatus = "failed";
+    await enrollment.save({ session });
+    return enrollment;
 };
 exports.handleFailedPayment = handleFailedPayment;
 // Handle cancelled payment
-const handleCancelledPayment = async (data) => {
+const handleCancelledPayment = async (query) => {
     const session = await mongoose_1.default.startSession();
-    try {
-        session.startTransaction();
-        // Main logic here
-        await session.commitTransaction();
+    const { transactionId } = query;
+    const enrollment = await Enrollment_model_1.default.findOne({ transactionId });
+    if (!enrollment)
+        throw new ApiError_1.ApiError(404, "Enrollment record not found");
+    if (enrollment.paymentStatus === "cancelled") {
+        return enrollment;
     }
-    catch (error) {
-        await session.abortTransaction();
-        throw error;
-    }
-    finally {
-        session.endSession();
-    }
+    enrollment.paymentStatus = "cancelled";
+    await enrollment.save({ session });
+    return enrollment;
 };
 exports.handleCancelledPayment = handleCancelledPayment;
 // Get all enrollments (Admin)
