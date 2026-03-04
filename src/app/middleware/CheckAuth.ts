@@ -15,7 +15,6 @@ export const checkAuth =
         console.log("No access token found in cookies",req.originalUrl);
         throw new ApiError(401, "No token provided");
       }
-
       let verifiedToken: JwtPayload;
 
       try {
@@ -33,6 +32,7 @@ export const checkAuth =
       if (!verifiedToken) {
         throw new ApiError(401, "Invalid token");
       }
+
 
       if (authRoles && !authRoles.includes(verifiedToken.role)) {
         throw new ApiError(403, "You are not authorized to access this resource");

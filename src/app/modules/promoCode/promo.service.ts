@@ -8,7 +8,7 @@ import { Types } from "mongoose";
 // --------------------------
 const createPromo = async (data: IPromoCode) => {
   console.log(data);
-  const exist = await PromoCode.findOne({ owner: data.owner, isDeleted: false });
+  const exist = await PromoCode.findOne({ owner: data.owner});
   if (exist) throw new ApiError(400, "User already contain a promo");
   const promo = await PromoCode.create({ ...data });
   console.log(promo);
@@ -19,7 +19,8 @@ const createPromo = async (data: IPromoCode) => {
 // Get user-specific promo (only their promo)
 // --------------------------
 const getMyPromo = async (userId: string) => {
-  const promo = await PromoCode.findOne({ createdBy: userId, isDeleted: false });
+  const promo = await PromoCode.findOne({ owner: userId });
+
   if (!promo) throw new ApiError(404, "No promo found for this user");
 
   return promo;
@@ -30,7 +31,7 @@ const getMyPromo = async (userId: string) => {
 // --------------------------
 const getMyPromoUsageStats = async (userId: string) => {
 
-  let promo = await PromoCode.findOne({ createdBy: userId }).lean();
+  let promo = await PromoCode.findOne({ owner: userId }).lean();
 
 
 
@@ -89,8 +90,8 @@ const getAllPromosAdmin = async (query: any) => {
   if (search) {
     filter.$or = [
       { code: { $regex: search, $options: "i" } },
-      { "createdBy.name": { $regex: search, $options: "i" } },
-      { "createdBy.email": { $regex: search, $options: "i" } },
+      { "owner.name": { $regex: search, $options: "i" } },
+      { "owner.email": { $regex: search, $options: "i" } },
     ];
   }
 
@@ -100,10 +101,9 @@ const getAllPromosAdmin = async (query: any) => {
     .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
     .skip(skip)
     .limit(Number(limit))
-    .populate("createdBy", "name email");
+    .populate("owner", "name email");
 
   const total = await PromoCode.countDocuments(filter);
-console.log(promos,'promos');
   return {
     data: promos,
     meta: {

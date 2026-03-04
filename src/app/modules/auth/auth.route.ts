@@ -7,7 +7,7 @@ import { authRateLimiter } from "../../middleware/rateLimiter";
 
 const router = Router();
 
-router.use(authRateLimiter);
+// router.use(authRateLimiter);
 
 router.get("/", AuthController.getAll);
 router.post("/register", AuthController.register);

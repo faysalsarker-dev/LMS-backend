@@ -82,6 +82,7 @@ export const createEnrollment = async (data: {
       phoneNumber: user.phone || "01700000000",
       city: user.address?.city || "Dhaka",
       country: user.address?.country || "Bangladesh",
+      currency: course.currency || "BDT",
     };
 
     const sslPayment = await SSLService.sslPaymentInit(paymentData);
@@ -99,7 +100,7 @@ export const createEnrollment = async (data: {
 
 // Handle successful payment
 export const handleSuccessPayment = async (query: Record<string, any>): Promise<IEnrollment> => {
-  const {transactionId ,  promoCode} = query; 
+  const {transactionId} = query; 
   
   const session = await mongoose.startSession();
   try {
@@ -115,6 +116,8 @@ export const handleSuccessPayment = async (query: Record<string, any>): Promise<
     enrollment.paymentStatus = "completed";
     await enrollment.save({ session });
 
+
+    console.log(enrollment,'enrolment');
     await User.findByIdAndUpdate(
       enrollment.user,
       { $addToSet: { courses: enrollment.course } },
@@ -136,13 +139,14 @@ export const handleSuccessPayment = async (query: Record<string, any>): Promise<
 
 
 
-    if (promoCode) {
-
+    if (enrollment.promoCode) {
+      console.log(enrollment.promoCode);
       await PromoCode.usePromo({
-        promoCode: promoCode,
+        promoCode: enrollment.promoCode,
         userId: enrollment.user,
         courseId: enrollment.course,
         price: enrollment.amount,
+        session, // ✅ pass session so this runs inside the transaction
       });
     }
 

@@ -4,8 +4,6 @@ const mongoose_1 = require("mongoose");
 const enrollmentSchema = new mongoose_1.Schema({
     user: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     course: { type: mongoose_1.Schema.Types.ObjectId, ref: "Course", required: true, index: true },
-    enrolledAt: { type: Date, default: Date.now },
-    completedAt: { type: Date, default: null },
     currency: { type: String, default: "USD" },
     amount: { type: Number, required: true },
     paymentStatus: {

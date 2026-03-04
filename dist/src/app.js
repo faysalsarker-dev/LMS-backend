@@ -10,6 +10,7 @@ const errorConverter_1 = __importDefault(require("./app/errors/errorConverter"))
 const errorHandler_middleware_1 = __importDefault(require("./app/middleware/errorHandler.middleware"));
 const routes_1 = require("./app/routes");
 const globalErrorHandler_1 = require("./app/middleware/globalErrorHandler");
+const rateLimiter_1 = require("./app/middleware/rateLimiter");
 const app = (0, express_1.default)();
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cookie_parser_1.default)());
@@ -20,6 +21,7 @@ app.use((req, res, next) => {
     console.log(`[${timestamp}] ${req.method} ${req.path}`);
     next();
 });
+app.use(rateLimiter_1.globalRateLimiter);
 app.use("/api/v1", routes_1.router);
 app.get("/", (req, res) => {
     res.status(200).json({

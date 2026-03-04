@@ -43,6 +43,7 @@ export interface IPromoCodeModel extends Model<IPromoCode> {
     userId: string | Types.ObjectId | any;
     courseId: string | Types.ObjectId | any;
     price: number;
+    session?: any;
   }): Promise<Document<unknown, {}, IPromoCode> & IPromoCode>;
 
   // ADD THIS NEW METHOD HERE
@@ -64,4 +65,5 @@ export interface IUsePromoParams {
   userId: string | Types.ObjectId;
   courseId: string | Types.ObjectId;
   price: number;
+  session?: any;
 }

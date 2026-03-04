@@ -127,21 +127,25 @@ PromoCodeSchema.statics.usePromo = async function ({
   userId,
   courseId,
   price,
+  session,
 }: IUsePromoParams) {
-  const promo = await this.findOne({ code: promoCode, isActive: true });
+  // Single atomic operation: validate and update in one query to avoid race conditions
+  // We first fetch the promo to get the commission rate, then update atomically
+  const promo = await this.findOne({ code: promoCode, isActive: true }).session(session ?? null);
 
   if (!promo) {
-   throw new ApiError(400, "Promo code is invalid, expired, or inactive.");
+    throw new ApiError(400, "Promo code is invalid, expired, or inactive.");
   }
 
   const earnAmount = (price * promo.commission) / 100;
+  console.log("Earn Amount for Promo Code:", earnAmount);
 
-  return await this.findOneAndUpdate(
-    { _id: promo._id },
+  const updated = await this.findOneAndUpdate(
+    { _id: promo._id, isActive: true },
     {
       $inc: {
         currentUsageCount: 1,
-        totalEarn: earnAmount, 
+        totalEarn: earnAmount,
       },
       $push: {
         usedBy: {
@@ -151,8 +155,14 @@ PromoCodeSchema.statics.usePromo = async function ({
         },
       },
     },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true, session: session ?? null }
   );
+
+  if (!updated) {
+    throw new ApiError(400, "Promo code is invalid, expired, or inactive.");
+  }
+
+  return updated;
 };
 
 PromoCodeSchema.statics.validatePromo = async function ({

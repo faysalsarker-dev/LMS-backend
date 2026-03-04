@@ -6,6 +6,7 @@ import errorHandler from './app/middleware/errorHandler.middleware';
 import { router } from './app/routes';
 import { globalErrorHandler } from './app/middleware/globalErrorHandler';
 import { globalRateLimiter } from './app/middleware/rateLimiter';
+import morgan from 'morgan';
 
 
 
@@ -15,12 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({ origin: ["https://lms-web-app-sigma.vercel.app","http://localhost:5173","https://lms.bonikjewellers.com" , "http://192.168.0.127:5173"], credentials: true }));
+app.use(morgan('dev'))
 
-app.use((req: Request, res: Response, next) => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${req.method} ${req.path}`);
-  next();
-});
 app.use(globalRateLimiter);
 
 app.use("/api/v1", router)

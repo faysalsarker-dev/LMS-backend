@@ -7,5 +7,6 @@ export interface ISSLCommerz {
     city: string,
     country: string;
     courseId: string;
+    currency?: string;
     
 }

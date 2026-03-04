@@ -160,7 +160,6 @@ export const redeemPromo = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { code, orderAmount } = req.body;
  
-console.log(code, orderAmount,'redeem controller');
 
    
   const result = await PromoService.redeemPromoService({
@@ -169,7 +168,6 @@ console.log(code, orderAmount,'redeem controller');
       orderAmount,
     });
 
-    console.log(result,'redeem');
     
   sendResponse(res, {
     statusCode: 200,
