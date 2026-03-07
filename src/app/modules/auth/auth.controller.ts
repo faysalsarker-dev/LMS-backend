@@ -57,7 +57,6 @@ logout: catchAsync(async (req: Request, res: Response) => {
 }),
 
 logoutFromOthers: catchAsync(async (req: Request, res: Response) => {
-console.log(req.body, 'body')
 
   const result = await userService.logoutFromOthers(req.body.email);
   if (!result) {

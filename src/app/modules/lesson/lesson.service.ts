@@ -6,7 +6,6 @@ import { ApiError } from "../../errors/ApiError";
 
 // Create
 export const createLesson = async (payload: Partial<ILesson>) => {
-  console.log(payload,'data');
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -55,68 +54,46 @@ type?:string;
   limit?: number;
 }
 
+import QueryBuilder from "../../builder/QueryBuilder";
+
 export const getAllLessons = async (params: GetAllLessonsParams) => {
-  const {
-    milestone = '',
-    search = '',
-    status = 'all',
-    course='all',
-    page = 1,
-    limit = 10,
-    type
-  } = params;
-  // Build filter object
-  const filter: any = {};
+  const searchableFields = ["title"];
 
-  // Milestone filter
-  if (milestone && milestone !== 'all') {
-    filter.milestone = milestone;
-  }
-  // Course filter
-  if (course && course !== 'all') {
-    filter.course = course;
-  }
-  if (search && search.trim() !== '') {
-    filter.$or = [
-      { title: { $regex: search.trim(), $options: 'i' } }
-    ];
-  }
+  const queryParams: Record<string, unknown> = {
+    ...params,
+    page: params.page || 1,
+    limit: params.limit || 10,
+  };
 
- if(type && type !== 'all'){
-  filter.type = type
- }
+  if (queryParams.milestone === "all") delete queryParams.milestone;
+  if (queryParams.course === "all") delete queryParams.course;
+  if (queryParams.status === "all") delete queryParams.status;
+  if (queryParams.type === "all") delete queryParams.type;
 
-  if (status && status !== 'all') {
-    filter.status = status;
-  }
+  const lessonQuery = new QueryBuilder(
+    Lesson.find().populate("milestone", "title").lean(),
+    queryParams
+  )
+    .search(searchableFields)
+    .filter()
+    .sort()
+    .paginate();
 
-  // Calculate pagination
-  const skip = (page - 1) * limit;
+  // Override sort manually for lessons to maintain original logic
+  lessonQuery.modelQuery = lessonQuery.modelQuery.sort({ order: 1 });
 
-  // Execute query with pagination
-  const [lessons, total] = await Promise.all([
-    Lesson.find(filter)
-      .populate('milestone', 'title') 
-      .sort({ order: 1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    Lesson.countDocuments(filter)
+  const [lessons, metaInfo] = await Promise.all([
+    lessonQuery.modelQuery,
+    lessonQuery.countTotal(),
   ]);
-
-  // Calculate meta information
-  const totalPages = Math.ceil(total / limit);
 
   return {
     data: lessons,
     meta: {
-      total,
-      page,
-      limit,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1
-    }
+      ...metaInfo,
+      hasNextPage: metaInfo.page < metaInfo.totalPages,
+      hasPrevPage: metaInfo.page > 1,
+    },
   };
 };
 

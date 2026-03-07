@@ -12,7 +12,7 @@ const mongoose_1 = require("mongoose");
 // --------------------------
 const createPromo = async (data) => {
     console.log(data);
-    const exist = await Promo_model_1.default.findOne({ owner: data.owner, isDeleted: false });
+    const exist = await Promo_model_1.default.findOne({ owner: data.owner });
     if (exist)
         throw new ApiError_1.ApiError(400, "User already contain a promo");
     const promo = await Promo_model_1.default.create({ ...data });
@@ -23,7 +23,7 @@ const createPromo = async (data) => {
 // Get user-specific promo (only their promo)
 // --------------------------
 const getMyPromo = async (userId) => {
-    const promo = await Promo_model_1.default.findOne({ createdBy: userId, isDeleted: false });
+    const promo = await Promo_model_1.default.findOne({ owner: userId });
     if (!promo)
         throw new ApiError_1.ApiError(404, "No promo found for this user");
     return promo;
@@ -32,7 +32,7 @@ const getMyPromo = async (userId) => {
 // Get usage stats for chart
 // --------------------------
 const getMyPromoUsageStats = async (userId) => {
-    let promo = await Promo_model_1.default.findOne({ createdBy: userId }).lean();
+    let promo = await Promo_model_1.default.findOne({ owner: userId }).lean();
     if (!promo)
         throw new ApiError_1.ApiError(404, "Promo not found");
     return promo;
@@ -66,8 +66,8 @@ const getAllPromosAdmin = async (query) => {
     if (search) {
         filter.$or = [
             { code: { $regex: search, $options: "i" } },
-            { "createdBy.name": { $regex: search, $options: "i" } },
-            { "createdBy.email": { $regex: search, $options: "i" } },
+            { "owner.name": { $regex: search, $options: "i" } },
+            { "owner.email": { $regex: search, $options: "i" } },
         ];
     }
     if (isActive !== undefined)
@@ -76,9 +76,8 @@ const getAllPromosAdmin = async (query) => {
         .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
         .skip(skip)
         .limit(Number(limit))
-        .populate("createdBy", "name email");
+        .populate("owner", "name email");
     const total = await Promo_model_1.default.countDocuments(filter);
-    console.log(promos, 'promos');
     return {
         data: promos,
         meta: {

@@ -12,7 +12,6 @@ const validateRequest =(schema:AnyZodObject ) =>  async(req: Request, res: Respo
         req.body = await schema.parseAsync(req.body)
         next()
   } catch (error: any) {
-    console.log('Validation error:', error);
     next(new ApiError(400, error.errors?.map((e: any) => e.message).join(', ') || 'Validation error'));
   }
 };

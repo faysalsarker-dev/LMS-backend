@@ -5,17 +5,6 @@ import { IAssignmentSubmission } from "./agt.interface";
 import AssignmentSubmission from "./Agt.model";
 
 export const AssignmentSubmissionService = {
-  // async createSubmission(data: Partial<IAssignmentSubmission>) {
-  //   const existing = await AssignmentSubmission.findOne({
-  //     student: data.student,
-  //     lesson: data.lesson,
-  //   });
-  //   if (existing) throw new ApiError(400, "Submission already exists");
-  //   const result = await AssignmentSubmission.create(data);
-  //   console.log(result,"created submission");
-  //   return result;
-  // },
-
 
 async createSubmission(data: Partial<IAssignmentSubmission>) {
   const session = await mongoose.startSession();

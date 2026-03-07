@@ -1,6 +1,6 @@
 import { Document, Model, Types } from "mongoose";
 
-export interface IPromoUsage {
+interface IPromoUsage {
   user: Types.ObjectId;
   usedAt: Date;
 }

@@ -66,6 +66,7 @@ const createEnrollment = async (data) => {
             phoneNumber: user.phone || "01700000000",
             city: user.address?.city || "Dhaka",
             country: user.address?.country || "Bangladesh",
+            currency: course.currency || "BDT",
         };
         const sslPayment = await sslCommersz_service_1.SSLService.sslPaymentInit(paymentData);
         await session.commitTransaction();
@@ -82,7 +83,7 @@ const createEnrollment = async (data) => {
 exports.createEnrollment = createEnrollment;
 // Handle successful payment
 const handleSuccessPayment = async (query) => {
-    const { transactionId, promoCode } = query;
+    const { transactionId } = query;
     const session = await mongoose_1.default.startSession();
     try {
         session.startTransaction();
@@ -95,17 +96,20 @@ const handleSuccessPayment = async (query) => {
         }
         enrollment.paymentStatus = "completed";
         await enrollment.save({ session });
+        console.log(enrollment, 'enrolment');
         await User_model_1.default.findByIdAndUpdate(enrollment.user, { $addToSet: { courses: enrollment.course } }, { session });
         await Course_model_1.default.findByIdAndUpdate(enrollment.course, {
             $inc: { totalEnrolled: 1 },
             $addToSet: { enrolledStudents: enrollment.user },
         }, { session });
-        if (promoCode) {
+        if (enrollment.promoCode) {
+            console.log(enrollment.promoCode);
             await Promo_model_1.default.usePromo({
-                promoCode: promoCode,
+                promoCode: enrollment.promoCode,
                 userId: enrollment.user,
                 courseId: enrollment.course,
                 price: enrollment.amount,
+                session, // ✅ pass session so this runs inside the transaction
             });
         }
         await progress_model_1.default.create([

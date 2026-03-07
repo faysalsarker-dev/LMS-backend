@@ -7,11 +7,9 @@ import { Types } from "mongoose";
 // Create promo (User can create only ONE)
 // --------------------------
 const createPromo = async (data: IPromoCode) => {
-  console.log(data);
   const exist = await PromoCode.findOne({ owner: data.owner});
   if (exist) throw new ApiError(400, "User already contain a promo");
   const promo = await PromoCode.create({ ...data });
-  console.log(promo);
   return promo;
 };
 
@@ -50,7 +48,6 @@ const getMyPromoUsageStats = async (userId: string) => {
 const updatePromo = async (id: string, data: Partial<IPromoCode>) => {
   const promo = await PromoCode.findById(id);
   if (!promo) throw new ApiError(404, "Promo not found");
-console.log(data);
   Object.assign(promo, data);
   await promo.save();
 
@@ -238,7 +235,6 @@ const getPromoMonthlyChart = async (year: number) => {
   });
 
 
-  console.log(final,'final');
   return final;
 };
 

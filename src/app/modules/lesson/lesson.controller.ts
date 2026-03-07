@@ -56,7 +56,6 @@ if (req.body.type === "video") {
     return question;
   });
 
-  console.log(questions, 'questions after processing audio at the end of logic..........');
   req.body.questions = questions;
 } else if(req.body.type === "audio") {
     const audioFile = files?.audioFile?.[0];

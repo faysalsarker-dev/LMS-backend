@@ -93,54 +93,21 @@ const getCourseById = async (id) => {
     return course;
 };
 exports.getCourseById = getCourseById;
+const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const getAllCourses = async (filters) => {
-    const { level, status, sortBy, sortOrder = "desc", page = 1, limit = 10, search, isFeatured, category, } = filters;
-    const query = {};
-    // 🎯 Filtering
-    if (level && level !== "all")
-        query.level = level;
-    if (status && status !== "all")
-        query.status = status;
-    if (isFeatured !== undefined)
-        query.isFeatured = isFeatured;
-    if (category && category !== "all") {
-        if (mongoose_1.default.Types.ObjectId.isValid(category)) {
-            query.category = new mongoose_1.default.Types.ObjectId(category);
-        }
-    }
-    // 🔍 Search by title
-    if (search)
-        query.title = { $regex: search, $options: "i" };
-    // 🔽 Sorting
-    const sortOptions = {};
-    if (sortBy) {
-        sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
-    }
-    else {
-        sortOptions.createdAt = -1;
-    }
-    // 📄 Pagination
-    const skip = (Number(page) - 1) * Number(limit);
-    // 🧵 Parallel queries
-    const [data, total] = await Promise.all([
-        Course_model_1.default.find(query)
-            .populate("milestones")
-            .populate("category")
-            .sort(sortOptions)
-            .skip(skip)
-            .limit(Number(limit))
-            .lean(),
-        Course_model_1.default.countDocuments(query),
+    const searchableFields = ["title"];
+    const courseQuery = new QueryBuilder_1.default(Course_model_1.default.find().populate("milestones").populate("category").lean(), filters)
+        .search(searchableFields)
+        .filter()
+        .sort()
+        .paginate();
+    const [data, metaInfo] = await Promise.all([
+        courseQuery.modelQuery,
+        courseQuery.countTotal(),
     ]);
-    // 📦 Response
     return {
-        meta: {
-            total,
-            page: Number(page),
-            limit: Number(limit),
-            totalPages: Math.ceil(total / Number(limit)),
-        },
-        data,
+        meta: metaInfo,
+        data: data,
     };
 };
 exports.getAllCourses = getAllCourses;

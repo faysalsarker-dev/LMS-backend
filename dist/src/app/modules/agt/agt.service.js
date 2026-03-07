@@ -9,16 +9,6 @@ const ApiError_1 = require("../../errors/ApiError");
 const progress_model_1 = __importDefault(require("../progress/progress.model"));
 const Agt_model_1 = __importDefault(require("./Agt.model"));
 exports.AssignmentSubmissionService = {
-    // async createSubmission(data: Partial<IAssignmentSubmission>) {
-    //   const existing = await AssignmentSubmission.findOne({
-    //     student: data.student,
-    //     lesson: data.lesson,
-    //   });
-    //   if (existing) throw new ApiError(400, "Submission already exists");
-    //   const result = await AssignmentSubmission.create(data);
-    //   console.log(result,"created submission");
-    //   return result;
-    // },
     async createSubmission(data) {
         const session = await mongoose_1.default.startSession();
         try {

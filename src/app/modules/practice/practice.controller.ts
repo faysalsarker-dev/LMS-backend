@@ -115,8 +115,6 @@ const deletePractice = catchAsync(async (req: Request, res: Response) => {
 const addItemToPractice = catchAsync(async (req: Request, res: Response) => {
   // Extract files from multer
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-console.log(files,'files ');
-console.log(req.body,'body ');
 
   // Check for audio file
   if (files?.audio && files.audio[0]?.path) {

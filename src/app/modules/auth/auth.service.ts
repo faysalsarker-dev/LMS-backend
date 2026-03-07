@@ -12,6 +12,7 @@ import { Request } from "express";
 import mongoose, { Query } from "mongoose";
 import { generateSessionToken } from "../../utils/sessionToken";
 import { clearAuthCookies } from "../../utils/setCookie";
+import QueryBuilder from "../../builder/QueryBuilder";
 
 export const userService = {
   async register(data: Partial<IUser>) {
@@ -49,7 +50,6 @@ export const userService = {
 
     user.otp = otp;
     user.otpExpiry = otpExpiry;
-    console.log(user);
     await user.save();
 
     await sendOtpEmail(user.email, otp);
@@ -222,75 +222,31 @@ async updateUser(userId: string, updates: Partial<IUser>) {
 
 
 
+  async getAll(req: Request) {
+    const searchableFields = ["name", "email", "phone"];
 
+    const userQuery = new QueryBuilder(
+      User.find()
+        .populate({
+          path: "courses",
+          select: "title thumbnail",
+        }),
+      req.query as Record<string, unknown>
+    )
+      .search(searchableFields)
+      .filter()
+      .sort()
+      .paginate();
 
- async getAll(req: Request) {
-    const {
-      page = "1",
-      limit = "10",
-      search,
-      role,
-      isVerified,
-      isActive,
-      sortBy = "createdAt",
-      sortOrder = "desc",
-    } = req.query as {
-      page?: string;
-      limit?: string;
-      search?: string;
-      role?: string;
-      isVerified?: string;
-      isActive?: string;
-      sortBy?: string;
-      sortOrder?: "asc" | "desc";
-    };
-
-    const pageNumber = Math.max(1, parseInt(page, 10));
-    const limitNumber = Math.max(1, parseInt(limit, 10));
-    const skip = (pageNumber - 1) * limitNumber;
-
-    // 🔹 Build filter object
-    const filter: Record<string, any> = {};
-    if (role) filter.role = role;
-    if (isVerified !== undefined) filter.isVerified = isVerified === "true";
-    if (isActive !== undefined) filter.isActive = isActive === "true";
-
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    // 🔹 Sorting
-    const sortOptions: Record<string, 1 | -1> = {
-      [sortBy]: sortOrder === "asc" ? 1 : -1,
-    };
-
-const [users, total] = await Promise.all([
-  User.find(filter)
-    .populate({
-      path: "courses",
-      select: "title thumbnail",
-    })
-    .skip(skip)
-    .limit(limitNumber)
-    .sort(sortOptions),
-  User.countDocuments(filter),
-]);
-
-
+    const [users, metaInfo] = await Promise.all([
+      userQuery.modelQuery,
+      userQuery.countTotal(),
+    ]);
 
     if (!users.length) throw new ApiError(404, "No users found");
 
     return {
-      meta: {
-        total,
-        page: pageNumber,
-        limit: limitNumber,
-        totalPages: Math.ceil(total / limitNumber),
-      },
+      meta: metaInfo,
       data: users,
     };
   },

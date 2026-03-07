@@ -13,7 +13,7 @@ const sslPaymentInit = async (payload) => {
             store_id: config_1.default.ssl.sslId,
             store_passwd: config_1.default.ssl.sslPass,
             total_amount: payload.amount,
-            currency: "BDT",
+            currency: payload.currency || "BDT",
             tran_id: payload.transactionId,
             success_url: `${config_1.default.ssl.sslSuccessBackendUrl}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=success&email=${payload.email}&courseId=${payload.courseId}`,
             fail_url: `${config_1.default.ssl.sslFailBackendUrl}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=fail`,

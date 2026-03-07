@@ -138,8 +138,6 @@ PromoCodeSchema.statics.usePromo = async function ({
   }
 
   const earnAmount = (price * promo.commission) / 100;
-  console.log("Earn Amount for Promo Code:", earnAmount);
-
   const updated = await this.findOneAndUpdate(
     { _id: promo._id, isActive: true },
     {

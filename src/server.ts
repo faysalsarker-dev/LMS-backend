@@ -2,8 +2,7 @@ import mongoose from 'mongoose';
 import app from './app';
 import config from './app/config/config';
 import { Server } from "http";
-import Progress from './app/modules/progress/progress.model';
-import Enrollment from './app/modules/enrollment/Enrollment.model';
+
 
 let server: Server;
 (async () => {
@@ -13,7 +12,6 @@ let server: Server;
     console.log('✅ MongoDB connected');
 
 
-//  await Enrollment.collection.dropIndexes();
 
 
     server =  app.listen(config.port, () => {

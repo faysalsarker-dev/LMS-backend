@@ -12,7 +12,6 @@ export const checkAuth =
       const accessToken = req.cookies.accessToken;
 
       if (!accessToken) {
-        console.log("No access token found in cookies",req.originalUrl);
         throw new ApiError(401, "No token provided");
       }
       let verifiedToken: JwtPayload;
@@ -41,7 +40,6 @@ export const checkAuth =
       req.user = verifiedToken;
       next();
     } catch (error) {
-      console.log("JWT error:", error);
       next(error);
     }
   };

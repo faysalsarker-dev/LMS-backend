@@ -38,14 +38,43 @@ export const createMilestone = async (
   }
 };
 
-export const getAllMilestones = async (course?: string, search?: string, status?: string): Promise<IMilestone[]> => {
-  const filter: any = {};
-  if (course) filter.course = course !== 'all' ? course : { $exists: true };
-  if (search) filter.title = { $regex: search, $options: "i" }; 
-  if (status) filter.status = status !== 'all' ? status : { $exists: true };
-const result = await Milestone.find(filter).populate('course','title').sort({ order: 1 });
+import QueryBuilder from "../../builder/QueryBuilder";
 
-  return result; 
+export const getAllMilestones = async (
+  course?: string,
+  search?: string,
+  status?: string
+): Promise<IMilestone[]> => {
+  const searchableFields = ["title"];
+
+  const queryParams: Record<string, unknown> = {};
+  // Handle course filtering natively
+  if (course && course !== "all") {
+    queryParams.course = course;
+  } else if (course === "all") {
+    queryParams.course = { $exists: true };
+  }
+  
+  // Handle status natively
+  if (status && status !== "all") {
+    queryParams.status = status;
+  } else if (status === "all") {
+    queryParams.status = { $exists: true };
+  }
+
+  if (search) queryParams.search = search;
+  
+  const milestoneQuery = new QueryBuilder(
+    Milestone.find().populate("course", "title").lean(),
+    queryParams
+  )
+    .search(searchableFields)
+    .filter()
+    .sort();
+
+  milestoneQuery.modelQuery = milestoneQuery.modelQuery.sort({ order: 1 });
+
+  return milestoneQuery.modelQuery as unknown as IMilestone[];
 };
 
 export const getMilestoneById = async (id: string): Promise<IMilestone | null> => {

@@ -14,6 +14,7 @@ const email_1 = require("../../utils/email");
 const cloudinary_config_1 = require("../../config/cloudinary.config");
 const mongoose_1 = __importDefault(require("mongoose"));
 const sessionToken_1 = require("../../utils/sessionToken");
+const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 exports.userService = {
     async register(data) {
         const existing = await User_model_1.default.findOne({ email: data.email });
@@ -147,49 +148,24 @@ exports.userService = {
         return updatedUser;
     },
     async getAll(req) {
-        const { page = "1", limit = "10", search, role, isVerified, isActive, sortBy = "createdAt", sortOrder = "desc", } = req.query;
-        const pageNumber = Math.max(1, parseInt(page, 10));
-        const limitNumber = Math.max(1, parseInt(limit, 10));
-        const skip = (pageNumber - 1) * limitNumber;
-        // 🔹 Build filter object
-        const filter = {};
-        if (role)
-            filter.role = role;
-        if (isVerified !== undefined)
-            filter.isVerified = isVerified === "true";
-        if (isActive !== undefined)
-            filter.isActive = isActive === "true";
-        if (search) {
-            filter.$or = [
-                { name: { $regex: search, $options: "i" } },
-                { email: { $regex: search, $options: "i" } },
-                { phone: { $regex: search, $options: "i" } },
-            ];
-        }
-        // 🔹 Sorting
-        const sortOptions = {
-            [sortBy]: sortOrder === "asc" ? 1 : -1,
-        };
-        const [users, total] = await Promise.all([
-            User_model_1.default.find(filter)
-                .populate({
-                path: "courses",
-                select: "title thumbnail",
-            })
-                .skip(skip)
-                .limit(limitNumber)
-                .sort(sortOptions),
-            User_model_1.default.countDocuments(filter),
+        const searchableFields = ["name", "email", "phone"];
+        const userQuery = new QueryBuilder_1.default(User_model_1.default.find()
+            .populate({
+            path: "courses",
+            select: "title thumbnail",
+        }), req.query)
+            .search(searchableFields)
+            .filter()
+            .sort()
+            .paginate();
+        const [users, metaInfo] = await Promise.all([
+            userQuery.modelQuery,
+            userQuery.countTotal(),
         ]);
         if (!users.length)
             throw new ApiError_1.ApiError(404, "No users found");
         return {
-            meta: {
-                total,
-                page: pageNumber,
-                limit: limitNumber,
-                totalPages: Math.ceil(total / limitNumber),
-            },
+            meta: metaInfo,
             data: users,
         };
     },

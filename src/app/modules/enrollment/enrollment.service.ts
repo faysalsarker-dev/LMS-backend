@@ -116,8 +116,6 @@ export const handleSuccessPayment = async (query: Record<string, any>): Promise<
     enrollment.paymentStatus = "completed";
     await enrollment.save({ session });
 
-
-    console.log(enrollment,'enrolment');
     await User.findByIdAndUpdate(
       enrollment.user,
       { $addToSet: { courses: enrollment.course } },
@@ -140,7 +138,6 @@ export const handleSuccessPayment = async (query: Record<string, any>): Promise<
 
 
     if (enrollment.promoCode) {
-      console.log(enrollment.promoCode);
       await PromoCode.usePromo({
         promoCode: enrollment.promoCode,
         userId: enrollment.user,
