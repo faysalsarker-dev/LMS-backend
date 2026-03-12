@@ -78,7 +78,6 @@ exports.createLessonController = (0, catchAsync_1.catchAsync)(async (req, res) =
             }
             return question;
         });
-        console.log(questions, 'questions after processing audio at the end of logic..........');
         req.body.questions = questions;
     }
     else if (req.body.type === "audio") {

@@ -44,6 +44,7 @@ const progress_model_1 = __importDefault(require("../progress/progress.model"));
 const ApiError_1 = require("../../errors/ApiError");
 const Lesson_model_1 = __importDefault(require("../lesson/Lesson.model"));
 const User_model_1 = __importDefault(require("../auth/User.model"));
+const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const createCourse = async (data) => {
     const session = await mongoose_1.default.startSession();
     session.startTransaction();
@@ -93,7 +94,6 @@ const getCourseById = async (id) => {
     return course;
 };
 exports.getCourseById = getCourseById;
-const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const getAllCourses = async (filters) => {
     const searchableFields = ["title"];
     const courseQuery = new QueryBuilder_1.default(Course_model_1.default.find().populate("milestones").populate("category").lean(), filters)

@@ -27,11 +27,19 @@ const progressSchema = new Schema<IProgress>(
     course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
     completedLessons: [{ type: Schema.Types.ObjectId, ref: "Lesson" }],
     assignmentSubmissions: [{ type: Schema.Types.ObjectId, ref: "AssignmentSubmission"}],
+    mockTestSubmissions: [{ type: Schema.Types.ObjectId, ref: "MockTestSubmission" }],
     avgMarks: { type: Number, default: 0 },
     quizResults: { type: [quizResultSchema], default: [] },
     progressPercentage: { type: Number, default: 0, min: 0, max: 100 },
     isCompleted: { type: Boolean, default: false },
     completedAt: { type: Date, default: null },
+
+
+   
+
+
+
+
   },
   { timestamps: true }
 );
@@ -96,6 +104,34 @@ progressSchema.methods.recalculateFromSubmissions = async function () {
   }
 
   await this.save();
+};
+
+// ---------------------------
+// Update progress with mock test submission
+// ---------------------------
+progressSchema.methods.updateWithMockTest = async function () {
+  // Using mongoose.model to avoid circular dependency
+  const MockTestSubmission = model("MockTestSubmission");
+  
+  const submissions = await MockTestSubmission.find({
+    _id: { $in: this.mockTestSubmissions },
+    status: "graded",
+  });
+
+  if (submissions.length) {
+    // You can implement custom logic to weight mock test scores alongside assignments.
+    // For now, we calculate an average Mock Test score, or add to avgMarks.
+    // Assuming each mock test has totalScore which is to be averaged.
+    const totalMockTestScore = submissions.reduce((sum, s) => sum + (s.totalScore || 0), 0);
+    const avgMockTestScore = totalMockTestScore / submissions.length;
+    
+    // Simple approach: combine assignment avgMarks and mockTest avg marks
+    // This formula can be refined based on client requirements.
+    this.avgMarks = (this.avgMarks + avgMockTestScore) / 2;
+  }
+
+  await this.save();
+  return this;
 };
 
 

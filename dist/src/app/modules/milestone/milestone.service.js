@@ -33,16 +33,32 @@ const createMilestone = async (data) => {
     }
 };
 exports.createMilestone = createMilestone;
+const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const getAllMilestones = async (course, search, status) => {
-    const filter = {};
-    if (course)
-        filter.course = course !== 'all' ? course : { $exists: true };
+    const searchableFields = ["title"];
+    const queryParams = {};
+    // Handle course filtering natively
+    if (course && course !== "all") {
+        queryParams.course = course;
+    }
+    else if (course === "all") {
+        queryParams.course = { $exists: true };
+    }
+    // Handle status natively
+    if (status && status !== "all") {
+        queryParams.status = status;
+    }
+    else if (status === "all") {
+        queryParams.status = { $exists: true };
+    }
     if (search)
-        filter.title = { $regex: search, $options: "i" };
-    if (status)
-        filter.status = status !== 'all' ? status : { $exists: true };
-    const result = await Milestone_model_1.default.find(filter).populate('course', 'title').sort({ order: 1 });
-    return result;
+        queryParams.search = search;
+    const milestoneQuery = new QueryBuilder_1.default(Milestone_model_1.default.find().populate("course", "title").lean(), queryParams)
+        .search(searchableFields)
+        .filter()
+        .sort();
+    milestoneQuery.modelQuery = milestoneQuery.modelQuery.sort({ order: 1 });
+    return milestoneQuery.modelQuery;
 };
 exports.getAllMilestones = getAllMilestones;
 const getMilestoneById = async (id) => {

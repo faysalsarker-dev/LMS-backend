@@ -1,5 +1,31 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * 🛠️ QueryBuilder Utility
+ *
+ * A highly reusable class designed to abstract and chain standard Mongoose queries
+ * like Pagination, Sorting, Searching, and Filtering. It ensures uniform API behavior
+ * across different modules while dramatically reducing boilerplate code.
+ *
+ * @example
+ * // 1. Instantiate the builder with a base Mongoose query and the incoming query payload
+ * const userQuery = new QueryBuilder(User.find().lean(), req.query)
+ *   .search(['name', 'email']) // 🔍 Search specified fields
+ *   .filter()                  // 🎯 Filter exact matches & automatically clean up payload
+ *   .sort()                    // 🔽 Apply sorting (defaults to -createdAt)
+ *   .paginate();               // 📄 Apply pagination (page, limit)
+ *
+ * // 2. Execute the query and simultaneously fetch pagination metadata
+ * const [data, meta] = await Promise.all([
+ *   userQuery.modelQuery,
+ *   userQuery.countTotal()
+ * ]);
+ *
+ * @control Filtering Logic & Best Practices
+ * - **Empty values:** Arrays containing empty strings `""`, `undefined`, or `"all"` are automatically ignored, preventing Mongoose from searching for non-existent empty entries.
+ * - **Booleans:** Text equivalents like `"true"` and `"false"` are explicitly cast to standard Booleans to avoid strict-casting failures in Mongoose schemas.
+ * - **Reserved Keywords:** Words like `search`, `sortBy`, `limit`, and `page` are automatically excluded from the strict `.filter()` matching process so they only affect their respective chainable methods.
+ */
 class QueryBuilder {
     constructor(modelQuery, query) {
         this.modelQuery = modelQuery;
@@ -21,16 +47,18 @@ class QueryBuilder {
         // Filtering out fields that are used for other purposes
         const excludeFields = ['search', 'sortBy', 'sortOrder', 'limit', 'page', 'fields'];
         excludeFields.forEach((el) => delete queryObj[el]);
-        // Handle 'all' explicitly by stripping those filters out
+        // Handle explicitly empty strings, 'all' selectors, or undefined
         Object.keys(queryObj).forEach((key) => {
-            if (queryObj[key] === 'all') {
+            if (queryObj[key] === "all" ||
+                queryObj[key] === "" ||
+                queryObj[key] === undefined) {
                 delete queryObj[key];
             }
-            // Handle boolean query strings
-            if (queryObj[key] === 'true') {
+            // Handle boolean query strings explicitly to bypass strict checks
+            if (queryObj[key] === "true") {
                 queryObj[key] = true;
             }
-            else if (queryObj[key] === 'false') {
+            else if (queryObj[key] === "false") {
                 queryObj[key] = false;
             }
         });

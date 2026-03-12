@@ -10,7 +10,6 @@ const Milestone_model_1 = __importDefault(require("../milestone/Milestone.model"
 const ApiError_1 = require("../../errors/ApiError");
 // Create
 const createLesson = async (payload) => {
-    console.log(payload, 'data');
     const session = await mongoose_1.default.startSession();
     session.startTransaction();
     try {
@@ -36,53 +35,40 @@ const createLesson = async (payload) => {
     }
 };
 exports.createLesson = createLesson;
+const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const getAllLessons = async (params) => {
-    const { milestone = '', search = '', status = 'all', course = 'all', page = 1, limit = 10, type } = params;
-    // Build filter object
-    const filter = {};
-    // Milestone filter
-    if (milestone && milestone !== 'all') {
-        filter.milestone = milestone;
-    }
-    // Course filter
-    if (course && course !== 'all') {
-        filter.course = course;
-    }
-    if (search && search.trim() !== '') {
-        filter.$or = [
-            { title: { $regex: search.trim(), $options: 'i' } }
-        ];
-    }
-    if (type && type !== 'all') {
-        filter.type = type;
-    }
-    if (status && status !== 'all') {
-        filter.status = status;
-    }
-    // Calculate pagination
-    const skip = (page - 1) * limit;
-    // Execute query with pagination
-    const [lessons, total] = await Promise.all([
-        Lesson_model_1.default.find(filter)
-            .populate('milestone', 'title')
-            .sort({ order: 1 })
-            .skip(skip)
-            .limit(limit)
-            .lean(),
-        Lesson_model_1.default.countDocuments(filter)
+    const searchableFields = ["title"];
+    const queryParams = {
+        ...params,
+        page: params.page || 1,
+        limit: params.limit || 10,
+    };
+    if (queryParams.milestone === "all")
+        delete queryParams.milestone;
+    if (queryParams.course === "all")
+        delete queryParams.course;
+    if (queryParams.status === "all")
+        delete queryParams.status;
+    if (queryParams.type === "all")
+        delete queryParams.type;
+    const lessonQuery = new QueryBuilder_1.default(Lesson_model_1.default.find().populate("milestone", "title").lean(), queryParams)
+        .search(searchableFields)
+        .filter()
+        .sort()
+        .paginate();
+    // Override sort manually for lessons to maintain original logic
+    lessonQuery.modelQuery = lessonQuery.modelQuery.sort({ order: 1 });
+    const [lessons, metaInfo] = await Promise.all([
+        lessonQuery.modelQuery,
+        lessonQuery.countTotal(),
     ]);
-    // Calculate meta information
-    const totalPages = Math.ceil(total / limit);
     return {
         data: lessons,
         meta: {
-            total,
-            page,
-            limit,
-            totalPages,
-            hasNextPage: page < totalPages,
-            hasPrevPage: page > 1
-        }
+            ...metaInfo,
+            hasNextPage: metaInfo.page < metaInfo.totalPages,
+            hasPrevPage: metaInfo.page > 1,
+        },
     };
 };
 exports.getAllLessons = getAllLessons;

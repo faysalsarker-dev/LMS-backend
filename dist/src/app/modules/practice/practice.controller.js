@@ -100,8 +100,6 @@ const deletePractice = (0, catchAsync_1.catchAsync)(async (req, res) => {
 const addItemToPractice = (0, catchAsync_1.catchAsync)(async (req, res) => {
     // Extract files from multer
     const files = req.files;
-    console.log(files, 'files ');
-    console.log(req.body, 'body ');
     // Check for audio file
     if (files?.audio && files.audio[0]?.path) {
         req.body.audioUrl = files.audio[0].path;

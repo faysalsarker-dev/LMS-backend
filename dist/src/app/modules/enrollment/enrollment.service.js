@@ -96,14 +96,12 @@ const handleSuccessPayment = async (query) => {
         }
         enrollment.paymentStatus = "completed";
         await enrollment.save({ session });
-        console.log(enrollment, 'enrolment');
         await User_model_1.default.findByIdAndUpdate(enrollment.user, { $addToSet: { courses: enrollment.course } }, { session });
         await Course_model_1.default.findByIdAndUpdate(enrollment.course, {
             $inc: { totalEnrolled: 1 },
             $addToSet: { enrolledStudents: enrollment.user },
         }, { session });
         if (enrollment.promoCode) {
-            console.log(enrollment.promoCode);
             await Promo_model_1.default.usePromo({
                 promoCode: enrollment.promoCode,
                 userId: enrollment.user,

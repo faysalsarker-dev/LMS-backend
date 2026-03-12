@@ -11,11 +11,13 @@ export interface IProgress {
   course: Schema.Types.ObjectId;
   completedLessons: Schema.Types.ObjectId[];
   assignmentSubmissions: Schema.Types.ObjectId[]; 
+  mockTestSubmissions: Schema.Types.ObjectId[];
   avgMarks?: number;
-quizResults: IQuizResult[];
+  quizResults: IQuizResult[];
   progressPercentage: number;
   isCompleted: boolean;
   completedAt?: Date;
   updateWithAssignment(assignmentId: string): Promise<void>;
+  updateWithMockTest?(): Promise<void>;
   recalculateFromSubmissions(): Promise<void>;
 }

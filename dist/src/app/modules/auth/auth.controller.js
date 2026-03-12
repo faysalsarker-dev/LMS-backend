@@ -45,7 +45,6 @@ exports.AuthController = {
         });
     }),
     logoutFromOthers: (0, catchAsync_1.catchAsync)(async (req, res) => {
-        console.log(req.body, 'body');
         const result = await auth_service_1.userService.logoutFromOthers(req.body.email);
         if (!result) {
             (0, setCookie_1.clearAuthCookies)(res);

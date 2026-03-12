@@ -11,12 +11,10 @@ const mongoose_1 = require("mongoose");
 // Create promo (User can create only ONE)
 // --------------------------
 const createPromo = async (data) => {
-    console.log(data);
     const exist = await Promo_model_1.default.findOne({ owner: data.owner });
     if (exist)
         throw new ApiError_1.ApiError(400, "User already contain a promo");
     const promo = await Promo_model_1.default.create({ ...data });
-    console.log(promo);
     return promo;
 };
 // --------------------------
@@ -44,7 +42,6 @@ const updatePromo = async (id, data) => {
     const promo = await Promo_model_1.default.findById(id);
     if (!promo)
         throw new ApiError_1.ApiError(404, "Promo not found");
-    console.log(data);
     Object.assign(promo, data);
     await promo.save();
     return promo;
@@ -175,7 +172,6 @@ const getPromoMonthlyChart = async (year) => {
             totalUses: found?.totalUses || 0
         };
     });
-    console.log(final, 'final');
     return final;
 };
 const getDetailedAnalytics = async (query) => {

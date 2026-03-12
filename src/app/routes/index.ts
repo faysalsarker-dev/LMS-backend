@@ -11,6 +11,8 @@ import TestimonialRoutes  from "../modules/testimonial/testimonial.routes"
 import Assignment  from "../modules/agt/agt.route"
 import Promo  from "../modules/promoCode/promo.routes"
 import practiceRoutes   from "../modules/practice/practice.routes"
+import MockTestRoute from "../modules/mockTest/mockTest.routes"
+import MockTestSectionRoute from "../modules/mockTestSection/mockTestSection.routes"
 export const router = Router()
 
 interface ModuleRoute {
@@ -68,7 +70,14 @@ const moduleRoutes: ModuleRoute[] = [
        path: "/practice",
        route: practiceRoutes 
    },
-
+   {
+       path: "/mock-test",
+       route: MockTestRoute
+   },
+   {
+       path: "/mock-test-section",
+       route: MockTestSectionRoute
+   }
 ]
 
 moduleRoutes.forEach((route) => {

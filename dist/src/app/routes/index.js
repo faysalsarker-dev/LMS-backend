@@ -17,6 +17,8 @@ const testimonial_routes_1 = __importDefault(require("../modules/testimonial/tes
 const agt_route_1 = __importDefault(require("../modules/agt/agt.route"));
 const promo_routes_1 = __importDefault(require("../modules/promoCode/promo.routes"));
 const practice_routes_1 = __importDefault(require("../modules/practice/practice.routes"));
+const mockTest_routes_1 = __importDefault(require("../modules/mockTest/mockTest.routes"));
+const mockTestSection_routes_1 = __importDefault(require("../modules/mockTestSection/mockTestSection.routes"));
 exports.router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -67,6 +69,14 @@ const moduleRoutes = [
         path: "/practice",
         route: practice_routes_1.default
     },
+    {
+        path: "/mock-test",
+        route: mockTest_routes_1.default
+    },
+    {
+        path: "/mock-test-section",
+        route: mockTestSection_routes_1.default
+    }
 ];
 moduleRoutes.forEach((route) => {
     exports.router.use(route.path, route.route);

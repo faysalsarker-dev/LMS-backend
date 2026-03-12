@@ -10,7 +10,6 @@ const validateRequest = (schema) => async (req, res, next) => {
         next();
     }
     catch (error) {
-        console.log('Validation error:', error);
         next(new ApiError_1.ApiError(400, error.errors?.map((e) => e.message).join(', ') || 'Validation error'));
     }
 };

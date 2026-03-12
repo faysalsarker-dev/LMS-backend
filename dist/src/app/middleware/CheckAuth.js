@@ -7,7 +7,6 @@ const checkAuth = (authRoles) => async (req, res, next) => {
     try {
         const accessToken = req.cookies.accessToken;
         if (!accessToken) {
-            console.log("No access token found in cookies", req.originalUrl);
             throw new ApiError_1.ApiError(401, "No token provided");
         }
         let verifiedToken;
@@ -33,7 +32,6 @@ const checkAuth = (authRoles) => async (req, res, next) => {
         next();
     }
     catch (error) {
-        console.log("JWT error:", error);
         next(error);
     }
 };

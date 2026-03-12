@@ -45,7 +45,6 @@ exports.userService = {
         const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
         user.otp = otp;
         user.otpExpiry = otpExpiry;
-        console.log(user);
         await user.save();
         await (0, email_1.sendOtpEmail)(user.email, otp);
         return { message: "OTP sent successfully", email: user.email };
