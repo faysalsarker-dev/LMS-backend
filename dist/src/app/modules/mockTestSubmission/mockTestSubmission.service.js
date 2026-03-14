@@ -8,31 +8,71 @@ const mongoose_1 = require("mongoose");
 const mockTestSubmission_model_1 = __importDefault(require("./mockTestSubmission.model"));
 const progress_model_1 = __importDefault(require("../progress/progress.model"));
 const submitMockTest = async (studentId, payload) => {
-    let totalScore = 0;
-    let allSectionsAutoGraded = true;
-    const sectionsToStore = payload.sections.map((sec) => {
-        totalScore += sec.autoGradedScore;
-        if (!sec.isAutoGraded) {
-            allSectionsAutoGraded = false;
-        }
-        return {
+    // 1. Find existing submission for this student, course, and mock test
+    let submission = await mockTestSubmission_model_1.default.findOne({
+        student: studentId,
+        course: payload.course,
+        mockTest: payload.mockTest,
+    });
+    const incomingSections = payload.sections;
+    if (!submission) {
+        // Initial submission
+        const sectionsToStore = incomingSections.map((sec) => ({
             sectionId: new mongoose_1.Types.ObjectId(sec.sectionId),
             studentAnswers: sec.studentAnswers,
-            autoGradedScore: sec.autoGradedScore,
+            autoGradedScore: sec.isAutoGraded ? sec.score : 0,
             adminScore: 0,
             isAutoGraded: sec.isAutoGraded,
-        };
+        }));
+        submission = await mockTestSubmission_model_1.default.create({
+            student: new mongoose_1.Types.ObjectId(studentId),
+            course: new mongoose_1.Types.ObjectId(payload.course),
+            mockTest: new mongoose_1.Types.ObjectId(payload.mockTest),
+            sections: sectionsToStore,
+            totalScore: 0, // Will calculate below
+            status: "pending_review",
+        });
+    }
+    else {
+        // Update existing submission with new or updated sections
+        incomingSections.forEach((incoming) => {
+            const existingSecIndex = submission.sections.findIndex((s) => s.sectionId.toString() === incoming.sectionId);
+            const sectionData = {
+                sectionId: new mongoose_1.Types.ObjectId(incoming.sectionId),
+                studentAnswers: incoming.studentAnswers,
+                autoGradedScore: incoming.isAutoGraded ? incoming.score : 0,
+                adminScore: 0,
+                isAutoGraded: incoming.isAutoGraded,
+            };
+            if (existingSecIndex > -1) {
+                submission.sections[existingSecIndex] = sectionData;
+            }
+            else {
+                submission.sections.push(sectionData);
+            }
+        });
+    }
+    // 2. Recalculate totalScore and Status based on all currently saved sections
+    let totalScore = 0;
+    let allSectionsGraded = true;
+    submission.sections.forEach((sec) => {
+        if (sec.isAutoGraded) {
+            totalScore += sec.autoGradedScore || 0;
+        }
+        else {
+            // Manual section: check if it has been graded by admin yet
+            if (sec.adminScore > 0) {
+                totalScore += sec.adminScore;
+            }
+            else {
+                allSectionsGraded = false;
+            }
+        }
     });
-    const status = allSectionsAutoGraded ? "graded" : "pending_review";
-    const submission = await mockTestSubmission_model_1.default.create({
-        student: new mongoose_1.Types.ObjectId(studentId),
-        course: new mongoose_1.Types.ObjectId(payload.course),
-        mockTest: new mongoose_1.Types.ObjectId(payload.mockTest),
-        sections: sectionsToStore,
-        totalScore,
-        status,
-    });
-    // Update Progress array
+    submission.totalScore = totalScore;
+    submission.status = allSectionsGraded ? "graded" : "pending_review";
+    await submission.save();
+    // 3. Update Progress array if not already present
     const progress = await progress_model_1.default.findOne({
         student: studentId,
         course: payload.course,
@@ -41,12 +81,13 @@ const submitMockTest = async (studentId, payload) => {
         if (!progress.mockTestSubmissions) {
             progress.mockTestSubmissions = [];
         }
-        if (!progress.mockTestSubmissions.includes(submission._id)) {
-            progress.mockTestSubmissions.push(submission._id);
+        const subId = submission._id;
+        if (!progress.mockTestSubmissions.some(id => id.toString() === subId.toString())) {
+            progress.mockTestSubmissions.push(subId);
         }
         await progress.save();
-        // If perfectly graded immediately, we can trigger an update
-        if (status === "graded" && typeof progress.updateWithMockTest === "function") {
+        // If completely graded, trigger progress update
+        if (submission.status === "graded" && typeof progress.updateWithMockTest === "function") {
             await progress.updateWithMockTest();
         }
     }

@@ -3,11 +3,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const mockTestSectionSubmissionSchema = new mongoose_1.Schema({
     sectionId: { type: mongoose_1.Schema.Types.ObjectId, ref: "MockTestSection", required: true },
-    studentAnswers: { type: String, default: "" },
     autoGradedScore: { type: Number, default: 0 },
     adminScore: { type: Number, default: 0 },
     adminFeedback: { type: String },
     isAutoGraded: { type: Boolean, default: false },
+    studentAnswers: { type: mongoose_1.Schema.Types.Mixed },
 }, { _id: false });
 const mockTestSubmissionSchema = new mongoose_1.Schema({
     student: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true, index: true },

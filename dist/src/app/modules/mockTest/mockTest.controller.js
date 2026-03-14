@@ -106,6 +106,7 @@ exports.deleteMockTest = (0, catchAsync_1.catchAsync)(async (req, res) => {
 });
 exports.getMocktestForUser = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const userId = req.user._id;
+    console.log(userId, 'request');
     if (!userId) {
         throw new ApiError_1.ApiError(http_status_1.default.UNAUTHORIZED, "User not found in request");
     }

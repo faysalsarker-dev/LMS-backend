@@ -4,7 +4,7 @@ import sendResponse from "../../utils/sendResponse";
 import * as submissionService from "./mockTestSubmission.service";
 
 export const handleSubmitMockTest = catchAsync(async (req: Request, res: Response) => {
-  const studentId = req.user._id || req.user.id;
+  const studentId = req.user._id;
   const submission = await submissionService.submitMockTest(studentId, req.body);
 
   sendResponse(res, {
@@ -51,5 +51,19 @@ export const handleGradeSubmission = catchAsync(async (req: Request, res: Respon
     success: true,
     message: "Mock test submission graded successfully",
     data: gradedSubmission,
+  });
+});
+
+export const handleGetMockTestProgress = catchAsync(async (req: Request, res: Response) => {
+  const studentId = req.user._id;
+  const { mockTestId } = req.params;
+
+  const progress = await submissionService.getMockTestProgress(studentId, mockTestId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Student mock test progress retrieved successfully",
+    data: progress,
   });
 });

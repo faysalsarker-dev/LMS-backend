@@ -2,11 +2,11 @@ import { Schema } from "mongoose";
 
 export interface IMockTestSectionSubmission {
   sectionId: Schema.Types.ObjectId;
-  studentAnswers: string; // Could be a JSON string of multiple answers, text, or a cloud URL (e.g., for audio)
   autoGradedScore: number;
   adminScore: number;
   adminFeedback?: string;
   isAutoGraded: boolean;
+  studentAnswers?: any;
 }
 
 export interface IMockTestSubmission {
@@ -17,4 +17,16 @@ export interface IMockTestSubmission {
   totalScore: number;
   status: "pending_review" | "graded";
   submittedAt?: Date;
+}
+
+
+export interface IMocktestSubmitPayload {
+    course: string;
+    mockTest: string;
+    sections: {
+      sectionId: string;
+      score: number;
+      isAutoGraded: boolean;
+      studentAnswers?: any;
+    }[];
 }

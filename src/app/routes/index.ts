@@ -13,6 +13,7 @@ import Promo  from "../modules/promoCode/promo.routes"
 import practiceRoutes   from "../modules/practice/practice.routes"
 import MockTestRoute from "../modules/mockTest/mockTest.routes"
 import MockTestSectionRoute from "../modules/mockTestSection/mockTestSection.routes"
+import MockTestSubmissionRoute from "../modules/mockTestSubmission/mockTestSubmission.route"
 export const router = Router()
 
 interface ModuleRoute {
@@ -77,6 +78,10 @@ const moduleRoutes: ModuleRoute[] = [
    {
        path: "/mock-test-section",
        route: MockTestSectionRoute
+   },
+   {
+       path: "/mock-test-submission",
+       route: MockTestSubmissionRoute
    }
 ]
 

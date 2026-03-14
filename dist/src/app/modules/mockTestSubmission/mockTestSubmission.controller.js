@@ -41,7 +41,7 @@ const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const submissionService = __importStar(require("./mockTestSubmission.service"));
 exports.handleSubmitMockTest = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    const studentId = req.user._id || req.user.id;
+    const studentId = req.user._id;
     const submission = await submissionService.submitMockTest(studentId, req.body);
     (0, sendResponse_1.default)(res, {
         statusCode: 201,

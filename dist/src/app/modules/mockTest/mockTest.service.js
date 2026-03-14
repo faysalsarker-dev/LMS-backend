@@ -12,14 +12,14 @@ const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const User_model_1 = __importDefault(require("../auth/User.model"));
 const getMocktestForUser = async (userId) => {
     const user = await User_model_1.default.findById(userId).select("courses");
-    if (!user) {
+    if (!user || (!user.courses || user.courses.length === 0)) {
         return [];
     }
-    const courseIds = user.courses || [];
+    const courseIds = user.courses;
     const mockTests = await mockTest_model_1.default.find({
         course: { $in: courseIds },
         status: "published",
-    }).populate("course", "title slug");
+    }).select("title slug thumbnail _id course").populate("course", "title slug");
     return mockTests;
 };
 exports.getMocktestForUser = getMocktestForUser;

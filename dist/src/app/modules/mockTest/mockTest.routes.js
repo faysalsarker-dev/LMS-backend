@@ -40,9 +40,9 @@ const multer_config_1 = require("../../config/multer.config");
 const router = (0, express_1.Router)();
 // Public routes
 router.get("/", MockTestController.getAllMockTests);
+router.get("/for-user", (0, CheckAuth_1.checkAuth)(), MockTestController.getMocktestForUser);
 router.get("/:slug", MockTestController.getMockTestBySlug);
 router.get("/id/:id", MockTestController.getMockTestById);
-router.get("/for-user", (0, CheckAuth_1.checkAuth)(), MockTestController.getMocktestForUser);
 // Protected routes (Admin / Instructor only in a real scenario, handled by checkAuth & roles)
 router.post("/", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerUpload.single("thumbnail"), MockTestController.createMockTest);
 router.put("/:id", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerUpload.single("thumbnail"), MockTestController.updateMockTest);

@@ -21,7 +21,6 @@ export const getMocktestForUser = async (
     status: "published",
   }).select("title slug thumbnail _id course").populate("course", "title slug");
 
-  console.log(mockTests)
   return mockTests;
 };
 

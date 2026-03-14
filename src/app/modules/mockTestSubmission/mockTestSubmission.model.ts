@@ -4,14 +4,15 @@ import { IMockTestSubmission, IMockTestSectionSubmission } from "./mockTestSubmi
 const mockTestSectionSubmissionSchema = new Schema<IMockTestSectionSubmission>(
   {
     sectionId: { type: Schema.Types.ObjectId, ref: "MockTestSection", required: true },
-    studentAnswers: { type: String, default: "" },
     autoGradedScore: { type: Number, default: 0 },
     adminScore: { type: Number, default: 0 },
     adminFeedback: { type: String },
     isAutoGraded: { type: Boolean, default: false },
+    studentAnswers: { type: Schema.Types.Mixed },
   },
   { _id: false }
 );
+
 
 const mockTestSubmissionSchema = new Schema<IMockTestSubmission>(
   {

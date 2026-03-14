@@ -8,14 +8,20 @@ const router = express.Router();
 // Student routes
 router.post(
   "/submit",
-  checkAuth([UserRoles.STUDENT]),
+  checkAuth(),
   submissionController.handleSubmitMockTest
 );
 
 router.get(
   "/my-submissions/:courseId",
-  checkAuth([UserRoles.STUDENT]),
+  checkAuth(),
   submissionController.handleGetStudentSubmissions
+);
+
+router.get(
+  "/my-mocktest-progress/:mockTestId",
+  checkAuth(),
+  submissionController.handleGetMockTestProgress
 );
 
 // Admin routes
@@ -31,4 +37,4 @@ router.patch(
   submissionController.handleGradeSubmission
 );
 
-export const MockTestSubmissionRoutes = router;
+export default router;
