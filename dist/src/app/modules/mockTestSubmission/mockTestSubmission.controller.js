@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleGradeSubmission = exports.handleGetPendingSubmissions = exports.handleGetStudentSubmissions = exports.handleSubmitMockTest = void 0;
+exports.handleGetMockTestProgress = exports.handleGradeSubmission = exports.handleGetPendingSubmissions = exports.handleGetStudentSubmissions = exports.handleSubmitMockTest = void 0;
 const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const submissionService = __importStar(require("./mockTestSubmission.service"));
@@ -79,5 +79,16 @@ exports.handleGradeSubmission = (0, catchAsync_1.catchAsync)(async (req, res) =>
         success: true,
         message: "Mock test submission graded successfully",
         data: gradedSubmission,
+    });
+});
+exports.handleGetMockTestProgress = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const studentId = req.user._id;
+    const { mockTestId } = req.params;
+    const progress = await submissionService.getMockTestProgress(studentId, mockTestId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Student mock test progress retrieved successfully",
+        data: progress,
     });
 });

@@ -8,7 +8,16 @@ const mockTestSectionSubmissionSchema = new Schema<IMockTestSectionSubmission>(
     adminScore: { type: Number, default: 0 },
     adminFeedback: { type: String },
     isAutoGraded: { type: Boolean, default: false },
-    studentAnswers: { type: Schema.Types.Mixed },
+    studentAnswers: [
+    {
+      questionId: { 
+        type: Schema.Types.ObjectId, 
+        ref: "MockTestSection", 
+        required: true 
+      },
+      answer: { type: Schema.Types.Mixed, required: true }
+    }
+  ]
   },
   { _id: false }
 );

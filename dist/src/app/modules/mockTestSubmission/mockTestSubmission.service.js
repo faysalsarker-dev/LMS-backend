@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.gradeSubmission = exports.getPendingSubmissions = exports.getStudentSubmissions = exports.submitMockTest = void 0;
+exports.getMockTestProgress = exports.gradeSubmission = exports.getPendingSubmissions = exports.getStudentSubmissions = exports.submitMockTest = void 0;
 const mongoose_1 = require("mongoose");
 const mockTestSubmission_model_1 = __importDefault(require("./mockTestSubmission.model"));
 const progress_model_1 = __importDefault(require("../progress/progress.model"));
@@ -145,3 +145,25 @@ const gradeSubmission = async (submissionId, adminGrades) => {
     return submission;
 };
 exports.gradeSubmission = gradeSubmission;
+const getMockTestProgress = async (studentId, mockTestId) => {
+    const submission = await mockTestSubmission_model_1.default.findOne({
+        student: studentId,
+        mockTest: mockTestId,
+    }).populate("sections.sectionId");
+    const progress = {
+        listening: "locked",
+        reading: "locked",
+        speaking: "locked",
+        writing: "locked",
+    };
+    if (submission) {
+        submission.sections.forEach((sec) => {
+            const sectionName = sec.sectionId?.name; // assuming population worked and MockTestSection has name
+            if (sectionName && sectionName in progress) {
+                progress[sectionName] = "submitted";
+            }
+        });
+    }
+    return progress;
+};
+exports.getMockTestProgress = getMockTestProgress;

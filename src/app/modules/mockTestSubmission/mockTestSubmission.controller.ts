@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
+import { ApiError } from "../../errors/ApiError";
 import * as submissionService from "./mockTestSubmission.service";
 
 export const handleSubmitMockTest = catchAsync(async (req: Request, res: Response) => {
@@ -30,13 +31,26 @@ export const handleGetStudentSubmissions = catchAsync(async (req: Request, res: 
 });
 
 export const handleGetPendingSubmissions = catchAsync(async (req: Request, res: Response) => {
-  const submissions = await submissionService.getPendingSubmissions();
+  const { meta, result } = await submissionService.getPendingSubmissions(req.query);
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "Pending mock test submissions retrieved successfully",
-    data: submissions,
+    meta,
+    data: result,
+  });
+});
+
+export const handleGetSubmissionById = catchAsync(async (req: Request, res: Response) => {
+  const { submissionId } = req.params;
+  const submission = await submissionService.getSubmissionById(submissionId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Mock test submission retrieved successfully",
+    data: submission,
   });
 });
 
@@ -65,5 +79,64 @@ export const handleGetMockTestProgress = catchAsync(async (req: Request, res: Re
     success: true,
     message: "Student mock test progress retrieved successfully",
     data: progress,
+  });
+});
+
+// ─── Speaking Mock Test Submission ───────────────────────────────────────────
+
+export const handleSubmitSpeakingMockTest = catchAsync(async (req: Request, res: Response) => {
+  if (!req.file) {
+    throw new ApiError(400, "Audio file is required for speaking mock test submission");
+  }
+
+
+
+
+
+  const studentId = req.user._id;
+
+  // multer-storage-cloudinary puts the Cloudinary URL in req.file.path
+  const audioUrl = (req.file as any).path;
+
+  const { course, mockTest, sectionId, questionId } = req.body;
+
+  console.log("Received speaking mock test submission:", {
+    studentId,
+    course,
+    mockTest,
+    sectionId,
+    questionId,
+    audioUrl,
+  });
+
+  if (!course || !mockTest || !sectionId) {
+    throw new ApiError(400, "course, mockTest, and sectionId are required");
+  }
+
+  const payload = {
+    course,
+    mockTest,
+    sections: [
+      {
+        sectionId,
+        score: 0, // speaking is manually graded by admin
+        isAutoGraded: false,
+        studentAnswers: [
+          {
+            questionId: questionId || sectionId, // Fallback to sectionId if questionId is not provided
+            answer: audioUrl,
+          },
+        ],
+      },
+    ],
+  };
+
+  const submission = await submissionService.submitMockTest(studentId, payload);
+
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: "Speaking mock test submitted successfully",
+    data: submission,
   });
 });

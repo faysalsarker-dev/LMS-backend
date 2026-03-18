@@ -6,7 +6,7 @@ export interface IMockTestSectionSubmission {
   adminScore: number;
   adminFeedback?: string;
   isAutoGraded: boolean;
-  studentAnswers?: any;
+  studentAnswers?: { questionId: string; answer: any }[];
 }
 
 export interface IMockTestSubmission {

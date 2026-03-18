@@ -19,6 +19,7 @@ const promo_routes_1 = __importDefault(require("../modules/promoCode/promo.route
 const practice_routes_1 = __importDefault(require("../modules/practice/practice.routes"));
 const mockTest_routes_1 = __importDefault(require("../modules/mockTest/mockTest.routes"));
 const mockTestSection_routes_1 = __importDefault(require("../modules/mockTestSection/mockTestSection.routes"));
+const mockTestSubmission_route_1 = __importDefault(require("../modules/mockTestSubmission/mockTestSubmission.route"));
 exports.router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -76,6 +77,10 @@ const moduleRoutes = [
     {
         path: "/mock-test-section",
         route: mockTestSection_routes_1.default
+    },
+    {
+        path: "/mock-test-submission",
+        route: mockTestSubmission_route_1.default
     }
 ];
 moduleRoutes.forEach((route) => {

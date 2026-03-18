@@ -2,6 +2,7 @@ import express from "express";
 import * as submissionController from "./mockTestSubmission.controller";
 import { checkAuth } from "../../middleware/CheckAuth";
 import { UserRoles } from "../auth/auth.interface";
+import {  multerVideoUpload } from "../../config/multer.config";
 
 const router = express.Router();
 
@@ -10,6 +11,13 @@ router.post(
   "/submit",
   checkAuth(),
   submissionController.handleSubmitMockTest
+);
+
+router.post(
+  "/submit-speaking",
+  checkAuth(),
+   multerVideoUpload.single("audio"),
+  submissionController.handleSubmitSpeakingMockTest
 );
 
 router.get(
@@ -29,6 +37,12 @@ router.get(
   "/pending",
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN]),
   submissionController.handleGetPendingSubmissions
+);
+
+router.get(
+  "/:submissionId",
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN]),
+  submissionController.handleGetSubmissionById
 );
 
 router.patch(
