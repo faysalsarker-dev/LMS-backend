@@ -3,10 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMockTestProgress = exports.gradeSubmission = exports.getPendingSubmissions = exports.getStudentSubmissions = exports.submitMockTest = void 0;
+exports.getMockTestProgress = exports.gradeSubmission = exports.getSubmissionById = exports.getPendingSubmissions = exports.getStudentSubmissions = exports.submitMockTest = void 0;
 const mongoose_1 = require("mongoose");
 const mockTestSubmission_model_1 = __importDefault(require("./mockTestSubmission.model"));
 const progress_model_1 = __importDefault(require("../progress/progress.model"));
+const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const submitMockTest = async (studentId, payload) => {
     // 1. Find existing submission for this student, course, and mock test
     let submission = await mockTestSubmission_model_1.default.findOne({
@@ -37,9 +38,33 @@ const submitMockTest = async (studentId, payload) => {
         // Update existing submission with new or updated sections
         incomingSections.forEach((incoming) => {
             const existingSecIndex = submission.sections.findIndex((s) => s.sectionId.toString() === incoming.sectionId);
+            // Handle studentAnswers: if it's an object (mapping ID to answer), convert to the new array format
+            let studentAnswersArray = incoming.studentAnswers;
+            if (incoming.studentAnswers &&
+                typeof incoming.studentAnswers === "object" &&
+                !Array.isArray(incoming.studentAnswers)) {
+                // If it's a map (and not the special speaking {audioUrl} case if sent directly)
+                if (!("audioUrl" in incoming.studentAnswers)) {
+                    studentAnswersArray = Object.entries(incoming.studentAnswers).map(([questionId, answer]) => ({
+                        questionId,
+                        answer: answer,
+                    }));
+                }
+                else {
+                    // It's the speaking special case {audioUrl: "..."}
+                    // We'll treat it as an answer for the sectionId if no questionId is involved
+                    // But ideally the controller should have fixed this already.
+                    studentAnswersArray = [
+                        {
+                            questionId: incoming.sectionId,
+                            answer: incoming.studentAnswers.audioUrl,
+                        },
+                    ];
+                }
+            }
             const sectionData = {
                 sectionId: new mongoose_1.Types.ObjectId(incoming.sectionId),
-                studentAnswers: incoming.studentAnswers,
+                studentAnswers: studentAnswersArray,
                 autoGradedScore: incoming.isAutoGraded ? incoming.score : 0,
                 adminScore: 0,
                 isAutoGraded: incoming.isAutoGraded,
@@ -82,12 +107,13 @@ const submitMockTest = async (studentId, payload) => {
             progress.mockTestSubmissions = [];
         }
         const subId = submission._id;
-        if (!progress.mockTestSubmissions.some(id => id.toString() === subId.toString())) {
+        if (!progress.mockTestSubmissions.some((id) => id.toString() === subId.toString())) {
             progress.mockTestSubmissions.push(subId);
         }
         await progress.save();
         // If completely graded, trigger progress update
-        if (submission.status === "graded" && typeof progress.updateWithMockTest === "function") {
+        if (submission.status === "graded" &&
+            typeof progress.updateWithMockTest === "function") {
             await progress.updateWithMockTest();
         }
     }
@@ -103,14 +129,64 @@ const getStudentSubmissions = async (studentId, courseId) => {
         .populate("sections.sectionId");
 };
 exports.getStudentSubmissions = getStudentSubmissions;
-const getPendingSubmissions = async () => {
-    return await mockTestSubmission_model_1.default.find({ status: "pending_review" })
+const getPendingSubmissions = async (query) => {
+    const baseQuery = { status: "pending_review" };
+    const submissionQuery = new QueryBuilder_1.default(mockTestSubmission_model_1.default.find(baseQuery)
         .populate("student", "name email")
         .populate("course", "title")
         .populate("mockTest", "title")
-        .populate("sections.sectionId", "name type");
+        .populate("sections.sectionId", "name type"), query)
+        .filter()
+        .sort()
+        .paginate();
+    const result = await submissionQuery.modelQuery;
+    const meta = await submissionQuery.countTotal();
+    return { meta, result };
 };
 exports.getPendingSubmissions = getPendingSubmissions;
+const getSubmissionById = async (submissionId) => {
+    const submission = await mockTestSubmission_model_1.default.findById(submissionId)
+        .populate("student", "name email phone")
+        .populate("course", "title description")
+        .populate("mockTest", "title type")
+        .populate("sections.sectionId")
+        .lean(); // Use lean for easier transformation
+    if (!submission) {
+        throw new Error("Submission not found");
+    }
+    // Transform sections to include full question data paired with user answers
+    const transformedSections = submission.sections.map((section) => {
+        const sectionData = section.sectionId;
+        if (!sectionData || !sectionData.questions)
+            return section;
+        // studentAnswers is now an array: [{ questionId, answer }]
+        const studentAnswers = section.studentAnswers || [];
+        // Create a map for quick lookup from the current array format
+        const answerMap = new Map();
+        studentAnswers.forEach((ans) => {
+            if (ans.questionId) {
+                answerMap.set(ans.questionId.toString(), ans.answer);
+            }
+        });
+        // Map through the original questions from the section and attach the user's answer
+        const questionsWithAnswers = sectionData.questions.map((question) => {
+            const qId = question._id.toString();
+            return {
+                ...question,
+                userAnswer: answerMap.get(qId) || null,
+            };
+        });
+        return {
+            ...section,
+            questionsWithAnswers, // This is the combined view the admin needs
+        };
+    });
+    return {
+        ...submission,
+        sections: transformedSections,
+    };
+};
+exports.getSubmissionById = getSubmissionById;
 const gradeSubmission = async (submissionId, adminGrades) => {
     const submission = await mockTestSubmission_model_1.default.findById(submissionId);
     if (!submission) {
@@ -158,7 +234,7 @@ const getMockTestProgress = async (studentId, mockTestId) => {
     };
     if (submission) {
         submission.sections.forEach((sec) => {
-            const sectionName = sec.sectionId?.name; // assuming population worked and MockTestSection has name
+            const sectionName = sec.sectionId?.name;
             if (sectionName && sectionName in progress) {
                 progress[sectionName] = "submitted";
             }

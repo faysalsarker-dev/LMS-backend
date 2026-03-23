@@ -36,9 +36,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleGetMockTestProgress = exports.handleGradeSubmission = exports.handleGetPendingSubmissions = exports.handleGetStudentSubmissions = exports.handleSubmitMockTest = void 0;
+exports.handleSubmitSpeakingMockTest = exports.handleGetMockTestProgress = exports.handleGradeSubmission = exports.handleGetSubmissionById = exports.handleGetPendingSubmissions = exports.handleGetStudentSubmissions = exports.handleSubmitMockTest = void 0;
 const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
+const ApiError_1 = require("../../errors/ApiError");
 const submissionService = __importStar(require("./mockTestSubmission.service"));
 exports.handleSubmitMockTest = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const studentId = req.user._id;
@@ -62,12 +63,23 @@ exports.handleGetStudentSubmissions = (0, catchAsync_1.catchAsync)(async (req, r
     });
 });
 exports.handleGetPendingSubmissions = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    const submissions = await submissionService.getPendingSubmissions();
+    const { meta, result } = await submissionService.getPendingSubmissions(req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
         message: "Pending mock test submissions retrieved successfully",
-        data: submissions,
+        meta,
+        data: result,
+    });
+});
+exports.handleGetSubmissionById = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const { submissionId } = req.params;
+    const submission = await submissionService.getSubmissionById(submissionId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Mock test submission retrieved successfully",
+        data: submission,
     });
 });
 exports.handleGradeSubmission = (0, catchAsync_1.catchAsync)(async (req, res) => {
@@ -90,5 +102,50 @@ exports.handleGetMockTestProgress = (0, catchAsync_1.catchAsync)(async (req, res
         success: true,
         message: "Student mock test progress retrieved successfully",
         data: progress,
+    });
+});
+// ─── Speaking Mock Test Submission ───────────────────────────────────────────
+exports.handleSubmitSpeakingMockTest = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    if (!req.file) {
+        throw new ApiError_1.ApiError(400, "Audio file is required for speaking mock test submission");
+    }
+    const studentId = req.user._id;
+    // multer-storage-cloudinary puts the Cloudinary URL in req.file.path
+    const audioUrl = req.file.path;
+    const { course, mockTest, sectionId, questionId } = req.body;
+    console.log("Received speaking mock test submission:", {
+        studentId,
+        course,
+        mockTest,
+        sectionId,
+        questionId,
+        audioUrl,
+    });
+    if (!course || !mockTest || !sectionId) {
+        throw new ApiError_1.ApiError(400, "course, mockTest, and sectionId are required");
+    }
+    const payload = {
+        course,
+        mockTest,
+        sections: [
+            {
+                sectionId,
+                score: 0, // speaking is manually graded by admin
+                isAutoGraded: false,
+                studentAnswers: [
+                    {
+                        questionId: questionId || sectionId, // Fallback to sectionId if questionId is not provided
+                        answer: audioUrl,
+                    },
+                ],
+            },
+        ],
+    };
+    const submission = await submissionService.submitMockTest(studentId, payload);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 201,
+        success: true,
+        message: "Speaking mock test submitted successfully",
+        data: submission,
     });
 });

@@ -17,6 +17,7 @@ const mockTestSectionSubmissionSchema = new Schema<IMockTestSectionSubmission>(
       },
       answer: { type: Schema.Types.Mixed, required: true }
     }
+    
   ]
   },
   { _id: false }

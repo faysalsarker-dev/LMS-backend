@@ -7,7 +7,16 @@ const mockTestSectionSubmissionSchema = new mongoose_1.Schema({
     adminScore: { type: Number, default: 0 },
     adminFeedback: { type: String },
     isAutoGraded: { type: Boolean, default: false },
-    studentAnswers: { type: mongoose_1.Schema.Types.Mixed },
+    studentAnswers: [
+        {
+            questionId: {
+                type: mongoose_1.Schema.Types.ObjectId,
+                ref: "MockTestSection",
+                required: true
+            },
+            answer: { type: mongoose_1.Schema.Types.Mixed, required: true }
+        }
+    ]
 }, { _id: false });
 const mockTestSubmissionSchema = new mongoose_1.Schema({
     student: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true, index: true },

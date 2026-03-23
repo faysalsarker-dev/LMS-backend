@@ -40,12 +40,15 @@ const express_1 = __importDefault(require("express"));
 const submissionController = __importStar(require("./mockTestSubmission.controller"));
 const CheckAuth_1 = require("../../middleware/CheckAuth");
 const auth_interface_1 = require("../auth/auth.interface");
+const multer_config_1 = require("../../config/multer.config");
 const router = express_1.default.Router();
 // Student routes
 router.post("/submit", (0, CheckAuth_1.checkAuth)(), submissionController.handleSubmitMockTest);
+router.post("/submit-speaking", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerVideoUpload.single("audio"), submissionController.handleSubmitSpeakingMockTest);
 router.get("/my-submissions/:courseId", (0, CheckAuth_1.checkAuth)(), submissionController.handleGetStudentSubmissions);
 router.get("/my-mocktest-progress/:mockTestId", (0, CheckAuth_1.checkAuth)(), submissionController.handleGetMockTestProgress);
 // Admin routes
 router.get("/pending", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), submissionController.handleGetPendingSubmissions);
+router.get("/:submissionId", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), submissionController.handleGetSubmissionById);
 router.patch("/:submissionId/grade", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), submissionController.handleGradeSubmission);
 exports.default = router;
