@@ -24,7 +24,8 @@ const enrollmentSchema = new Schema<IEnrollment>(
 );
 
 // Indexes
-enrollmentSchema.index({ createdAt: 1 }); 
+enrollmentSchema.index({ createdAt: 1 });
+enrollmentSchema.index({ user: 1, course: 1 });  
 
 const Enrollment = model<IEnrollment>("Enrollment", enrollmentSchema);
 export default Enrollment;

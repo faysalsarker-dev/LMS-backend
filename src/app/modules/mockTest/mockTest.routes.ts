@@ -7,19 +7,21 @@ import {
 } from "./mockTest.validation";
 import { checkAuth } from "../../middleware/CheckAuth";
 import { multerUpload } from "../../config/multer.config";
+import { rateLimit } from "../../middleware/rateLimiter";
 
 const router = Router();
 
-// Public routes
-router.get("/", MockTestController.getAllMockTests);
-router.get("/for-user", checkAuth(), MockTestController.getMocktestForUser);
-router.get("/:slug", MockTestController.getMockTestBySlug);
-router.get("/id/:id", MockTestController.getMockTestById);
+// ── Public reads ──────────────────────────────────────────────────
+router.get("/",          rateLimit("content"), MockTestController.getAllMockTests);
+router.get("/for-user",  checkAuth(), rateLimit("content"), MockTestController.getMocktestForUser);
+router.get("/:slug",     rateLimit("content"), MockTestController.getMockTestBySlug);
+router.get("/id/:id",   rateLimit("content"), MockTestController.getMockTestById);
 
-// Protected routes (Admin / Instructor only in a real scenario, handled by checkAuth & roles)
+// ── Admin / Instructor mutations ─────────────────────────────────────
 router.post(
   "/",
   checkAuth(),
+  rateLimit("write"),
   multerUpload.single("thumbnail"),
   MockTestController.createMockTest,
 );
@@ -27,10 +29,11 @@ router.post(
 router.put(
   "/:id",
   checkAuth(),
+  rateLimit("write"),
   multerUpload.single("thumbnail"),
   MockTestController.updateMockTest,
 );
 
-router.delete("/:id", checkAuth(), MockTestController.deleteMockTest);
+router.delete("/:id", checkAuth(), rateLimit("admin"), MockTestController.deleteMockTest);
 
 export default router;

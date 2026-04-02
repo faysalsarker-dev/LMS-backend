@@ -4,54 +4,56 @@ import validateRequest from "../../middleware/validateRequest.middleware";
 import { iCourseSchema } from "./course.validation";
 import { multerUpload } from "../../config/multer.config";
 import { checkAuth } from "../../middleware/CheckAuth";
+import { rateLimit } from "../../middleware/rateLimiter";
 
 
 
 
 const router = Router();
 
-// Public routes
-router.get("/", CourseController.getAllCourses);
-router.get("/select", CourseController.getAllCoursesForSelecting);
+// ── Public content reads ──────────────────────────────────────────
+router.get("/",       rateLimit("content"), CourseController.getAllCourses);
+router.get("/select", rateLimit("content"), CourseController.getAllCoursesForSelecting);
+router.get("/my-course/:id", rateLimit("content"), CourseController.getCourseById);
+router.get("/:slug",         rateLimit("content"), CourseController.getCourseBySlug);
 
-// Protected routes
-router.post(
-  "/",
-multerUpload.single("file"),
-  CourseController.createCourse
-);
+// ── Authenticated reads ───────────────────────────────────────────
+router.get("/my-enrolled-courses", checkAuth(), rateLimit("content"), CourseController.getMyEnrolledCourses);
+router.get("/my-wishlist-courses", checkAuth(), rateLimit("content"), CourseController.getMyWishlistCourses);
 
-
-router.get("/my-enrolled-courses",checkAuth(),  CourseController.getMyEnrolledCourses);
-router.get("/my-wishlist-courses",checkAuth(),  CourseController.getMyWishlistCourses);
-router.get("/my-course/:id", CourseController.getCourseById);
-router.get("/:slug", CourseController.getCourseBySlug);
 router.get(
   "/:courseId/curriculum",
-  checkAuth(), 
-  CourseController.getCourseCurriculum
+  checkAuth(),
+  rateLimit("content"),
+  CourseController.getCourseCurriculum,
 );
 
 router.get(
   "/lessons/:lessonId",
   checkAuth(),
-  CourseController.getLessonContent
+  rateLimit("content"),
+  CourseController.getLessonContent,
 );
 
-
-
-
+// ── Mutations ─────────────────────────────────────────────────────
+router.post(
+  "/",
+  rateLimit("write"),
+  multerUpload.single("file"),
+  CourseController.createCourse,
+);
 
 router.put(
   "/:id",
-multerUpload.single("file"),
-  CourseController.updateCourse
+  rateLimit("write"),
+  multerUpload.single("file"),
+  CourseController.updateCourse,
 );
 
 router.delete(
   "/:id",
-
-  CourseController.deleteCourse
+  rateLimit("admin"),
+  CourseController.deleteCourse,
 );
 
 

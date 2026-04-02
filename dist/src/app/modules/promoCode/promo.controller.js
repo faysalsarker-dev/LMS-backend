@@ -113,11 +113,12 @@ exports.getAnalytics = (0, catchAsync_1.catchAsync)(async (req, res) => {
 });
 exports.checkPromo = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const userId = req.user?._id;
-    const { code, orderAmount } = req.body;
+    const { code, orderAmount, currency } = req.body;
     const result = await promo_service_1.PromoService.validatePromoService({
         code,
         userId,
         orderAmount,
+        currency
     });
     (0, sendResponse_1.default)(res, {
         statusCode: 200,

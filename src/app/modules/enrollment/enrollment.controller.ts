@@ -22,6 +22,7 @@ export const createEnrollmentController = catchAsync(
       promoCode: req.body.promoCode,
     };
 
+
     const result = await createEnrollment(payload);
 
     sendResponse(res, {

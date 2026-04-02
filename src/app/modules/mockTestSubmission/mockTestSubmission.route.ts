@@ -2,53 +2,62 @@ import express from "express";
 import * as submissionController from "./mockTestSubmission.controller";
 import { checkAuth } from "../../middleware/CheckAuth";
 import { UserRoles } from "../auth/auth.interface";
-import {  multerVideoUpload } from "../../config/multer.config";
+import { multerVideoUpload } from "../../config/multer.config";
+import { rateLimit } from "../../middleware/rateLimiter";
 
 const router = express.Router();
 
-// Student routes
+// ── Student submission ────────────────────────────────────────────
 router.post(
   "/submit",
   checkAuth(),
-  submissionController.handleSubmitMockTest
+  rateLimit("quiz"),
+  submissionController.handleSubmitMockTest,
 );
 
 router.post(
   "/submit-speaking",
   checkAuth(),
-   multerVideoUpload.single("audio"),
-  submissionController.handleSubmitSpeakingMockTest
+  rateLimit("upload"),
+  multerVideoUpload.single("audio"),
+  submissionController.handleSubmitSpeakingMockTest,
 );
 
+// ── Student reads ─────────────────────────────────────────────────
 router.get(
   "/my-submissions/:courseId",
   checkAuth(),
-  submissionController.handleGetStudentSubmissions
+  rateLimit("content"),
+  submissionController.handleGetStudentSubmissions,
 );
 
 router.get(
   "/my-mocktest-progress/:mockTestId",
   checkAuth(),
-  submissionController.handleGetMockTestProgress
+  rateLimit("content"),
+  submissionController.handleGetMockTestProgress,
 );
 
-// Admin routes
+// ── Admin / Instructor review ─────────────────────────────────────
 router.get(
   "/pending",
-  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN]),
-  submissionController.handleGetPendingSubmissions
+  checkAuth([UserRoles.INSTRUCTOR, UserRoles.SUPER_ADMIN]),
+  rateLimit("admin"),
+  submissionController.handleGetPendingSubmissions,
 );
 
 router.get(
   "/:submissionId",
-  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN]),
-  submissionController.handleGetSubmissionById
+  checkAuth([UserRoles.INSTRUCTOR, UserRoles.SUPER_ADMIN]),
+  rateLimit("admin"),
+  submissionController.handleGetSubmissionById,
 );
 
 router.patch(
   "/:submissionId/grade",
-  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN]),
-  submissionController.handleGradeSubmission
+  checkAuth([UserRoles.INSTRUCTOR, UserRoles.SUPER_ADMIN]),
+  rateLimit("admin"),
+  submissionController.handleGradeSubmission,
 );
 
 export default router;

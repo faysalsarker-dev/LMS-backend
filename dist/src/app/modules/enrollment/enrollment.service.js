@@ -33,13 +33,13 @@ const createEnrollment = async (data) => {
         const user = await User_model_1.default.findById(data.user).session(session);
         if (!user)
             throw new ApiError_1.ApiError(404, "User not found");
-        let finalAmount = course.price;
+        let finalAmount = course.isDiscounted ? course.discountPrice : course.price;
         let appliedPromo = null;
         if (data.promoCode) {
             const validation = await Promo_model_1.default.validatePromo({
                 code: data.promoCode,
                 userId: data.user,
-                originalPrice: course.price,
+                originalPrice: finalAmount,
             });
             finalAmount = validation.finalAmount;
             appliedPromo = validation.promoCode;
@@ -136,22 +136,19 @@ exports.handleSuccessPayment = handleSuccessPayment;
 // Handle failed payment
 const handleFailedPayment = async (query) => {
     const { transactionId } = query;
-    const session = await mongoose_1.default.startSession();
-    // 1. Find the pending enrollment
-    const enrollment = await Enrollment_model_1.default.findOne({ transactionId }).session(session);
+    const enrollment = await Enrollment_model_1.default.findOne({ transactionId });
     if (!enrollment)
         throw new ApiError_1.ApiError(404, "Enrollment record not found");
     if (enrollment.paymentStatus === "failed") {
         return enrollment;
     }
     enrollment.paymentStatus = "failed";
-    await enrollment.save({ session });
+    await enrollment.save();
     return enrollment;
 };
 exports.handleFailedPayment = handleFailedPayment;
 // Handle cancelled payment
 const handleCancelledPayment = async (query) => {
-    const session = await mongoose_1.default.startSession();
     const { transactionId } = query;
     const enrollment = await Enrollment_model_1.default.findOne({ transactionId });
     if (!enrollment)
@@ -160,7 +157,7 @@ const handleCancelledPayment = async (query) => {
         return enrollment;
     }
     enrollment.paymentStatus = "cancelled";
-    await enrollment.save({ session });
+    await enrollment.save();
     return enrollment;
 };
 exports.handleCancelledPayment = handleCancelledPayment;
@@ -180,7 +177,8 @@ const getAllEnrollments = async (filters) => {
     return await Enrollment_model_1.default.find(query)
         .populate("user", "name email")
         .populate("course", "title slug")
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .lean();
 };
 exports.getAllEnrollments = getAllEnrollments;
 // Get enrollment by ID

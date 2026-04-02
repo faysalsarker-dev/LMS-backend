@@ -4,10 +4,12 @@ import { IMockTestSubmission, IMockTestSectionSubmission } from "./mockTestSubmi
 const mockTestSectionSubmissionSchema = new Schema<IMockTestSectionSubmission>(
   {
     sectionId: { type: Schema.Types.ObjectId, ref: "MockTestSection", required: true },
+    name: { type: String,default:""},
     autoGradedScore: { type: Number, default: 0 },
     adminScore: { type: Number, default: 0 },
     adminFeedback: { type: String },
     isAutoGraded: { type: Boolean, default: false },
+    totalMarks: { type: Number, default: 0 },
     studentAnswers: [
     {
       questionId: { 
@@ -36,6 +38,10 @@ const mockTestSubmissionSchema = new Schema<IMockTestSubmission>(
   },
   { timestamps: true }
 );
+
+// Indexes for high-frequency queries
+mockTestSubmissionSchema.index({ student: 1, mockTest: 1 }, { unique: true }); // Fastest lookup per student per test
+mockTestSubmissionSchema.index({ status: 1 });                                  // Admin pending-review list
 
 const MockTestSubmission = model<IMockTestSubmission>("MockTestSubmission", mockTestSubmissionSchema);
 export default MockTestSubmission;

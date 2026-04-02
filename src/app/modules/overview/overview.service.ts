@@ -70,8 +70,8 @@ class OverviewService {
     return await Enrollment.find()
       .populate("user", "name email profile")
       .populate("course", "title slug thumbnail")
-      .select("user course status enrolledAt currency amount paymentStatus transactionId")
-      .sort({ enrolledAt: -1 })
+      .select("user course status createdAt currency amount paymentStatus transactionId ")
+      .sort({ createdAt: -1 })
       .limit(5)
       .lean();
   }

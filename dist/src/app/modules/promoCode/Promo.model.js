@@ -37,6 +37,10 @@ const PromoCodeSchema = new mongoose_1.Schema({
         enum: ["percentage", "fixed_amount"],
         required: true,
     },
+    currency: {
+        type: String,
+        default: null,
+    },
     // --- Creator Info ---
     owner: {
         type: mongoose_1.Schema.Types.ObjectId,

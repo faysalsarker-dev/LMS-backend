@@ -53,6 +53,11 @@ export const updateMockTestSection = async (id: string, payload: Partial<IMockTe
   if (!Types.ObjectId.isValid(id)) throw new ApiError(httpStatus.BAD_REQUEST, "Invalid Section ID");
   const section = await MockTestSection.findByIdAndUpdate(id, payload, { new: true });
   if (!section) throw new ApiError(httpStatus.NOT_FOUND, "Section not found");
+  section.totalMarks = section.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+
+  await section.save();
+
+
   return section;
 };
 
@@ -67,6 +72,9 @@ export const deleteMockTestSection = async (id: string): Promise<IMockTestSectio
       $unset: { [section.name]: "" },
     });
   }
+  section.totalMarks = section.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
 
+  await section.save();
   return section;
 };
+

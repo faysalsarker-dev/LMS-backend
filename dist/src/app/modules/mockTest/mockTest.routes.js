@@ -37,14 +37,15 @@ const express_1 = require("express");
 const MockTestController = __importStar(require("./mockTest.controller"));
 const CheckAuth_1 = require("../../middleware/CheckAuth");
 const multer_config_1 = require("../../config/multer.config");
+const rateLimiter_1 = require("../../middleware/rateLimiter");
 const router = (0, express_1.Router)();
-// Public routes
-router.get("/", MockTestController.getAllMockTests);
-router.get("/for-user", (0, CheckAuth_1.checkAuth)(), MockTestController.getMocktestForUser);
-router.get("/:slug", MockTestController.getMockTestBySlug);
-router.get("/id/:id", MockTestController.getMockTestById);
-// Protected routes (Admin / Instructor only in a real scenario, handled by checkAuth & roles)
-router.post("/", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerUpload.single("thumbnail"), MockTestController.createMockTest);
-router.put("/:id", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerUpload.single("thumbnail"), MockTestController.updateMockTest);
-router.delete("/:id", (0, CheckAuth_1.checkAuth)(), MockTestController.deleteMockTest);
+// ── Public reads ──────────────────────────────────────────────────
+router.get("/", (0, rateLimiter_1.rateLimit)("content"), MockTestController.getAllMockTests);
+router.get("/for-user", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), MockTestController.getMocktestForUser);
+router.get("/:slug", (0, rateLimiter_1.rateLimit)("content"), MockTestController.getMockTestBySlug);
+router.get("/id/:id", (0, rateLimiter_1.rateLimit)("content"), MockTestController.getMockTestById);
+// ── Admin / Instructor mutations ─────────────────────────────────────
+router.post("/", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("write"), multer_config_1.multerUpload.single("thumbnail"), MockTestController.createMockTest);
+router.put("/:id", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("write"), multer_config_1.multerUpload.single("thumbnail"), MockTestController.updateMockTest);
+router.delete("/:id", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("admin"), MockTestController.deleteMockTest);
 exports.default = router;

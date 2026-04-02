@@ -12,71 +12,27 @@ import {
   checkPromo,
 } from "./promo.controller";
 import { checkAuth } from "../../middleware/CheckAuth";
+import { rateLimit } from "../../middleware/rateLimiter";
 
 
 const router = Router();
 
 
 
-router.post(
-  "/",
-  checkAuth(), 
-  createPromo
-);
+// ── Instructor / creator promo management ──────────────────────────────
+router.post("/",      checkAuth(), rateLimit("write"), createPromo);
+router.get("/mine",   checkAuth(), rateLimit("admin"), getMyPromo);
+router.get("/my-promo", checkAuth(), rateLimit("admin"), getMyPromoUsageStats);
+router.put("/:id",    checkAuth(), rateLimit("write"), updatePromo);
+router.delete("/:id", checkAuth(), rateLimit("admin"), deletePromo);
 
-router.get(
-  "/mine",
-    checkAuth(), 
-  getMyPromo
-);
+// ── Admin routes ────────────────────────────────────────────────────
+router.get("/admin/all",  rateLimit("admin"), getAllPromosAdmin);
+router.get("/admin/:id",  checkAuth(), rateLimit("admin"), getPromoById);
+router.get("/analytics", checkAuth(), rateLimit("admin"), getAnalytics);
 
-router.get(
-  "/my-promo",
-   checkAuth(), 
-  getMyPromoUsageStats
-);
-
-
-
-router.put(
-  "/:id",
-  checkAuth(), 
-  updatePromo
-);
-
-router.delete(
-  "/:id",
-   checkAuth(), 
-  deletePromo
-);
-
-/**
- * ADMIN ROUTES
- */
-
-router.get(
-  "/admin/all",
-  // checkAuth(), 
-  getAllPromosAdmin
-);
-
-router.get(
-  "/admin/:id",
-  checkAuth(), 
-  getPromoById
-);
-
-
-router.get(
-  "/analytics",
-  checkAuth(), 
-  getAnalytics
-);
-
-
-router.post("/validate", checkAuth(), checkPromo);
-
-// Redeem promo (final apply)
-router.post("/redeem", checkAuth(), redeemPromo);
+// ── Student promo redemption (tighter — prevents code enumeration) ────────
+router.post("/validate", checkAuth(), rateLimit("write"), checkPromo);
+router.post("/redeem",   checkAuth(), rateLimit("write"), redeemPromo);
 
 export default router;

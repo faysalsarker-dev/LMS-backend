@@ -290,7 +290,7 @@ const redeemPromoService = async ({ code, userId, orderAmount, }) => {
         promo,
     };
 };
-const validatePromoService = async ({ code, userId, orderAmount, }) => {
+const validatePromoService = async ({ code, userId, orderAmount, currency }) => {
     const promo = await Promo_model_1.default.findOne({ code: code.trim().toUpperCase() });
     if (!promo)
         throw new ApiError_1.ApiError(404, "Promo code not found");
@@ -303,6 +303,9 @@ const validatePromoService = async ({ code, userId, orderAmount, }) => {
         throw new ApiError_1.ApiError(400, "Promo expired");
     if (promo.maxUsageCount && promo.currentUsageCount >= promo.maxUsageCount) {
         throw new ApiError_1.ApiError(400, "Promo limit reached");
+    }
+    if (promo.currency !== currency) {
+        throw new ApiError_1.ApiError(400, "Promo currency does not match");
     }
     const usedByUser = promo.usedBy.filter((u) => u.user.toString() === userId);
     if (promo.maxUsagePerUser && usedByUser.length >= promo.maxUsagePerUser) {

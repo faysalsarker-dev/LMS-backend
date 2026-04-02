@@ -75,5 +75,8 @@ CourseSchema.pre("findOneAndDelete", async function (next) {
 
 
 
+// Indexes
+CourseSchema.index({ status: 1 }); // Efficient filtering of published/draft/archived courses
+
 const Course = mongoose.model<ICourse>("Course", CourseSchema);
 export default Course;

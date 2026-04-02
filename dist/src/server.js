@@ -21,22 +21,28 @@ let server;
     }
 })();
 process.on("SIGTERM", () => {
-    console.log("SIGTERM signal recieved... Server shutting down..");
+    console.log("SIGTERM signal received. Gracefully shutting down...");
     if (server) {
         server.close(() => {
-            process.exit(1);
+            console.log('HTTP server closed.');
+            process.exit(0);
         });
     }
-    process.exit(1);
+    else {
+        process.exit(0);
+    }
 });
 process.on("SIGINT", () => {
-    console.log("SIGINT signal recieved... Server shutting down..");
+    console.log("SIGINT signal received. Gracefully shutting down...");
     if (server) {
         server.close(() => {
-            process.exit(1);
+            console.log('HTTP server closed.');
+            process.exit(0);
         });
     }
-    process.exit(1);
+    else {
+        process.exit(0);
+    }
 });
 process.on("unhandledRejection", (err) => {
     console.log("Unhandled Rejecttion detected... Server shutting down..", err);

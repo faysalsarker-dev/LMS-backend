@@ -1,8 +1,7 @@
 import { Router } from "express";
 import * as MockTestSectionController from "./mockTestSection.controller";
 import { checkAuth } from "../../middleware/CheckAuth";
-import validateRequest from "../../middleware/validateRequest.middleware";
-import { createMockTestSectionSchema, updateMockTestSectionSchema } from "./mockTestSection.validation";
+
 
 const router = Router();
 

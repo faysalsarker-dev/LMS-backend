@@ -39,16 +39,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const LessonController = __importStar(require("./lesson.controller"));
 const multer_config_1 = require("../../config/multer.config");
+const rateLimiter_1 = require("../../middleware/rateLimiter");
 const router = express_1.default.Router();
-// CRUD
-router.post("/", 
-// multerVideoUpload.single("video"),
-multer_config_1.multerVideoUpload.fields([
+// ── Lesson CRUD ──────────────────────────────────────────────────
+router.post("/", (0, rateLimiter_1.rateLimit)("upload"), multer_config_1.multerVideoUpload.fields([
     { name: "video", maxCount: 1 },
     { name: "audioFile", maxCount: 1 },
 ]), LessonController.createLessonController);
-router.get("/", LessonController.getAllLessonsController);
-router.get("/:id", LessonController.getSingleLessonController);
-router.patch("/:id", LessonController.updateLessonController);
-router.delete("/:id", LessonController.deleteLessonController);
+router.get("/", (0, rateLimiter_1.rateLimit)("content"), LessonController.getAllLessonsController);
+router.get("/:id", (0, rateLimiter_1.rateLimit)("content"), LessonController.getSingleLessonController);
+router.patch("/:id", (0, rateLimiter_1.rateLimit)("write"), LessonController.updateLessonController);
+router.delete("/:id", (0, rateLimiter_1.rateLimit)("admin"), LessonController.deleteLessonController);
 exports.default = router;

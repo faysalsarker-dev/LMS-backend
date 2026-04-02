@@ -59,3 +59,4 @@ export const deleteMockTestSection = catchAsync(async (req: Request, res: Respon
     data: result,
   });
 });
+

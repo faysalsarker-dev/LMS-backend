@@ -102,55 +102,6 @@ const markQuizAsComplete = async (studentId, courseId, lessonId, passed) => {
     return progress;
 };
 exports.markQuizAsComplete = markQuizAsComplete;
-/**
- * Gets a student's progress for a specific course.
- */
-// export const getStudentProgress = async (
-//   studentId: string,
-//   courseId: string
-// ): Promise<any> => {
-//   const progress = await Progress.findOne({
-//     student: new Types.ObjectId(studentId),
-//     course: new Types.ObjectId(courseId),
-//   })
-//     .populate("completedLessons", "_id title")
-//     .populate({
-//       path: "assignmentSubmissions",
-//       select: "lesson result feedback status submittedAt",
-//       populate: { path: "lesson", select: "title" }
-//     });
-//   if (!progress) {
-//     throw new ApiError(404, "Progress not found for this student and course");
-//   }
-//   // 2. Calculate Quiz Statistics
-//   const totalQuizzes = progress.quizResults.length;
-//   const passedCount = progress.quizResults.filter(q => q.passed === true).length;
-//   const failedCount = totalQuizzes - passedCount;
-//   // 3. Transform data for the Student Overview
-//   return {
-//     overview: {
-//       progressPercentage: progress.progressPercentage,
-//       isCompleted: progress.isCompleted,
-//       completedAt: progress.completedAt,
-//       totalLessonsCompleted: progress.completedLessons.length,
-//     },
-//     quizStats: {
-//       totalAttempted: totalQuizzes,
-//       passed: passedCount,
-//       failed: failedCount,
-//     },
-//     assignmentStats: {
-//       avgMarks: progress.avgMarks,
-//       submissions: progress.assignmentSubmissions.map((sub: any) => ({
-//         lessonName: sub.lesson?.title || "Assignment",
-//         status: sub.status,
-//         marks: sub.result,
-//         feedback: sub.feedback,
-//         submittedAt: sub.submittedAt
-//       }))
-//     }
-//   };
-// };
 const getStudentProgress = async (studentId, courseId) => {
     // Fetch progress with populated data
     const progress = await progress_model_1.default.findOne({
@@ -163,9 +114,14 @@ const getStudentProgress = async (studentId, courseId) => {
         select: "lesson result feedback status submittedAt",
         populate: {
             path: "lesson",
-            select: "title assignment" // Add assignment field to get maxMarks
+            select: "title assignment"
         }
+    })
+        .populate({
+        path: "mockTestSubmissions",
+        select: "totalScore sections status submittedAt totalMarks",
     });
+    console.log(progress, 'progress');
     if (!progress) {
         throw new ApiError_1.ApiError(404, "Progress not found for this student and course");
     }
@@ -201,7 +157,22 @@ const getStudentProgress = async (studentId, courseId) => {
                 feedback: sub.feedback,
                 date: sub.submittedAt
             }))
-        }
+        },
+        mockTestStats: {
+            submissions: progress.mockTestSubmissions.map((sub) => ({
+                status: sub.status,
+                totalScore: sub.totalScore,
+                submittedAt: sub.submittedAt,
+                sections: sub.sections.map((section) => ({
+                    autoGradedScore: section.autoGradedScore,
+                    adminScore: section.adminScore,
+                    adminFeedback: section.adminFeedback,
+                    isAutoGraded: section.isAutoGraded,
+                    name: section.name,
+                    totalMarks: section.totalMarks,
+                })),
+            })),
+        },
     };
 };
 exports.getStudentProgress = getStudentProgress;

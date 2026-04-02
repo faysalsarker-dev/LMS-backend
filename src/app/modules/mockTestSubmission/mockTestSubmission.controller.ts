@@ -98,7 +98,7 @@ export const handleSubmitSpeakingMockTest = catchAsync(async (req: Request, res:
   // multer-storage-cloudinary puts the Cloudinary URL in req.file.path
   const audioUrl = (req.file as any).path;
 
-  const { course, mockTest, sectionId, questionId } = req.body;
+  const { course, mockTest, sectionId, questionId,totalMarks } = req.body;
 
   console.log("Received speaking mock test submission:", {
     studentId,
@@ -119,8 +119,10 @@ export const handleSubmitSpeakingMockTest = catchAsync(async (req: Request, res:
     sections: [
       {
         sectionId,
-        score: 0, // speaking is manually graded by admin
+        score: 0, 
+        name: "Speaking",
         isAutoGraded: false,
+        totalMarks: Number(totalMarks),
         studentAnswers: [
           {
             questionId: questionId || sectionId, // Fallback to sectionId if questionId is not provided

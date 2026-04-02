@@ -43,7 +43,10 @@ index: true,
       enum: ["percentage", "fixed_amount"],
       required: true,
     },
-
+currency: {
+      type: String,
+      default: null,
+    },
     // --- Creator Info ---
     owner: {
       type: Schema.Types.ObjectId,

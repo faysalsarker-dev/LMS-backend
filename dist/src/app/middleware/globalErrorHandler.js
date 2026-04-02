@@ -7,14 +7,15 @@ const handleCastError_1 = require("../helpers/handleCastError");
 const handlerZodError_1 = require("../helpers/handlerZodError");
 const handlerValidationError_1 = require("../helpers/handlerValidationError");
 const ApiError_1 = require("../errors/ApiError");
-const globalErrorHandler = async (err, req, res, next) => {
+const globalErrorHandler = (err, req, res, next) => {
     console.error('🔥 Global Error Handler:', err);
+    // Fire-and-forget: cleanup uploaded files without blocking the error response
     if (req.file) {
-        await (0, cloudinary_config_1.deleteImageFromCLoudinary)(req.file.path);
+        (0, cloudinary_config_1.deleteImageFromCLoudinary)(req.file.path).catch((e) => console.error('Failed to delete uploaded file from Cloudinary:', e));
     }
     if (req.files && Array.isArray(req.files) && req.files.length) {
-        const imageUrls = req.files.map(file => file.path);
-        await Promise.all(imageUrls.map(url => (0, cloudinary_config_1.deleteImageFromCLoudinary)(url)));
+        const imageUrls = req.files.map((file) => file.path);
+        Promise.all(imageUrls.map((url) => (0, cloudinary_config_1.deleteImageFromCLoudinary)(url))).catch((e) => console.error('Failed to delete uploaded files from Cloudinary:', e));
     }
     let errorSources = [];
     let statusCode = 500;

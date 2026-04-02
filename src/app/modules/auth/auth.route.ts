@@ -3,19 +3,30 @@ import { checkAuth } from "../../middleware/CheckAuth";
 import { UserRoles } from "./auth.interface";
 import { AuthController } from "./auth.controller";
 import { multerUpload } from "../../config/multer.config";
-import { authRateLimiter } from "../../middleware/rateLimiter";
+import { rateLimit } from "../../middleware/rateLimiter";
 
 const router = Router();
 
-// router.use(authRateLimiter);
-
 router.get("/", AuthController.getAll);
-router.post("/register", AuthController.register);
-router.post("/login", AuthController.login);
-router.put("/verify-otp", AuthController.verifyOtp);
-router.post("/logout", checkAuth(), AuthController.logout);
-router.post("/logout-all", AuthController.logoutFromOthers);
+
+// ── Credential endpoints ──────────────────────────────────────────
+router.post("/register", rateLimit("auth"), AuthController.register);
+router.post("/login",    rateLimit("auth"), AuthController.login);
+
+// ── OTP / password recovery ───────────────────────────────────────
+router.post("/send-otp",         rateLimit("otp"), AuthController.sendOtp);
+router.put("/verify-otp",        rateLimit("otp"), AuthController.verifyOtp);
+router.post("/forget-password",  rateLimit("otp"), AuthController.forgetPassword);
+router.put("/reset-password",    rateLimit("otp"), AuthController.resetPassword);
+
+// ── Token management ──────────────────────────────────────────────
+router.post("/refresh-token", rateLimit("refresh"), AuthController.getNewAccessToken);
+
+// ── Authenticated user actions ────────────────────────────────────
+router.post("/logout",      checkAuth(), AuthController.logout);
+router.post("/logout-all",  AuthController.logoutFromOthers);
 router.put("/addToWishlist", checkAuth(), AuthController.addToWishlist);
+
 router.get(
   "/me",
   checkAuth([
@@ -26,25 +37,28 @@ router.get(
   ]),
   AuthController.me,
 );
-router.post("/refresh-token", AuthController.getNewAccessToken);
-router.post("/send-otp", AuthController.sendOtp);
-router.post("/forget-password", AuthController.forgetPassword);
-router.put("/reset-password", AuthController.resetPassword);
-router.put("/update-password", checkAuth(), AuthController.updatePassword);
+
+router.put("/update-password", checkAuth(), rateLimit("write"), AuthController.updatePassword);
+
 router.put(
   "/update",
   checkAuth(),
+  rateLimit("write"),
   multerUpload.single("file"),
   AuthController.updateProfile,
 );
+
+// ── Admin user management ─────────────────────────────────────────
 router.put(
   "/update-user/:id",
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN]),
+  rateLimit("admin"),
   AuthController.updateUser,
 );
 router.delete(
   "/delete/:id",
   checkAuth([UserRoles.SUPER_ADMIN]),
+  rateLimit("admin"),
   AuthController.deleteUser,
 );
 

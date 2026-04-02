@@ -16,7 +16,7 @@ export interface IPromoCode {
 commission: number;
 totalEarn: number;
   isActive: boolean;
-
+currency?:string;
   validFrom: Date;
   expirationDate: Date;
 

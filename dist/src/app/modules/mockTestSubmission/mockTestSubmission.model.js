@@ -3,10 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const mockTestSectionSubmissionSchema = new mongoose_1.Schema({
     sectionId: { type: mongoose_1.Schema.Types.ObjectId, ref: "MockTestSection", required: true },
+    name: { type: String, default: "" },
     autoGradedScore: { type: Number, default: 0 },
     adminScore: { type: Number, default: 0 },
     adminFeedback: { type: String },
     isAutoGraded: { type: Boolean, default: false },
+    totalMarks: { type: Number, default: 0 },
     studentAnswers: [
         {
             questionId: {
@@ -27,5 +29,8 @@ const mockTestSubmissionSchema = new mongoose_1.Schema({
     status: { type: String, enum: ["pending_review", "graded"], default: "pending_review" },
     submittedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
+// Indexes for high-frequency queries
+mockTestSubmissionSchema.index({ student: 1, mockTest: 1 }, { unique: true }); // Fastest lookup per student per test
+mockTestSubmissionSchema.index({ status: 1 }); // Admin pending-review list
 const MockTestSubmission = (0, mongoose_1.model)("MockTestSubmission", mockTestSubmissionSchema);
 exports.default = MockTestSubmission;

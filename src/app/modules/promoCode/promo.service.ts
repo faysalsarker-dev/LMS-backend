@@ -407,10 +407,12 @@ const validatePromoService = async ({
   code,
   userId,
   orderAmount,
+  currency
 }: {
   code: string;
   userId: string;
   orderAmount: number;
+  currency:string;
 }) => {
   const promo = await PromoCode.findOne({ code: code.trim().toUpperCase() });
 
@@ -426,6 +428,9 @@ const validatePromoService = async ({
 
   if (promo.maxUsageCount && promo.currentUsageCount >= promo.maxUsageCount) {
     throw new ApiError(400, "Promo limit reached");
+  }
+  if(promo.currency !== currency){
+    throw new ApiError(400, "Promo currency does not match");
   }
 
   const usedByUser = promo.usedBy.filter(

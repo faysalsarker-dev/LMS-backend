@@ -49,7 +49,7 @@ const mockTestSection_interface_1 = require("./mockTestSection.interface");
  * Both can be present together for mixed option types.
  */
 const optionSchema = new mongoose_1.Schema({
-    optionId: { type: String, required: true }, // "A" | "B" | "opt_1" …
+    optionId: { type: String }, // "A" | "B" | "opt_1" …
     text: { type: String, default: null },
     imageUrl: { type: String, default: null },
 }, { _id: false } // no extra _id on each option
@@ -64,9 +64,9 @@ const optionSchema = new mongoose_1.Schema({
  * Auto-marker compares each position against correctPosition.
  */
 const segmentSchema = new mongoose_1.Schema({
-    segmentId: { type: String, required: true },
-    text: { type: String, required: true },
-    correctPosition: { type: Number, required: true }, // 1-based
+    segmentId: { type: String, },
+    text: { type: String, },
+    correctPosition: { type: Number, }, // 1-based
 }, { _id: false });
 /**
  * ISubQuestion — one MCQ inside a reading-passage block.
@@ -75,8 +75,8 @@ const segmentSchema = new mongoose_1.Schema({
  * Student's answer = subQuestionSelections: { "sq_1": "B", "sq_2": "A" }
  */
 const subQuestionSchema = new mongoose_1.Schema({
-    subQuestionId: { type: String, required: true },
-    questionText: { type: String, required: true },
+    subQuestionId: { type: String, },
+    questionText: { type: String, },
     options: { type: [optionSchema], default: [] },
     correctOptionId: { type: String, default: null }, // String — never Mixed
     marks: { type: Number, default: 1 },
@@ -178,10 +178,10 @@ const MockTestSectionSchema = new mongoose_1.Schema({
         enum: ["listening", "reading", "writing", "speaking"],
         required: true,
     },
+    totalMarks: { type: Number, default: 0 },
     timeLimit: { type: Number, default: 20, required: true }, // minutes
     instruction: { type: String, default: null },
     questions: { type: [mockQuestionSchema], default: [] },
-    // status removed — controlled by parent MockTest only
 }, { timestamps: true });
 // Compound index — fast lookup: "give me the listening section for this test"
 MockTestSectionSchema.index({ mockTest: 1, name: 1 }, { unique: true });

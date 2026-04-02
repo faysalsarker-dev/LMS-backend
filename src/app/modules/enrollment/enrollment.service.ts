@@ -32,7 +32,6 @@ export const createEnrollment = async (data: {
       throw new ApiError(400, "User is already enrolled in this course");
     }
 
-
     const course = await Course.findById(data.course).session(session);
     if (!course) throw new ApiError(404, "Course not found");
 
@@ -40,14 +39,15 @@ export const createEnrollment = async (data: {
     if (!user) throw new ApiError(404, "User not found");
 
 
-    let finalAmount = course.price; 
+    let finalAmount = course.isDiscounted ? course.discountPrice : course.price; 
     let appliedPromo = null;
 
     if (data.promoCode) {
       const validation = await PromoCode.validatePromo({
         code: data.promoCode,
         userId: data.user,
-        originalPrice: course.price,
+        originalPrice: finalAmount,
+
       });
       
       finalAmount = validation.finalAmount;
@@ -182,50 +182,33 @@ export const handleSuccessPayment = async (query: Record<string, any>): Promise<
 
 // Handle failed payment
 export const handleFailedPayment = async (query: Record<string, any>) => {
-  const {transactionId } = query; 
+  const { transactionId } = query;
 
-  const session = await mongoose.startSession();
+  const enrollment = await Enrollment.findOne({ transactionId });
+  if (!enrollment) throw new ApiError(404, "Enrollment record not found");
 
+  if (enrollment.paymentStatus === "failed") {
+    return enrollment;
+  }
+  enrollment.paymentStatus = "failed";
+  await enrollment.save();
 
-
-
-
-  // 1. Find the pending enrollment
-    const enrollment = await Enrollment.findOne({ transactionId }).session(session);
-    if (!enrollment) throw new ApiError(404, "Enrollment record not found");
-
-    if (enrollment.paymentStatus === "failed") {
-        return enrollment;
-    }
-    enrollment.paymentStatus = "failed";
-    await enrollment.save({ session });
-
-
-
-
-
-    
-return enrollment;
-
+  return enrollment;
 };
 
 // Handle cancelled payment
 export const handleCancelledPayment = async (query: Record<string, any>) => {
-  const session = await mongoose.startSession();
-  const {transactionId } = query; 
+  const { transactionId } = query;
 
+  const enrollment = await Enrollment.findOne({ transactionId });
+  if (!enrollment) throw new ApiError(404, "Enrollment record not found");
 
-
-    const enrollment = await Enrollment.findOne({ transactionId });
-    if (!enrollment) throw new ApiError(404, "Enrollment record not found");
-
-    if (enrollment.paymentStatus === "cancelled") {
-        return enrollment;
-    }
-    enrollment.paymentStatus = "cancelled";
-    await enrollment.save({ session });
+  if (enrollment.paymentStatus === "cancelled") {
     return enrollment;
-
+  }
+  enrollment.paymentStatus = "cancelled";
+  await enrollment.save();
+  return enrollment;
 };
 
 
@@ -270,7 +253,8 @@ export const getAllEnrollments = async (filters?: {
   return await Enrollment.find(query)
     .populate("user", "name email")
     .populate("course", "title slug")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 };
 
 // Get enrollment by ID

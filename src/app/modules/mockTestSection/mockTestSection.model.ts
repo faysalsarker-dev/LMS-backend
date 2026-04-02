@@ -22,7 +22,7 @@ import {
  */
 const optionSchema = new Schema(
   {
-    optionId: { type: String, required: true },   // "A" | "B" | "opt_1" …
+    optionId: { type: String },   // "A" | "B" | "opt_1" …
     text:     { type: String, default: null },
     imageUrl: { type: String, default: null },
   },
@@ -40,9 +40,9 @@ const optionSchema = new Schema(
  */
 const segmentSchema = new Schema(
   {
-    segmentId:       { type: String, required: true },
-    text:            { type: String, required: true },
-    correctPosition: { type: Number, required: true },  // 1-based
+    segmentId:       { type: String,  },
+    text:            { type: String, },
+    correctPosition: { type: Number, },  // 1-based
   },
   { _id: false }
 );
@@ -55,8 +55,8 @@ const segmentSchema = new Schema(
  */
 const subQuestionSchema = new Schema(
   {
-    subQuestionId:   { type: String, required: true },
-    questionText:    { type: String, required: true },
+    subQuestionId:   { type: String,  },
+    questionText:    { type: String,  },
     options:         { type: [optionSchema], default: [] },
     correctOptionId: { type: String, default: null },   // String — never Mixed
     marks:           { type: Number, default: 1 },
@@ -178,10 +178,10 @@ const MockTestSectionSchema: Schema<IMockTestSection> = new Schema(
       enum:     ["listening", "reading", "writing", "speaking"],
       required: true,
     },
+    totalMarks: { type: Number, default: 0 },
     timeLimit:   { type: Number,default: 20, required: true },  // minutes
     instruction: { type: String, default: null },
     questions:   { type: [mockQuestionSchema], default: [] },
-    // status removed — controlled by parent MockTest only
   },
   { timestamps: true }
 );

@@ -170,60 +170,6 @@ export const markQuizAsComplete = async (
 
 
 
-/**
- * Gets a student's progress for a specific course.
- */
-
-// export const getStudentProgress = async (
-//   studentId: string,
-//   courseId: string
-// ): Promise<any> => {
-//   const progress = await Progress.findOne({
-//     student: new Types.ObjectId(studentId),
-//     course: new Types.ObjectId(courseId),
-//   })
-//     .populate("completedLessons", "_id title")
-//     .populate({
-//       path: "assignmentSubmissions",
-//       select: "lesson result feedback status submittedAt",
-//       populate: { path: "lesson", select: "title" }
-//     });
-
-//   if (!progress) {
-//     throw new ApiError(404, "Progress not found for this student and course");
-//   }
-
-//   // 2. Calculate Quiz Statistics
-//   const totalQuizzes = progress.quizResults.length;
-//   const passedCount = progress.quizResults.filter(q => q.passed === true).length;
-//   const failedCount = totalQuizzes - passedCount;
-
-//   // 3. Transform data for the Student Overview
-//   return {
-//     overview: {
-//       progressPercentage: progress.progressPercentage,
-//       isCompleted: progress.isCompleted,
-//       completedAt: progress.completedAt,
-//       totalLessonsCompleted: progress.completedLessons.length,
-//     },
-//     quizStats: {
-//       totalAttempted: totalQuizzes,
-//       passed: passedCount,
-//       failed: failedCount,
-//     },
-//     assignmentStats: {
-//       avgMarks: progress.avgMarks,
-//       submissions: progress.assignmentSubmissions.map((sub: any) => ({
-//         lessonName: sub.lesson?.title || "Assignment",
-//         status: sub.status,
-//         marks: sub.result,
-//         feedback: sub.feedback,
-//         submittedAt: sub.submittedAt
-//       }))
-//     }
-//   };
-// };
-
 
 export const getStudentProgress = async (
   studentId: string,
@@ -240,10 +186,17 @@ export const getStudentProgress = async (
       select: "lesson result feedback status submittedAt",
       populate: { 
         path: "lesson", 
-        select: "title assignment" // Add assignment field to get maxMarks
+        select: "title assignment" 
       }
-    });
+    })
+  .populate({
+  path: "mockTestSubmissions",
+  select: "totalScore sections status submittedAt totalMarks",
+});
 
+
+
+    console.log(progress,'progress')
   if (!progress) {
     throw new ApiError(404, "Progress not found for this student and course");
   }
@@ -283,6 +236,21 @@ export const getStudentProgress = async (
         feedback: sub.feedback,
         date: sub.submittedAt
       }))
-    }
+    },
+mockTestStats: {
+  submissions: (progress.mockTestSubmissions as any[]).map((sub) => ({
+    status: sub.status,
+    totalScore: sub.totalScore,
+    submittedAt: sub.submittedAt,
+    sections: sub.sections.map((section: any) => ({
+      autoGradedScore: section.autoGradedScore,
+      adminScore: section.adminScore,
+      adminFeedback: section.adminFeedback,
+      isAutoGraded: section.isAutoGraded,
+      name: section.name,
+      totalMarks: section.totalMarks,
+    })),
+  })),
+},
   };
 };

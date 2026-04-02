@@ -136,43 +136,6 @@ exports.AssignmentSubmissionService = {
     //   }
     //   return submission;
     // },
-    // async reviewSubmission(
-    //   id: string,
-    //   marks: number,
-    //   feedback: string,
-    //   status: "reviewed" | "graded" = "graded"
-    // ) {
-    //   const session = await mongoose.startSession();
-    //   try {
-    //     session.startTransaction();
-    //     const submission = await AssignmentSubmission.findById(id).session(session);
-    //     if (!submission) {
-    //       throw new ApiError(404, "Submission not found");
-    //     }
-    //     submission.result = marks;
-    //     submission.feedback = feedback;
-    //     submission.status = status;
-    //     await submission.save({ session });
-    //     if (status === "graded") {
-    //       const progress = await Progress.findOne({
-    //         student: submission.student,
-    //         course: submission.course,
-    //       }).session(session);
-    //       if (progress) {
-    //         await progress.updateWithAssignment(
-    //           submission._id.toString(),
-    //         );
-    //       }
-    //     }
-    //     await session.commitTransaction();
-    //     session.endSession();
-    //     return submission;
-    //   } catch (error) {
-    //     await session.abortTransaction();
-    //     session.endSession();
-    //     throw error;
-    //   }
-    // },
     async reviewSubmission(id, marks, feedback, status = "graded") {
         const session = await mongoose_1.default.startSession();
         try {

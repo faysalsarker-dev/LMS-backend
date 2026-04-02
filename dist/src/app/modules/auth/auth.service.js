@@ -173,13 +173,15 @@ exports.userService = {
         if (!user)
             throw new ApiError_1.ApiError(404, "User not found");
         if (user.sessionToken !== sessionToken) {
-            // await User.findByIdAndUpdate(userId, { sessionToken: null });
             return {
                 logout: true,
                 message: "Session expired. Logged in from another device."
             };
         }
-        return user;
+        const userObj = user.toObject();
+        delete userObj.sessionToken;
+        const newInfo = userObj;
+        return newInfo;
     },
     async addToWishlist(id, courseId) {
         const user = await User_model_1.default.findById(id);

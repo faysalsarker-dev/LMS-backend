@@ -264,7 +264,7 @@ async getMe(
   if (!user) throw new ApiError(404, "User not found");
   
   if (user.sessionToken !== sessionToken) {
-    // await User.findByIdAndUpdate(userId, { sessionToken: null });
+    
     
     return {
       logout: true,
@@ -272,7 +272,11 @@ async getMe(
     };
   }
 
-  return user;
+
+const userObj = user.toObject();
+delete userObj.sessionToken;
+const newInfo = userObj;
+  return newInfo;
 },
 
 

@@ -53,6 +53,8 @@ const updateMockTestSection = async (id, payload) => {
     const section = await mockTestSection_model_1.default.findByIdAndUpdate(id, payload, { new: true });
     if (!section)
         throw new ApiError_1.ApiError(http_status_1.default.NOT_FOUND, "Section not found");
+    section.totalMarks = section.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+    await section.save();
     return section;
 };
 exports.updateMockTestSection = updateMockTestSection;
@@ -68,6 +70,8 @@ const deleteMockTestSection = async (id) => {
             $unset: { [section.name]: "" },
         });
     }
+    section.totalMarks = section.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+    await section.save();
     return section;
 };
 exports.deleteMockTestSection = deleteMockTestSection;

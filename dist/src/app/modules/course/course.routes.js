@@ -37,18 +37,20 @@ const express_1 = require("express");
 const CourseController = __importStar(require("./course.controller"));
 const multer_config_1 = require("../../config/multer.config");
 const CheckAuth_1 = require("../../middleware/CheckAuth");
+const rateLimiter_1 = require("../../middleware/rateLimiter");
 const router = (0, express_1.Router)();
-// Public routes
-router.get("/", CourseController.getAllCourses);
-router.get("/select", CourseController.getAllCoursesForSelecting);
-// Protected routes
-router.post("/", multer_config_1.multerUpload.single("file"), CourseController.createCourse);
-router.get("/my-enrolled-courses", (0, CheckAuth_1.checkAuth)(), CourseController.getMyEnrolledCourses);
-router.get("/my-wishlist-courses", (0, CheckAuth_1.checkAuth)(), CourseController.getMyWishlistCourses);
-router.get("/my-course/:id", CourseController.getCourseById);
-router.get("/:slug", CourseController.getCourseBySlug);
-router.get("/:courseId/curriculum", (0, CheckAuth_1.checkAuth)(), CourseController.getCourseCurriculum);
-router.get("/lessons/:lessonId", (0, CheckAuth_1.checkAuth)(), CourseController.getLessonContent);
-router.put("/:id", multer_config_1.multerUpload.single("file"), CourseController.updateCourse);
-router.delete("/:id", CourseController.deleteCourse);
+// ── Public content reads ──────────────────────────────────────────
+router.get("/", (0, rateLimiter_1.rateLimit)("content"), CourseController.getAllCourses);
+router.get("/select", (0, rateLimiter_1.rateLimit)("content"), CourseController.getAllCoursesForSelecting);
+router.get("/my-course/:id", (0, rateLimiter_1.rateLimit)("content"), CourseController.getCourseById);
+router.get("/:slug", (0, rateLimiter_1.rateLimit)("content"), CourseController.getCourseBySlug);
+// ── Authenticated reads ───────────────────────────────────────────
+router.get("/my-enrolled-courses", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), CourseController.getMyEnrolledCourses);
+router.get("/my-wishlist-courses", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), CourseController.getMyWishlistCourses);
+router.get("/:courseId/curriculum", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), CourseController.getCourseCurriculum);
+router.get("/lessons/:lessonId", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), CourseController.getLessonContent);
+// ── Mutations ─────────────────────────────────────────────────────
+router.post("/", (0, rateLimiter_1.rateLimit)("write"), multer_config_1.multerUpload.single("file"), CourseController.createCourse);
+router.put("/:id", (0, rateLimiter_1.rateLimit)("write"), multer_config_1.multerUpload.single("file"), CourseController.updateCourse);
+router.delete("/:id", (0, rateLimiter_1.rateLimit)("admin"), CourseController.deleteCourse);
 exports.default = router;

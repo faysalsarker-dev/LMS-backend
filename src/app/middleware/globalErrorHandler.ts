@@ -7,7 +7,7 @@ import { handlerZodError } from '../helpers/handlerZodError';
 import { handlerValidationError } from '../helpers/handlerValidationError';
 import { ApiError } from '../errors/ApiError';
 
-export const globalErrorHandler = async(
+export const globalErrorHandler = (
   err: any,
   req: Request,
   res: Response,
@@ -15,16 +15,19 @@ export const globalErrorHandler = async(
 ) => {
   console.error('🔥 Global Error Handler:', err);
 
+  // Fire-and-forget: cleanup uploaded files without blocking the error response
+  if (req.file) {
+    deleteImageFromCLoudinary(req.file.path).catch((e) =>
+      console.error('Failed to delete uploaded file from Cloudinary:', e)
+    );
+  }
 
-    if (req.file) {
-        await deleteImageFromCLoudinary(req.file.path)
-    }
-
-    if (req.files && Array.isArray(req.files) && req.files.length) {
-        const imageUrls = (req.files as Express.Multer.File[]).map(file => file.path)
-
-        await Promise.all(imageUrls.map(url => deleteImageFromCLoudinary(url)))
-    }
+  if (req.files && Array.isArray(req.files) && req.files.length) {
+    const imageUrls = (req.files as Express.Multer.File[]).map((file) => file.path);
+    Promise.all(imageUrls.map((url) => deleteImageFromCLoudinary(url))).catch((e) =>
+      console.error('Failed to delete uploaded files from Cloudinary:', e)
+    );
+  }
 
 
  let errorSources: TErrorSources[] = []

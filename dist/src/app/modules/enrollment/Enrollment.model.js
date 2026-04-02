@@ -18,5 +18,6 @@ const enrollmentSchema = new mongoose_1.Schema({
 }, { timestamps: true });
 // Indexes
 enrollmentSchema.index({ createdAt: 1 });
+enrollmentSchema.index({ user: 1, course: 1 });
 const Enrollment = (0, mongoose_1.model)("Enrollment", enrollmentSchema);
 exports.default = Enrollment;

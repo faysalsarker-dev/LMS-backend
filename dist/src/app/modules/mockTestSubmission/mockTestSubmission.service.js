@@ -24,13 +24,15 @@ const submitMockTest = async (studentId, payload) => {
             autoGradedScore: sec.isAutoGraded ? sec.score : 0,
             adminScore: 0,
             isAutoGraded: sec.isAutoGraded,
+            name: sec.name,
+            // totalMarks: sec.totalMarks,
         }));
         submission = await mockTestSubmission_model_1.default.create({
             student: new mongoose_1.Types.ObjectId(studentId),
             course: new mongoose_1.Types.ObjectId(payload.course),
             mockTest: new mongoose_1.Types.ObjectId(payload.mockTest),
             sections: sectionsToStore,
-            totalScore: 0, // Will calculate below
+            totalScore: 0,
             status: "pending_review",
         });
     }
@@ -62,20 +64,46 @@ const submitMockTest = async (studentId, payload) => {
                     ];
                 }
             }
-            const sectionData = {
-                sectionId: new mongoose_1.Types.ObjectId(incoming.sectionId),
-                studentAnswers: studentAnswersArray,
-                autoGradedScore: incoming.isAutoGraded ? incoming.score : 0,
-                adminScore: 0,
-                isAutoGraded: incoming.isAutoGraded,
-            };
             if (existingSecIndex > -1) {
-                submission.sections[existingSecIndex] = sectionData;
+                const existingSection = submission.sections[existingSecIndex];
+                const existingAnswers = existingSection.studentAnswers || [];
+                // Merge answers: if an answer for a questionId already exists, update it, else add it
+                const mergedAnswers = [...existingAnswers];
+                studentAnswersArray.forEach((newAns) => {
+                    const index = mergedAnswers.findIndex((ans) => ans.questionId === newAns.questionId);
+                    if (index > -1) {
+                        mergedAnswers[index] = newAns;
+                    }
+                    else {
+                        mergedAnswers.push(newAns);
+                    }
+                });
+                // Update the existing section
+                existingSection.studentAnswers = mergedAnswers;
+                if (incoming.isAutoGraded) {
+                    existingSection.autoGradedScore = incoming.score;
+                }
+                existingSection.isAutoGraded = incoming.isAutoGraded;
+                existingSection.name = incoming.name;
+                if (incoming.totalMarks !== undefined) {
+                    existingSection.totalMarks = incoming.totalMarks;
+                }
             }
             else {
+                const sectionData = {
+                    sectionId: new mongoose_1.Types.ObjectId(incoming.sectionId),
+                    studentAnswers: studentAnswersArray,
+                    autoGradedScore: incoming.isAutoGraded ? incoming.score : 0,
+                    adminScore: 0,
+                    isAutoGraded: incoming.isAutoGraded,
+                    name: incoming.name,
+                    totalMarks: incoming.totalMarks,
+                };
                 submission.sections.push(sectionData);
             }
         });
+        // Explicitly mark the sections array as modified so Mongoose saves the deep changes
+        submission.markModified("sections");
     }
     // 2. Recalculate totalScore and Status based on all currently saved sections
     let totalScore = 0;

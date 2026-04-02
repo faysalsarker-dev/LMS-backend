@@ -135,7 +135,7 @@ export const getAnalytics = catchAsync(async (req: Request, res: Response) => {
 
 export const checkPromo = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?._id;
-    const { code, orderAmount } = req.body;
+    const { code, orderAmount , currency} = req.body;
 
  
 
@@ -145,6 +145,7 @@ export const checkPromo = catchAsync(async (req: Request, res: Response) => {
       code,
       userId,
       orderAmount,
+      currency
     });
   sendResponse(res, {
     statusCode: 200,

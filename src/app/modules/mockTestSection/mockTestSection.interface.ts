@@ -143,5 +143,6 @@ export interface IMockTestSection extends Document {
   name:         SectionName;
   timeLimit:    number;          // minutes
   instruction?: string;
+  totalMarks: number;
   questions:    IMockQuestion[];
 }

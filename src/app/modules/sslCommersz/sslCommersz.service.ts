@@ -5,7 +5,6 @@ import { ApiError } from "../../errors/ApiError";
 
 
 const sslPaymentInit = async (payload: ISSLCommerz) => {
-
     try {
         const data = {
             store_id: config.ssl.sslId,
@@ -46,7 +45,6 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
             data: data,
             headers: { "Content-Type": "application/x-www-form-urlencoded" }
         })
-
         return response.data;
 
     } catch (error: any) {

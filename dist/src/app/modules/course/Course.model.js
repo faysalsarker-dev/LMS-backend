@@ -96,5 +96,7 @@ CourseSchema.pre("findOneAndDelete", async function (next) {
         next(error);
     }
 });
+// Indexes
+CourseSchema.index({ status: 1 }); // Efficient filtering of published/draft/archived courses
 const Course = mongoose_1.default.model("Course", CourseSchema);
 exports.default = Course;

@@ -3,93 +3,98 @@ import { PracticeController } from './practice.controller';
 import { checkAuth } from '../../middleware/CheckAuth';
 import { UserRoles } from '../auth/auth.interface';
 import { multerUpload } from '../../config/multer.config';
+import { rateLimit } from '../../middleware/rateLimiter';
 
 const router = express.Router();
 
-// Practice CRUD
+// ── Practice CRUD (admin/instructor) ───────────────────────────────────
 router.post(
   '/',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  rateLimit('write'),
   multerUpload.single('file'),
-  PracticeController.createPractice
+  PracticeController.createPractice,
 );
 
 router.get(
   '/',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
-  PracticeController.getAllPractices
-);
-router.get(
-  '/student',
-  checkAuth([UserRoles.STUDENT,UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
-  PracticeController.getUserPractices
+  rateLimit('admin'),
+  PracticeController.getAllPractices,
 );
 
 router.patch(
   '/:id',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  rateLimit('write'),
   multerUpload.single('file'),
-  PracticeController.updatePractice
+  PracticeController.updatePractice,
 );
 
 router.delete(
   '/:id',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
-  PracticeController.deletePractice
+  rateLimit('admin'),
+  PracticeController.deletePractice,
+);
+
+// ── Student practice reads ───────────────────────────────────────────
+router.get(
+  '/student',
+  checkAuth([UserRoles.STUDENT, UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  rateLimit('content'),
+  PracticeController.getUserPractices,
 );
 
 router.get(
   '/:slug/student',
   checkAuth(),
-  PracticeController.getPracticeByIdForUser
+  rateLimit('content'),
+  PracticeController.getPracticeByIdForUser,
 );
-
-
-
 
 router.get(
   '/:id',
   checkAuth(),
-  PracticeController.getSinglePractice
+  rateLimit('content'),
+  PracticeController.getSinglePractice,
 );
 
-
-// ============== NEW: Practice Item Management Routes ==============
-
-// Add item to practice
+// ── Practice item management (admin/instructor) ────────────────────────
 router.post(
   '/items',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  rateLimit('write'),
   multerUpload.fields([
     { name: 'audio', maxCount: 1 },
     { name: 'image', maxCount: 1 },
   ]),
-  PracticeController.addItemToPractice
+  PracticeController.addItemToPractice,
 );
 
-// Update practice item
 router.patch(
   '/:practiceId/items/:itemId',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  rateLimit('write'),
   multerUpload.fields([
     { name: 'audio', maxCount: 1 },
     { name: 'image', maxCount: 1 },
   ]),
-  PracticeController.updatePracticeItem
+  PracticeController.updatePracticeItem,
 );
 
-// Delete practice item
 router.delete(
   '/:practiceId/items/:itemId',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
-  PracticeController.deletePracticeItem
+  rateLimit('admin'),
+  PracticeController.deletePracticeItem,
 );
 
-// Reorder practice items
 router.patch(
   '/:practiceId/items/reorder',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
-  PracticeController.reorderPracticeItems
+  rateLimit('write'),
+  PracticeController.reorderPracticeItems,
 );
 
 export default router;

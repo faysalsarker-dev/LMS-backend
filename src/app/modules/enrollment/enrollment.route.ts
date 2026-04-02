@@ -1,54 +1,37 @@
 import express from "express";
 import * as EnrollmentController from "./enrollment.controller";
 import { checkAuth } from "../../middleware/CheckAuth";
+import { rateLimit } from "../../middleware/rateLimiter";
 
 const router = express.Router();
 
 
+// ── Admin analytics ────────────────────────────────────────────────
 router.get(
   "/analytics/total-earnings",
   checkAuth(),
-  EnrollmentController.getTotalEarningsController
+  rateLimit("admin"),
+  EnrollmentController.getTotalEarningsController,
 );
 
 router.get(
   "/analytics/monthly-earnings/:year",
   checkAuth(),
-  EnrollmentController.getMonthlyEarningsController
+  rateLimit("admin"),
+  EnrollmentController.getMonthlyEarningsController,
 );
 
+// ── Payment callbacks (no auth, called by SSL gateway) ──────────────────
+router.post("/success", EnrollmentController.paymentSSlSuccessController);
+router.post("/cancel",  EnrollmentController.paymentSSlCancelController);
+router.post("/fail",    EnrollmentController.paymentSSlFailedController);
 
-router.post(
-  "/success",
-EnrollmentController.paymentSSlSuccessController
-
-);
-router.post(
-  "/cancel",
-EnrollmentController.paymentSSlCancelController
-
-);
-router.post(
-  "/fail",
-EnrollmentController.paymentSSlFailedController
-
-
-);
-
-// Create enrollment (Student enrolls in course)
-router.post("/", checkAuth(), EnrollmentController.createEnrollmentController);
-
-// Get all enrollments (Admin - with filters)
-router.get("/", checkAuth(), EnrollmentController.getAllEnrollmentsController);
-
-// Get enrollment by ID
-router.get("/:id", checkAuth(), EnrollmentController.getEnrollmentByIdController);
-
-// Update enrollment
-router.patch("/:id", checkAuth(), EnrollmentController.updateEnrollmentController);
-
-// Delete enrollment
-router.delete("/:id", checkAuth(), EnrollmentController.deleteEnrollmentController);
+// ── Enrollment CRUD ────────────────────────────────────────────────
+router.post("/",    checkAuth(), rateLimit("write"),  EnrollmentController.createEnrollmentController);
+router.get("/",     checkAuth(), rateLimit("admin"),  EnrollmentController.getAllEnrollmentsController);
+router.get("/:id",  checkAuth(), rateLimit("admin"),  EnrollmentController.getEnrollmentByIdController);
+router.patch("/:id", checkAuth(), rateLimit("write"),  EnrollmentController.updateEnrollmentController);
+router.delete("/:id", checkAuth(), rateLimit("admin"), EnrollmentController.deleteEnrollmentController);
 
 const EnrollmentRoutes = router;
 export default EnrollmentRoutes;

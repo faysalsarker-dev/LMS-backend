@@ -1,8 +1,6 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import errorConverter from "./app/errors/errorConverter";
-import errorHandler from "./app/middleware/errorHandler.middleware";
 import { router } from "./app/routes";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import { globalRateLimiter } from "./app/middleware/rateLimiter";
@@ -10,7 +8,7 @@ import morgan from "morgan";
 
 const app = express();
 
-app.enable('trust proxy');
+app.set('trust proxy', 1); // Trust exactly 1 proxy hop (Vercel edge)
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.json());
@@ -32,7 +30,9 @@ app.use(globalRateLimiter);
 
 app.get("/api/v1", (_req: Request, res: Response) => {
   res.status(200).json({
-    message: "api is working.....",
+    success: true,
+    message: "Humanistic Language Center API is working.......",
+    
   });
 });
 
@@ -41,7 +41,5 @@ app.use("/api/v1", router);
 
 
 app.use(globalErrorHandler);
-app.use(errorConverter);
-app.use(errorHandler);
 
 export default app;
