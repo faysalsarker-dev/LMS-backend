@@ -43,12 +43,13 @@ const router = (0, express_1.Router)();
 router.get("/", (0, rateLimiter_1.rateLimit)("content"), CourseController.getAllCourses);
 router.get("/select", (0, rateLimiter_1.rateLimit)("content"), CourseController.getAllCoursesForSelecting);
 router.get("/my-course/:id", (0, rateLimiter_1.rateLimit)("content"), CourseController.getCourseById);
-router.get("/:slug", (0, rateLimiter_1.rateLimit)("content"), CourseController.getCourseBySlug);
 // ── Authenticated reads ───────────────────────────────────────────
 router.get("/my-enrolled-courses", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), CourseController.getMyEnrolledCourses);
 router.get("/my-wishlist-courses", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), CourseController.getMyWishlistCourses);
-router.get("/:courseId/curriculum", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), CourseController.getCourseCurriculum);
 router.get("/lessons/:lessonId", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), CourseController.getLessonContent);
+router.get("/:courseId/curriculum", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), CourseController.getCourseCurriculum);
+// ⚠️ Wildcard route — MUST be last among GETs so it doesn't swallow specific paths
+router.get("/:slug", (0, rateLimiter_1.rateLimit)("content"), CourseController.getCourseBySlug);
 // ── Mutations ─────────────────────────────────────────────────────
 router.post("/", (0, rateLimiter_1.rateLimit)("write"), multer_config_1.multerUpload.single("file"), CourseController.createCourse);
 router.put("/:id", (0, rateLimiter_1.rateLimit)("write"), multer_config_1.multerUpload.single("file"), CourseController.updateCourse);

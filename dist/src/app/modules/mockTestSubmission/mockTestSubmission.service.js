@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMockTestProgress = exports.gradeSubmission = exports.getSubmissionById = exports.getPendingSubmissions = exports.getStudentSubmissions = exports.submitMockTest = void 0;
+exports.updateSectionGrade = exports.getMockTestProgress = exports.gradeSubmission = exports.getSubmissionById = exports.getPendingSubmissions = exports.getStudentSubmissions = exports.submitMockTest = void 0;
 const mongoose_1 = require("mongoose");
 const mockTestSubmission_model_1 = __importDefault(require("./mockTestSubmission.model"));
 const progress_model_1 = __importDefault(require("../progress/progress.model"));
@@ -220,6 +220,7 @@ const gradeSubmission = async (submissionId, adminGrades) => {
     if (!submission) {
         throw new Error("Submission not found");
     }
+    console.log(adminGrades, 'adminGrades');
     let totalAdminScore = 0;
     let totalAutoScore = 0;
     submission.sections.forEach((section) => {
@@ -237,6 +238,7 @@ const gradeSubmission = async (submissionId, adminGrades) => {
     // Assume if grade is called, admin provides grades for all manual sections
     submission.totalScore = totalAutoScore + totalAdminScore;
     submission.status = "graded";
+    console.log(submission, 'submission');
     await submission.save();
     // Try updating Progress
     const progress = await progress_model_1.default.findOne({
@@ -271,3 +273,39 @@ const getMockTestProgress = async (studentId, mockTestId) => {
     return progress;
 };
 exports.getMockTestProgress = getMockTestProgress;
+const updateSectionGrade = async (submissionId, sectionId, adminScore, adminFeedback) => {
+    const submission = await mockTestSubmission_model_1.default.findById(submissionId);
+    if (!submission) {
+        throw new Error("Submission not found");
+    }
+    const section = submission.sections.find((s) => s.sectionId.toString() === sectionId);
+    if (!section) {
+        throw new Error("Section not found in submission");
+    }
+    section.adminScore = adminScore;
+    if (adminFeedback !== undefined) {
+        section.adminFeedback = adminFeedback;
+    }
+    // Recalculate totalScore and Status based on all currently saved sections
+    let totalScore = 0;
+    let allSectionsGraded = true;
+    submission.sections.forEach((sec) => {
+        if (sec.isAutoGraded) {
+            totalScore += sec.autoGradedScore || 0;
+        }
+        else {
+            // Manual section: check if it has been graded by admin yet
+            if (sec.adminScore > 0) {
+                totalScore += sec.adminScore;
+            }
+            else {
+                allSectionsGraded = false;
+            }
+        }
+    });
+    submission.totalScore = totalScore;
+    submission.status = allSectionsGraded ? "graded" : "pending_review";
+    await submission.save();
+    return submission;
+};
+exports.updateSectionGrade = updateSectionGrade;

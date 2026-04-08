@@ -43,6 +43,7 @@ exports.userService = {
         }
         const otp = (0, otpGenerator_1.generateOTP)();
         const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+        console.log("Generated OTP:", otp, "for email:", email);
         user.otp = otp;
         user.otpExpiry = otpExpiry;
         await user.save();

@@ -265,7 +265,7 @@ export const gradeSubmission = async (
   if (!submission) {
     throw new Error("Submission not found");
   }
-
+console.log(adminGrades,'adminGrades');
   let totalAdminScore = 0;
   let totalAutoScore = 0;
 
@@ -287,7 +287,7 @@ export const gradeSubmission = async (
   // Assume if grade is called, admin provides grades for all manual sections
   submission.totalScore = totalAutoScore + totalAdminScore;
   submission.status = "graded";
-
+console.log(submission,'submission');
   await submission.save();
 
   // Try updating Progress
@@ -330,3 +330,55 @@ export const getMockTestProgress = async (
 
   return progress;
 };
+
+export const updateSectionGrade = async (
+  submissionId: string,
+  sectionId: string,
+  adminScore: number,
+  adminFeedback?: string,
+) => {
+  const submission = await MockTestSubmission.findById(submissionId);
+
+  if (!submission) {
+    throw new Error("Submission not found");
+  }
+
+  const section = submission.sections.find(
+    (s) => s.sectionId.toString() === sectionId,
+  );
+
+  if (!section) {
+    throw new Error("Section not found in submission");
+  }
+
+  section.adminScore = adminScore;
+  if (adminFeedback !== undefined) {
+    section.adminFeedback = adminFeedback;
+  }
+
+  // Recalculate totalScore and Status based on all currently saved sections
+  let totalScore = 0;
+  let allSectionsGraded = true;
+
+  submission.sections.forEach((sec) => {
+    if (sec.isAutoGraded) {
+      totalScore += sec.autoGradedScore || 0;
+    } else {
+      // Manual section: check if it has been graded by admin yet
+      if (sec.adminScore > 0) {
+        totalScore += sec.adminScore;
+      } else {
+        allSectionsGraded = false;
+      }
+    }
+  });
+
+  submission.totalScore = totalScore;
+  submission.status = allSectionsGraded ? "graded" : "pending_review";
+
+  await submission.save();
+  return submission;
+};
+
+
+

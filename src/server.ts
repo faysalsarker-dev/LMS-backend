@@ -5,7 +5,8 @@ import { Server } from "http";
 
 
 let server: Server;
-(async () => {
+
+const main = async () =>  {
   try {
     await mongoose.connect(config.database_url);
     
@@ -21,9 +22,9 @@ let server: Server;
     console.error('❌ MongoDB connection failed', error);
     process.exit(1);
   }
-})();
+};
 
-
+main();
 process.on("SIGTERM", () => {
     console.log("SIGTERM signal received. Gracefully shutting down...");
     if (server) {

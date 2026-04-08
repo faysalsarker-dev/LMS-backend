@@ -10,14 +10,15 @@ const routes_1 = require("./app/routes");
 const globalErrorHandler_1 = require("./app/middleware/globalErrorHandler");
 const rateLimiter_1 = require("./app/middleware/rateLimiter");
 const morgan_1 = __importDefault(require("morgan"));
+const ApiError_1 = require("./app/errors/ApiError");
 const app = (0, express_1.default)();
-app.set('trust proxy', 1); // Trust exactly 1 proxy hop (Vercel edge)
+app.set('trust proxy', 1);
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
 app.use((0, cors_1.default)({
     origin: [
-        "https://lms-web-app-sigma.vercel.app",
+        "https://lms.faysalsarker.me",
         "https://humanisticlanguagecenter.com",
         "http://humanisticlanguagecenter.com",
         "http://localhost:5173"
@@ -33,5 +34,8 @@ app.get("/api/v1", (_req, res) => {
     });
 });
 app.use("/api/v1", routes_1.router);
+app.use((req, _res, next) => {
+    next(new ApiError_1.ApiError(404, `Can't find ${req.originalUrl} on this server!`));
+});
 app.use(globalErrorHandler_1.globalErrorHandler);
 exports.default = app;

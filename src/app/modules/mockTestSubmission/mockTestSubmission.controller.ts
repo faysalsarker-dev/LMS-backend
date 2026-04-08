@@ -3,6 +3,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { ApiError } from "../../errors/ApiError";
 import * as submissionService from "./mockTestSubmission.service";
+import { IMocktestSubmitPayload } from "./mockTestSubmission.interface";
 
 export const handleSubmitMockTest = catchAsync(async (req: Request, res: Response) => {
   const studentId = req.user._id;
@@ -56,8 +57,7 @@ export const handleGetSubmissionById = catchAsync(async (req: Request, res: Resp
 
 export const handleGradeSubmission = catchAsync(async (req: Request, res: Response) => {
   const { submissionId } = req.params;
-  const { grades } = req.body; // Array of { sectionId, score, feedback }
-
+  const { grades } = req.body; 
   const gradedSubmission = await submissionService.gradeSubmission(submissionId, grades);
 
   sendResponse(res, {
@@ -113,7 +113,7 @@ export const handleSubmitSpeakingMockTest = catchAsync(async (req: Request, res:
     throw new ApiError(400, "course, mockTest, and sectionId are required");
   }
 
-  const payload = {
+  const payload: IMocktestSubmitPayload = {
     course,
     mockTest,
     sections: [
@@ -140,5 +140,24 @@ export const handleSubmitSpeakingMockTest = catchAsync(async (req: Request, res:
     success: true,
     message: "Speaking mock test submitted successfully",
     data: submission,
+  });
+});
+
+export const handleUpdateSectionGrade = catchAsync(async (req: Request, res: Response) => {
+  const { submissionId, sectionId } = req.params;
+  const { adminScore, adminFeedback } = req.body;
+
+  const updatedSubmission = await submissionService.updateSectionGrade(
+    submissionId,
+    sectionId,
+    adminScore,
+    adminFeedback,
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Section grade updated successfully",
+    data: updatedSubmission,
   });
 });

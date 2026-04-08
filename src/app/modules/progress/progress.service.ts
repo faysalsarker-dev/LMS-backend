@@ -196,7 +196,6 @@ export const getStudentProgress = async (
 
 
 
-    console.log(progress,'progress')
   if (!progress) {
     throw new ApiError(404, "Progress not found for this student and course");
   }

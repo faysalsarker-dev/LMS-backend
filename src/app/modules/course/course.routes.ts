@@ -15,11 +15,17 @@ const router = Router();
 router.get("/",       rateLimit("content"), CourseController.getAllCourses);
 router.get("/select", rateLimit("content"), CourseController.getAllCoursesForSelecting);
 router.get("/my-course/:id", rateLimit("content"), CourseController.getCourseById);
-router.get("/:slug",         rateLimit("content"), CourseController.getCourseBySlug);
 
 // ── Authenticated reads ───────────────────────────────────────────
-router.get("/my-enrolled-courses", checkAuth(), rateLimit("content"), CourseController.getMyEnrolledCourses);
-router.get("/my-wishlist-courses", checkAuth(), rateLimit("content"), CourseController.getMyWishlistCourses);
+router.get("/my-enrolled-courses", checkAuth(),  rateLimit("content"), CourseController.getMyEnrolledCourses);
+router.get("/my-wishlist-courses", checkAuth(),  rateLimit("content"), CourseController.getMyWishlistCourses);
+
+router.get(
+  "/lessons/:lessonId",
+  checkAuth(),
+  rateLimit("content"),
+  CourseController.getLessonContent,
+);
 
 router.get(
   "/:courseId/curriculum",
@@ -28,12 +34,8 @@ router.get(
   CourseController.getCourseCurriculum,
 );
 
-router.get(
-  "/lessons/:lessonId",
-  checkAuth(),
-  rateLimit("content"),
-  CourseController.getLessonContent,
-);
+// ⚠️ Wildcard route — MUST be last among GETs so it doesn't swallow specific paths
+router.get("/:slug", rateLimit("content"), CourseController.getCourseBySlug);
 
 // ── Mutations ─────────────────────────────────────────────────────
 router.post(

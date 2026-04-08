@@ -4,7 +4,7 @@ import { IMockTestSubmission, IMockTestSectionSubmission } from "./mockTestSubmi
 const mockTestSectionSubmissionSchema = new Schema<IMockTestSectionSubmission>(
   {
     sectionId: { type: Schema.Types.ObjectId, ref: "MockTestSection", required: true },
-    name: { type: String,default:""},
+    name: { type: String, enum: ["Speaking", "Writing", "Reading", "Listening"] as const, required: true },
     autoGradedScore: { type: Number, default: 0 },
     adminScore: { type: Number, default: 0 },
     adminFeedback: { type: String },

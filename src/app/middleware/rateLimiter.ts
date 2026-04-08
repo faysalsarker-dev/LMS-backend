@@ -33,6 +33,7 @@
 import _expressRateLimit, {
   Options,
   RateLimitRequestHandler,
+  ipKeyGenerator,
 } from "express-rate-limit";
 import { Request } from "express";
 
@@ -137,7 +138,7 @@ const keyGenerator = (req: Request): string => {
 
   // Handles proxies: req.ip already resolves correctly because
   // app.set('trust proxy', 1) is set in app.ts.
-  return `ip:${req.ip ?? "unknown"}`;
+  return `ip:${ipKeyGenerator(req.ip ?? "unknown")}`;
 };
 
 // ─── Builder ──────────────────────────────────────────────────────────────────

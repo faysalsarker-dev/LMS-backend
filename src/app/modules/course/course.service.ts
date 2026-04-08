@@ -250,7 +250,6 @@ export const getMyEnrolledCourses = async (userId: string) => {
       .select("course progressPercentage")
       .lean(),
   ]);
-
   const progressMap = new Map(
     progressList.map((p) => [p.course.toString(), p.progressPercentage])
   );

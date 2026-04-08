@@ -60,4 +60,11 @@ router.patch(
   submissionController.handleGradeSubmission,
 );
 
+router.patch(
+  "/:submissionId/section/:sectionId/grade",
+  checkAuth([UserRoles.INSTRUCTOR, UserRoles.SUPER_ADMIN]),
+  rateLimit("admin"),
+  submissionController.handleUpdateSectionGrade,
+);
+
 export default router;

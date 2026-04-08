@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleSubmitSpeakingMockTest = exports.handleGetMockTestProgress = exports.handleGradeSubmission = exports.handleGetSubmissionById = exports.handleGetPendingSubmissions = exports.handleGetStudentSubmissions = exports.handleSubmitMockTest = void 0;
+exports.handleUpdateSectionGrade = exports.handleSubmitSpeakingMockTest = exports.handleGetMockTestProgress = exports.handleGradeSubmission = exports.handleGetSubmissionById = exports.handleGetPendingSubmissions = exports.handleGetStudentSubmissions = exports.handleSubmitMockTest = void 0;
 const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const ApiError_1 = require("../../errors/ApiError");
@@ -84,7 +84,7 @@ exports.handleGetSubmissionById = (0, catchAsync_1.catchAsync)(async (req, res) 
 });
 exports.handleGradeSubmission = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const { submissionId } = req.params;
-    const { grades } = req.body; // Array of { sectionId, score, feedback }
+    const { grades } = req.body;
     const gradedSubmission = await submissionService.gradeSubmission(submissionId, grades);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
@@ -149,5 +149,16 @@ exports.handleSubmitSpeakingMockTest = (0, catchAsync_1.catchAsync)(async (req, 
         success: true,
         message: "Speaking mock test submitted successfully",
         data: submission,
+    });
+});
+exports.handleUpdateSectionGrade = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const { submissionId, sectionId } = req.params;
+    const { adminScore, adminFeedback } = req.body;
+    const updatedSubmission = await submissionService.updateSectionGrade(submissionId, sectionId, adminScore, adminFeedback);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Section grade updated successfully",
+        data: updatedSubmission,
     });
 });

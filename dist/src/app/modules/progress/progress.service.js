@@ -121,7 +121,6 @@ const getStudentProgress = async (studentId, courseId) => {
         path: "mockTestSubmissions",
         select: "totalScore sections status submittedAt totalMarks",
     });
-    console.log(progress, 'progress');
     if (!progress) {
         throw new ApiError_1.ApiError(404, "Progress not found for this student and course");
     }

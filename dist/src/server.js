@@ -7,7 +7,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const app_1 = __importDefault(require("./app"));
 const config_1 = __importDefault(require("./app/config/config"));
 let server;
-(async () => {
+const main = async () => {
     try {
         await mongoose_1.default.connect(config_1.default.database_url);
         console.log('✅ MongoDB connected');
@@ -19,7 +19,8 @@ let server;
         console.error('❌ MongoDB connection failed', error);
         process.exit(1);
     }
-})();
+};
+main();
 process.on("SIGTERM", () => {
     console.log("SIGTERM signal received. Gracefully shutting down...");
     if (server) {

@@ -3,7 +3,7 @@ import { Schema } from "mongoose";
 export interface IMockTestSectionSubmission {
   sectionId: Schema.Types.ObjectId;
   autoGradedScore: number;
-  name: string;
+  name: 'Speaking' | 'Writing' | 'Reading' | 'Listening';
   adminScore: number;
   adminFeedback?: string;
   isAutoGraded: boolean;
@@ -30,7 +30,7 @@ export interface IMocktestSubmitPayload {
       score: number;
       isAutoGraded: boolean;
       studentAnswers?: any;
-      name: string;
+      name: 'Speaking' | 'Writing' | 'Reading' | 'Listening';
       totalMarks: number;
     }[];
 }

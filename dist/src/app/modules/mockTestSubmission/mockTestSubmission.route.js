@@ -53,4 +53,5 @@ router.get("/my-mocktest-progress/:mockTestId", (0, CheckAuth_1.checkAuth)(), (0
 router.get("/pending", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.INSTRUCTOR, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), submissionController.handleGetPendingSubmissions);
 router.get("/:submissionId", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.INSTRUCTOR, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), submissionController.handleGetSubmissionById);
 router.patch("/:submissionId/grade", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.INSTRUCTOR, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), submissionController.handleGradeSubmission);
+router.patch("/:submissionId/section/:sectionId/grade", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.INSTRUCTOR, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), submissionController.handleUpdateSectionGrade);
 exports.default = router;
