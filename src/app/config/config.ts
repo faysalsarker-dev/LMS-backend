@@ -28,6 +28,11 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string(),
   CLOUDINARY_API_SECRET: z.string(),
 
+  BUNNY_STORAGE_ZONE_NAME: z.string(),
+  BUNNY_STORAGE_ZONE_PASSWORD: z.string(),
+  BUNNY_STORAGE_REGION_HOST: z.string().default("storage.bunnycdn.com"),
+  BUNNY_CDN_HOSTNAME: z.string().optional(),
+
   // ✅ SSL (flat in env, grouped in export)
   SSL_STORE_ID: z.string(),
 SSL_STORE_PASS: z.string(),
@@ -74,6 +79,13 @@ export default {
     cloudinary_cloud_name: env.data.CLOUDINARY_CLOUD_NAME,
     cloudinary_api_key: env.data.CLOUDINARY_API_KEY,
     cloudinary_api_secret: env.data.CLOUDINARY_API_SECRET,
+  },
+
+  bunny: {
+    storage_zone_name: env.data.BUNNY_STORAGE_ZONE_NAME,
+    storage_zone_password: env.data.BUNNY_STORAGE_ZONE_PASSWORD,
+    storage_region_host: env.data.BUNNY_STORAGE_REGION_HOST,
+    cdn_hostname: env.data.BUNNY_CDN_HOSTNAME,
   },
 
   ssl: {

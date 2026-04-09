@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { deleteImageFromCLoudinary } from '../config/cloudinary.config';
+import { deleteFileFromBunny } from '../config/bunny.config';
 import { TErrorSources } from '../interfaces/error.types';
 import { handlerDuplicateError } from '../helpers/handleDuplicateError';
 import { handleCastError } from '../helpers/handleCastError';
@@ -16,16 +17,23 @@ export const globalErrorHandler = (
   console.error('🔥 Global Error Handler:', err);
 
   // Fire-and-forget: cleanup uploaded files without blocking the error response
+  const cleanupUrl = async (url: string) => {
+    if (url.includes('cloudinary.com')) {
+      return deleteImageFromCLoudinary(url);
+    }
+    return deleteFileFromBunny(url);
+  };
+
   if (req.file) {
-    deleteImageFromCLoudinary(req.file.path).catch((e) =>
-      console.error('Failed to delete uploaded file from Cloudinary:', e)
+    cleanupUrl(req.file.path).catch((e) =>
+      console.error('Failed to delete uploaded file:', e)
     );
   }
 
   if (req.files && Array.isArray(req.files) && req.files.length) {
-    const imageUrls = (req.files as Express.Multer.File[]).map((file) => file.path);
-    Promise.all(imageUrls.map((url) => deleteImageFromCLoudinary(url))).catch((e) =>
-      console.error('Failed to delete uploaded files from Cloudinary:', e)
+    const fileUrls = (req.files as Express.Multer.File[]).map((file) => file.path);
+    Promise.all(fileUrls.map((url) => cleanupUrl(url))).catch((e) =>
+      console.error('Failed to delete uploaded files:', e)
     );
   }
 

@@ -5,57 +5,66 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.multerVideoUpload = exports.multerUpload = void 0;
 const multer_1 = __importDefault(require("multer"));
-const multer_storage_cloudinary_1 = require("multer-storage-cloudinary");
-const cloudinary_config_1 = require("./cloudinary.config");
-const storage = new multer_storage_cloudinary_1.CloudinaryStorage({
-    cloudinary: cloudinary_config_1.cloudinaryUpload,
-    params: {
-        public_id: (req, file) => {
-            // My Special.Image#!@.png => 4545adsfsadf-45324263452-my-image.png
-            // My Special.Image#!@.png => [My Special, Image#!@, png]
-            const fileName = file.originalname
-                .toLowerCase()
-                .replace(/\s+/g, "-") // empty space remove replace with dash
-                .replace(/\./g, "-")
-                // eslint-disable-next-line no-useless-escape
-                .replace(/[^a-z0-9\-\.]/g, ""); // non alpha numeric - !@#$
-            const extension = file.originalname.split(".").pop();
-            // binary -> 0,1 hexa decimal -> 0-9 A-F base 36 -> 0-9 a-z
-            // 0.2312345121 -> "0.hedfa674338sasfamx" -> 
-            //452384772534
-            const uniqueFileName = Math.random().toString(36).substring(2) + "-" + Date.now() + "-" + fileName + "." + extension;
-            return uniqueFileName;
-        }
+const path_1 = __importDefault(require("path"));
+const bunny_config_1 = require("./bunny.config");
+const ApiError_1 = require("../errors/ApiError");
+const sanitizeFileName = (name) => name
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/\./g, "-")
+    .replace(/[^a-z0-9\-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+const getFolderForField = (fieldname, mimetype) => {
+    if (fieldname === "video")
+        return "videos";
+    if (fieldname === "audio" || fieldname === "audioFile")
+        return "audio";
+    if (mimetype.startsWith("image/"))
+        return "images";
+    return "uploads";
+};
+const buildDestinationPath = (file) => {
+    const extension = path_1.default.extname(file.originalname) || "";
+    const baseName = sanitizeFileName(path_1.default.basename(file.originalname, extension));
+    const folder = getFolderForField(file.fieldname, file.mimetype);
+    const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}-${baseName}${extension}`;
+    return `${folder}/${uniqueName}`;
+};
+class BunnyStorage {
+    _handleFile(req, file, cb) {
+        const chunks = [];
+        file.stream.on("data", (chunk) => {
+            chunks.push(chunk);
+        });
+        file.stream.on("error", (error) => cb(error));
+        file.stream.on("end", async () => {
+            try {
+                const buffer = Buffer.concat(chunks);
+                const destinationPath = buildDestinationPath(file);
+                const publicUrl = await (0, bunny_config_1.uploadBufferToBunny)(buffer, destinationPath, file.mimetype);
+                cb(null, {
+                    buffer,
+                    size: buffer.length,
+                    path: publicUrl,
+                    filename: destinationPath,
+                    mimetype: file.mimetype,
+                });
+            }
+            catch (error) {
+                cb(new ApiError_1.ApiError(500, `Failed to upload file to Bunny.net: ${error.message}`));
+            }
+        });
     }
-});
-exports.multerUpload = (0, multer_1.default)({ storage: storage });
-const videoStorage = new multer_storage_cloudinary_1.CloudinaryStorage({
-    cloudinary: cloudinary_config_1.cloudinaryUpload,
-    params: async (req, file) => {
-        const originalName = file.originalname
-            .toLowerCase()
-            .replace(/\s+/g, "-")
-            .replace(/\./g, "-")
-            .replace(/[^a-z0-9\-\.]/g, "");
-        const extension = file.originalname.split(".").pop();
-        const uniqueFileName = Math.random().toString(36).substring(2) +
-            "-" +
-            Date.now() +
-            "-" +
-            originalName +
-            "." +
-            extension;
-        return {
-            folder: "videos",
-            public_id: uniqueFileName,
-            resource_type: "video",
-            format: extension,
-        };
-    },
-});
+    _removeFile(req, file, cb) {
+        cb(null);
+    }
+}
+const bunnyStorage = new BunnyStorage();
+exports.multerUpload = (0, multer_1.default)({ storage: bunnyStorage });
 exports.multerVideoUpload = (0, multer_1.default)({
-    storage: videoStorage,
+    storage: bunnyStorage,
     limits: {
-        fileSize: 300 * 1024 * 1024
-    }
+        fileSize: 300 * 1024 * 1024,
+    },
 });

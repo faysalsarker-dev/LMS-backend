@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.globalErrorHandler = void 0;
 const cloudinary_config_1 = require("../config/cloudinary.config");
+const bunny_config_1 = require("../config/bunny.config");
 const handleDuplicateError_1 = require("../helpers/handleDuplicateError");
 const handleCastError_1 = require("../helpers/handleCastError");
 const handlerZodError_1 = require("../helpers/handlerZodError");
@@ -10,12 +11,18 @@ const ApiError_1 = require("../errors/ApiError");
 const globalErrorHandler = (err, req, res, next) => {
     console.error('🔥 Global Error Handler:', err);
     // Fire-and-forget: cleanup uploaded files without blocking the error response
+    const cleanupUrl = async (url) => {
+        if (url.includes('cloudinary.com')) {
+            return (0, cloudinary_config_1.deleteImageFromCLoudinary)(url);
+        }
+        return (0, bunny_config_1.deleteFileFromBunny)(url);
+    };
     if (req.file) {
-        (0, cloudinary_config_1.deleteImageFromCLoudinary)(req.file.path).catch((e) => console.error('Failed to delete uploaded file from Cloudinary:', e));
+        cleanupUrl(req.file.path).catch((e) => console.error('Failed to delete uploaded file:', e));
     }
     if (req.files && Array.isArray(req.files) && req.files.length) {
-        const imageUrls = req.files.map((file) => file.path);
-        Promise.all(imageUrls.map((url) => (0, cloudinary_config_1.deleteImageFromCLoudinary)(url))).catch((e) => console.error('Failed to delete uploaded files from Cloudinary:', e));
+        const fileUrls = req.files.map((file) => file.path);
+        Promise.all(fileUrls.map((url) => cleanupUrl(url))).catch((e) => console.error('Failed to delete uploaded files:', e));
     }
     let errorSources = [];
     let statusCode = 500;
