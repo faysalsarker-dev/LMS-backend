@@ -2,7 +2,7 @@ import express from "express";
 import * as submissionController from "./mockTestSubmission.controller";
 import { checkAuth } from "../../middleware/CheckAuth";
 import { UserRoles } from "../auth/auth.interface";
-import { multerVideoUpload } from "../../config/multer.config";
+import { dynamicFileUploadMiddleware } from "../../middleware/fileUpload.middleware";
 import { rateLimit } from "../../middleware/rateLimiter";
 
 const router = express.Router();
@@ -19,7 +19,7 @@ router.post(
   "/submit-speaking",
   checkAuth(),
   rateLimit("upload"),
-  multerVideoUpload.single("audio"),
+  dynamicFileUploadMiddleware("audio"),
   submissionController.handleSubmitSpeakingMockTest,
 );
 

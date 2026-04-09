@@ -2,7 +2,7 @@ import express from 'express';
 import { PracticeController } from './practice.controller';
 import { checkAuth } from '../../middleware/CheckAuth';
 import { UserRoles } from '../auth/auth.interface';
-import { multerUpload } from '../../config/multer.config';
+import { dynamicFileUploadMiddleware } from '../../middleware/fileUpload.middleware';
 import { rateLimit } from '../../middleware/rateLimiter';
 
 const router = express.Router();
@@ -12,7 +12,7 @@ router.post(
   '/',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
   rateLimit('write'),
-  multerUpload.single('file'),
+  dynamicFileUploadMiddleware('file'),
   PracticeController.createPractice,
 );
 
@@ -27,7 +27,7 @@ router.patch(
   '/:id',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
   rateLimit('write'),
-  multerUpload.single('file'),
+  dynamicFileUploadMiddleware('file'),
   PracticeController.updatePractice,
 );
 
@@ -65,10 +65,7 @@ router.post(
   '/items',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
   rateLimit('write'),
-  multerUpload.fields([
-    { name: 'audio', maxCount: 1 },
-    { name: 'image', maxCount: 1 },
-  ]),
+  dynamicFileUploadMiddleware(['audio', 'image']),
   PracticeController.addItemToPractice,
 );
 
@@ -76,10 +73,7 @@ router.patch(
   '/:practiceId/items/:itemId',
   checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
   rateLimit('write'),
-  multerUpload.fields([
-    { name: 'audio', maxCount: 1 },
-    { name: 'image', maxCount: 1 },
-  ]),
+  dynamicFileUploadMiddleware(['audio', 'image']),
   PracticeController.updatePracticeItem,
 );
 

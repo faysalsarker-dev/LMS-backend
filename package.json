@@ -8,6 +8,8 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@types/ali-oss": "^6.23.3",
+    "ali-oss": "^6.23.0",
     "axios": "^1.13.5",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^1.41.3",
