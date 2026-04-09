@@ -6,7 +6,7 @@ import {
   updateMockTestSchema,
 } from "./mockTest.validation";
 import { checkAuth } from "../../middleware/CheckAuth";
-import { multerUpload } from "../../config/multer.config";
+import { dynamicFileUploadMiddleware } from "../../middleware/fileUpload.middleware";
 import { rateLimit } from "../../middleware/rateLimiter";
 
 const router = Router();
@@ -22,7 +22,7 @@ router.post(
   "/",
   checkAuth(),
   rateLimit("write"),
-  multerUpload.single("thumbnail"),
+  dynamicFileUploadMiddleware("thumbnail"),
   MockTestController.createMockTest,
 );
 
@@ -30,7 +30,7 @@ router.put(
   "/:id",
   checkAuth(),
   rateLimit("write"),
-  multerUpload.single("thumbnail"),
+  dynamicFileUploadMiddleware("thumbnail"),
   MockTestController.updateMockTest,
 );
 

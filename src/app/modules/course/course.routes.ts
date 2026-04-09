@@ -2,7 +2,7 @@ import { Router } from "express";
 import * as CourseController from './course.controller';
 import validateRequest from "../../middleware/validateRequest.middleware";
 import { iCourseSchema } from "./course.validation";
-import { multerUpload } from "../../config/multer.config";
+import { dynamicFileUploadMiddleware } from "../../middleware/fileUpload.middleware";
 import { checkAuth } from "../../middleware/CheckAuth";
 import { rateLimit } from "../../middleware/rateLimiter";
 
@@ -41,14 +41,14 @@ router.get("/:slug", rateLimit("content"), CourseController.getCourseBySlug);
 router.post(
   "/",
   rateLimit("write"),
-  multerUpload.single("file"),
+  dynamicFileUploadMiddleware("file"),
   CourseController.createCourse,
 );
 
 router.put(
   "/:id",
   rateLimit("write"),
-  multerUpload.single("file"),
+  dynamicFileUploadMiddleware("file"),
   CourseController.updateCourse,
 );
 

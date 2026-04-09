@@ -2,7 +2,7 @@ import { Router } from "express";
 import { checkAuth } from "../../middleware/CheckAuth";
 import { UserRoles } from "./auth.interface";
 import { AuthController } from "./auth.controller";
-import { multerUpload } from "../../config/multer.config";
+import { dynamicFileUploadMiddleware } from "../../middleware/fileUpload.middleware";
 import { rateLimit } from "../../middleware/rateLimiter";
 
 const router = Router();
@@ -44,7 +44,7 @@ router.put(
   "/update",
   checkAuth(),
   rateLimit("write"),
-  multerUpload.single("file"),
+  dynamicFileUploadMiddleware("file"),
   AuthController.updateProfile,
 );
 

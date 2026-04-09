@@ -43,7 +43,7 @@ export const uploadBufferToBunny = async (
   try {
     const url = getStorageEndpoint(destinationPath);
 
-    await axios.put(url, buffer, {
+   await axios.put(url, buffer, {
       headers: {
         AccessKey: storagePassword,
         "Content-Type": mimeType,
@@ -51,7 +51,6 @@ export const uploadBufferToBunny = async (
       },
       maxBodyLength: Infinity,
     });
-
     return getPublicUrl(destinationPath);
   } catch (error: any) {
     throw new ApiError(500, `Bunny.net upload failed: ${error.message}`);

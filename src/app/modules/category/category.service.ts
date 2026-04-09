@@ -1,4 +1,5 @@
 import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
+import { deleteFile } from "../../utils/fileDelete";
 import { ICategory } from "./category.interface";
 import { Category } from "./Category.model";
 
@@ -26,7 +27,7 @@ export const CategoryService = {
   async deleteCategory(id: string) {
     const category = await Category.findByIdAndDelete(id);
 
-      await deleteImageFromCLoudinary(category?.thumbnail as string)
+      await deleteFile(category?.thumbnail as string)
     return category;
 
   },

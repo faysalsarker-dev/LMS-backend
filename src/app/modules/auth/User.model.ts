@@ -33,6 +33,7 @@ const userSchema = new Schema<IUser>(
       country: { type: String, default: null },
       city: { type: String, default: null },
     },
+    isInternational: { type: Boolean, default: true },
 
     otp: { type: String, select: false },
     otpExpiry: { type: Date, select: false },

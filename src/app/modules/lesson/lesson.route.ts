@@ -1,6 +1,6 @@
 import express from "express";
 import * as LessonController from "./lesson.controller";
-import { multerUpload, multerVideoUpload } from "../../config/multer.config";
+import { dynamicFileUploadMiddleware } from "../../middleware/fileUpload.middleware";
 import { rateLimit } from "../../middleware/rateLimiter";
 
 const router = express.Router();
@@ -9,10 +9,7 @@ const router = express.Router();
 router.post(
   "/",
   rateLimit("upload"),
-  multerVideoUpload.fields([
-    { name: "video", maxCount: 1 },
-    { name: "audioFile", maxCount: 1 },
-  ]),
+  dynamicFileUploadMiddleware(["video", "audioFile"]),
   LessonController.createLessonController,
 );
 router.get("/",     rateLimit("content"), LessonController.getAllLessonsController);

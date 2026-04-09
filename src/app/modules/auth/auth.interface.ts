@@ -23,6 +23,7 @@ export interface IUser extends Document {
   profile?: string;
  courses: Types.ObjectId[];
  wishlist: Types.ObjectId[];
+ isInternational?: boolean;
  
  address:{
   country?:string,
