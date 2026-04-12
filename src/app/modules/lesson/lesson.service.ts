@@ -3,6 +3,7 @@ import { ILesson } from "./lesson.interface";
 import Lesson from "./Lesson.model";
 import Milestone from "../milestone/Milestone.model";
 import { ApiError } from "../../errors/ApiError";
+import { deleteFile } from "../../utils/fileDelete";
 
 // Create
 export const createLesson = async (payload: Partial<ILesson>) => {
@@ -128,6 +129,38 @@ export const updateLesson = async (id: string, payload: Partial<ILesson>) => {
 
 // Delete
 export const deleteLesson = async (id: string) => {
-  const lesson = await Lesson.findByIdAndDelete(id);
-  return lesson;
+  const lesson = await Lesson.findById(id);
+  if (!lesson) return null;
+
+  const intl = lesson.isInternational ?? true;
+
+  if (lesson.video?.url) {
+    try {
+      await deleteFile(lesson.video.url, intl);
+    } catch (error: any) {
+      console.error(`Failed to delete lesson video for ${id}:`, error.message);
+    }
+  }
+
+  if (lesson.audio?.url) {
+    try {
+      await deleteFile(lesson.audio.url, intl);
+    } catch (error: any) {
+      console.error(`Failed to delete lesson audio for ${id}:`, error.message);
+    }
+  }
+
+  if (lesson.questions && Array.isArray(lesson.questions)) {
+    for (const question of lesson.questions) {
+      if (question?.audio) {
+        try {
+          await deleteFile(question.audio, intl);
+        } catch (error: any) {
+          console.error(`Failed to delete lesson question audio for ${id}:`, error.message);
+        }
+      }
+    }
+  }
+
+  return Lesson.findByIdAndDelete(id);
 };

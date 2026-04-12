@@ -7,6 +7,7 @@ const MockTestSchema: Schema<IMockTest> = new Schema(
     title: { type: String, required: true, trim: true },
     slug: { type: String, unique: true, lowercase: true, trim: true },
     thumbnail: { type: String, default: null },
+    isInternational: { type: Boolean, default: true },
     course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
     
     // The 4 test parts. We will use a unified 'MockTestSection' model to avoid code repeating.

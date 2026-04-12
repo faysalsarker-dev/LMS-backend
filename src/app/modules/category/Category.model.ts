@@ -6,6 +6,7 @@ const CategorySchema: Schema<ICategory> = new Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
     thumbnail: { type: String, default: null },
+    isInternational: { type: Boolean, default: true },
     totalCourse: { type: Number, default: 0 },
   },
   { timestamps: true }

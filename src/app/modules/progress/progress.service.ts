@@ -1,19 +1,23 @@
+import fs from "fs/promises";
+import path from "path";
 import { Types } from "mongoose";
 import { ApiError } from "../../errors/ApiError";
 import Course from "../course/Course.model";
-import Lesson from "../lesson/Lesson.model";
 import { IProgress } from "./progress.interface";
 import Progress from "./progress.model";
 
+const CERTIFICATE_TEMPLATE_PATH = path.resolve(
+  process.cwd(),
+  "src/app/certificates/Certificate.svg"
+);
 
-
-
-
-
-
-
-
-
+const escapeXml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 
 const updateProgressPercentage = async (
   progress: IProgress,
@@ -29,64 +33,12 @@ const updateProgressPercentage = async (
     const percentage = Math.min((completedCount / course.totalLectures) * 100, 100);
     progress.progressPercentage = parseFloat(percentage.toFixed(2));
 
-    // Check if course is completed
     if (completedCount >= course.totalLectures && !progress.isCompleted) {
       progress.isCompleted = true;
       progress.completedAt = new Date();
     }
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-// export const markLessonAsComplete = async (
-//   studentId: string,
-//   courseId: string,
-//   lessonId: string,
-// ): Promise<IProgress> => {
-
-
-
-
-
-//   // 2. Find the student's progress document
-//   const progress = await Progress.findOne({
-//     student: studentId,
-//     course: courseId,
-//   });
-
-//   if (!progress) {
-//     throw new ApiError(404,"Student is not enrolled in this course");
-//   }
-
-//   // 3. Add the lesson to the completed list
-//   // We use $addToSet to prevent duplicate lesson IDs from being added.
-//   await progress.updateOne({ $addToSet: { completedLessons: lessonId } });
-
-//   // 4. Refetch the document to get the updated array length
-//   const updatedProgress = await Progress.findById(progress._id);
-//   if (!updatedProgress) {
-//     throw new ApiError(500,"Failed to update progress");
-//   }
-
-// // Instead of updateOne then refetch, you could:
-//    if (!progress.completedLessons.some((l) => l.toString() === lessonId)) {
-//      progress.completedLessons.push(lessonId as any);
-//    }
-//    await updateProgressPercentage(progress, courseId);
-//    await progress.save();
-
-
-//   return updatedProgress;
-// };
 
 export const markLessonAsComplete = async (
   studentId: string,
@@ -102,7 +54,6 @@ export const markLessonAsComplete = async (
     throw new ApiError(404, "Student is not enrolled in this course");
   }
 
-  // Add lesson if not already completed
   if (!progress.completedLessons.some((l) => l.toString() === lessonId)) {
     progress.completedLessons.push(lessonId as any);
   }
@@ -113,14 +64,12 @@ export const markLessonAsComplete = async (
   return progress;
 };
 
-
 export const markQuizAsComplete = async (
   studentId: string,
   courseId: string,
   lessonId: string,
   passed: boolean
 ): Promise<IProgress> => {
-
   const progress = await Progress.findOne({
     student: studentId,
     course: courseId,
@@ -133,13 +82,12 @@ export const markQuizAsComplete = async (
     throw new ApiError(400, "Quiz not complete. Cannot mark lesson as complete.");
   }
 
-  // Check if quiz result already exists
   const existingIndex = progress.quizResults.findIndex(
     (qr) => qr.lesson.toString() === lessonId
   );
 
   const result = {
-    lesson: lessonId as any, 
+    lesson: lessonId as any,
     passed,
     attemptedAt: new Date(),
   };
@@ -151,7 +99,7 @@ export const markQuizAsComplete = async (
   }
 
   if (!progress.completedLessons.some((l) => l.toString() === lessonId)) {
-    progress.completedLessons.push(lessonId as any); 
+    progress.completedLessons.push(lessonId as any);
   }
 
   await updateProgressPercentage(progress, courseId);
@@ -159,23 +107,10 @@ export const markQuizAsComplete = async (
   return progress;
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
 export const getStudentProgress = async (
   studentId: string,
   courseId: string
 ): Promise<any> => {
-  // Fetch progress with populated data
   const progress = await Progress.findOne({
     student: new Types.ObjectId(studentId),
     course: new Types.ObjectId(courseId),
@@ -184,34 +119,30 @@ export const getStudentProgress = async (
     .populate({
       path: "assignmentSubmissions",
       select: "lesson result feedback status submittedAt",
-      populate: { 
-        path: "lesson", 
-        select: "title assignment" 
+      populate: {
+        path: "lesson",
+        select: "title assignment"
       }
     })
-  .populate({
-  path: "mockTestSubmissions",
-  select: "totalScore sections status submittedAt totalMarks",
-});
-
-
+    .populate({
+      path: "mockTestSubmissions",
+      select: "totalScore sections status submittedAt totalMarks",
+    });
 
   if (!progress) {
     throw new ApiError(404, "Progress not found for this student and course");
   }
 
   const course = await Course.findById(courseId).select("totalLectures").lean();
-  
+
   if (!course) {
     throw new ApiError(404, "Course not found");
   }
 
-  // Calculate Quiz Statistics
   const totalQuizzes = progress.quizResults.length;
   const passedCount = progress.quizResults.filter(q => q.passed === true).length;
   const failedCount = totalQuizzes - passedCount;
 
-  // Transform data for the Student Overview
   return {
     overview: {
       progressPercentage: progress.progressPercentage,
@@ -231,25 +162,59 @@ export const getStudentProgress = async (
         lessonName: sub.lesson?.title || "Assignment",
         status: sub.status,
         marks: sub.result,
-        maxMarks: sub.lesson?.assignment?.maxMarks || null, 
+        maxMarks: sub.lesson?.assignment?.maxMarks || null,
         feedback: sub.feedback,
         date: sub.submittedAt
       }))
     },
-mockTestStats: {
-  submissions: (progress.mockTestSubmissions as any[]).map((sub) => ({
-    status: sub.status,
-    totalScore: sub.totalScore,
-    submittedAt: sub.submittedAt,
-    sections: sub.sections.map((section: any) => ({
-      autoGradedScore: section.autoGradedScore,
-      adminScore: section.adminScore,
-      adminFeedback: section.adminFeedback,
-      isAutoGraded: section.isAutoGraded,
-      name: section.name,
-      totalMarks: section.totalMarks,
-    })),
-  })),
-},
+    mockTestStats: {
+      submissions: (progress.mockTestSubmissions as any[]).map((sub) => ({
+        status: sub.status,
+        totalScore: sub.totalScore,
+        submittedAt: sub.submittedAt,
+        sections: sub.sections.map((section: any) => ({
+          autoGradedScore: section.autoGradedScore,
+          adminScore: section.adminScore,
+          adminFeedback: section.adminFeedback,
+          isAutoGraded: section.isAutoGraded,
+          name: section.name,
+          totalMarks: section.totalMarks,
+        })),
+      })),
+    },
   };
+};
+
+export const generateCertificateSvg = async (
+  studentId: string,
+  progressId: string
+): Promise<string> => {
+  const progress = await Progress.findOne({
+    _id: new Types.ObjectId(progressId),
+    student: new Types.ObjectId(studentId),
+  }).select("isCompleted certificates");
+
+  if (!progress) {
+    throw new ApiError(404, "Progress not found");
+  }
+
+  if (!progress.isCompleted) {
+    throw new ApiError(400, "Course is not completed yet");
+  }
+
+  if (
+    !progress.certificates?.name ||
+    !progress.certificates?.title ||
+    !progress.certificates?.description ||
+    !progress.certificates?.issuedAt
+  ) {
+    throw new ApiError(400, "Certificate data not found in progress");
+  }
+
+  const template = await fs.readFile(CERTIFICATE_TEMPLATE_PATH, "utf-8");
+
+  return template
+    .replace(/\{\{student_name\}\}/g, escapeXml(progress.certificates.name))
+    .replace(/\{\{course_title\}\}/g, escapeXml(progress.certificates.title))
+    .replace(/\{\{course_description\}\}/g, escapeXml(progress.certificates.description));
 };

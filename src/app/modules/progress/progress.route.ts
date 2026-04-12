@@ -9,10 +9,17 @@ router.post(
   checkAuth(),
   progressController.handleMarkLessonComplete,
 );
+
 router.post(
   "/complete-quiz",
   checkAuth(),
   progressController.handleQuizLessonComplete,
+);
+
+router.get(
+  "/certificate/:progressId",
+  checkAuth(),
+  progressController.handleGenerateCertificate,
 );
 
 router.get(
@@ -23,4 +30,4 @@ router.get(
 
 const progressRoutes = router;
 
-export default progressRoutes
+export default progressRoutes;

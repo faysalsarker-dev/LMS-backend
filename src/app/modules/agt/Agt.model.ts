@@ -18,6 +18,7 @@ const assignmentSubmissionSchema = new Schema<IAssignmentSubmission>(
     fileUrl: {
       type: String,
     },
+    isInternational: { type: Boolean, default: true },
 
     textResponse: { type: String, default: null },
 

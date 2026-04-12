@@ -5,17 +5,16 @@ import { ApiError } from "../../errors/ApiError";
 import config from "../../config/config";
 import { generateToken, verifyToken } from "./../../utils/jwt";
 import { generateOTP } from "../../utils/otpGenerator";
-import { sendLinkEmail, sendOtpEmail } from "../../utils/email";
+import { sendInviteEmail, sendLinkEmail, sendOtpEmail } from "../../utils/email";
 import { JwtPayload } from "jsonwebtoken";
 import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 import { Request } from "express";
 import mongoose, { Query } from "mongoose";
 import { generateSessionToken } from "../../utils/sessionToken";
-import { clearAuthCookies } from "../../utils/setCookie";
 import QueryBuilder from "../../builder/QueryBuilder";
 
 export const userService = {
-  async register(data: Partial<IUser>) {
+  async register(data: Partial<IUser> & { isInviated?: boolean }) {
     const existing = await User.findOne({ email: data.email });
     if (existing && existing.isVerified) {
       throw new ApiError(400, "Email already exists");
@@ -23,6 +22,15 @@ export const userService = {
     if (existing && !existing.isVerified) {
       throw new ApiError(400, "Account is not verified");
     }
+
+    if(data.isInviated){
+       const user = new User(data);
+      await user.save();
+     await sendInviteEmail(user.email, { name: user.name, role: user.role, email: user.email, password: data.password });
+      return user;
+      }
+
+
 
     const otp = generateOTP();
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
@@ -47,7 +55,6 @@ export const userService = {
 
     const otp = generateOTP();
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
-console.log("Generated OTP:", otp, "for email:", email);
     user.otp = otp;
     user.otpExpiry = otpExpiry;
     await user.save();

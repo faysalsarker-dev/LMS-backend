@@ -6,6 +6,13 @@ export interface IQuizResult {
   attemptedAt: Date;
 }
 
+export interface ICertificateSnapshot {
+  name: string | null;
+  title: string | null;
+  description: string | null;
+  issuedAt: Date | null;
+}
+
 export interface IProgress {
   student: Schema.Types.ObjectId;
   course: Schema.Types.ObjectId;
@@ -17,7 +24,10 @@ export interface IProgress {
   progressPercentage: number;
   isCompleted: boolean;
   completedAt?: Date;
+  certificates: ICertificateSnapshot;
+
   updateWithAssignment(assignmentId: string): Promise<void>;
   updateWithMockTest?(): Promise<void>;
   recalculateFromSubmissions(): Promise<void>;
+  generateCertificate(description: string): Promise<IProgress>;
 }

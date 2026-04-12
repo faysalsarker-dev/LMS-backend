@@ -1,11 +1,8 @@
-
-
 import AssignmentSubmission from "../agt/Agt.model";
+import User from "../auth/User.model";
+import Course from "../course/Course.model";
 import { IProgress, IQuizResult } from "./progress.interface";
-import { Schema, model, Types } from "mongoose";
-
-
-
+import { Schema, model } from "mongoose";
 
 const quizResultSchema = new Schema<IQuizResult>(
   {
@@ -16,30 +13,24 @@ const quizResultSchema = new Schema<IQuizResult>(
   { _id: false }
 );
 
-
-
-
-
-
 const progressSchema = new Schema<IProgress>(
   {
     student: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
     completedLessons: [{ type: Schema.Types.ObjectId, ref: "Lesson" }],
-    assignmentSubmissions: [{ type: Schema.Types.ObjectId, ref: "AssignmentSubmission"}],
+    assignmentSubmissions: [{ type: Schema.Types.ObjectId, ref: "AssignmentSubmission" }],
     mockTestSubmissions: [{ type: Schema.Types.ObjectId, ref: "MockTestSubmission" }],
     avgMarks: { type: Number, default: 0 },
     quizResults: { type: [quizResultSchema], default: [] },
     progressPercentage: { type: Number, default: 0, min: 0, max: 100 },
     isCompleted: { type: Boolean, default: false },
     completedAt: { type: Date, default: null },
-
-
-   
-
-
-
-
+    certificates: {
+      name: { type: String, default: null },
+      title: { type: String, default: null },
+      description: { type: String, default: null },
+      issuedAt: { type: Date, default: null },
+    },
   },
   { timestamps: true }
 );
@@ -61,11 +52,10 @@ progressSchema.methods.addCompletedLesson = async function (lessonId: string) {
 // Update progress with assignment submission
 // ---------------------------
 progressSchema.methods.updateWithAssignment = async function (submissionId: string) {
-  if (!this.assignmentSubmissions.includes(submissionId)) {
-    this.assignmentSubmissions.push(submissionId);
+  if (!this.assignmentSubmissions.includes(submissionId as any)) {
+    this.assignmentSubmissions.push(submissionId as any);
   }
 
-  // Calculate average marks for graded submissions
   const submissions = await AssignmentSubmission.find({
     _id: { $in: this.assignmentSubmissions },
     status: "graded",
@@ -76,12 +66,12 @@ progressSchema.methods.updateWithAssignment = async function (submissionId: stri
     this.avgMarks = totalMarks / submissions.length;
   }
 
-  // Optional: update progressPercentage based on completed lessons + assignments
   const totalItems = this.completedLessons.length + this.assignmentSubmissions.length;
-  // Example: totalItems / 100 * 100 = just a demo, you can calculate based on course structure
-  this.progressPercentage = Math.min(100, totalItems); 
+  this.progressPercentage = Math.min(100, totalItems);
 
-  if (this.progressPercentage >= 100) this.isCompleted = true;
+  if (this.progressPercentage >= 100) {
+    this.isCompleted = true;
+  }
 
   await this.save();
   return this;
@@ -94,10 +84,7 @@ progressSchema.methods.recalculateFromSubmissions = async function () {
   });
 
   if (submissions.length) {
-    const total = submissions.reduce(
-      (sum, s) => sum + (s.result || 0),
-      0
-    );
+    const total = submissions.reduce((sum, s) => sum + (s.result || 0), 0);
     this.avgMarks = total / submissions.length;
   } else {
     this.avgMarks = 0;
@@ -110,23 +97,16 @@ progressSchema.methods.recalculateFromSubmissions = async function () {
 // Update progress with mock test submission
 // ---------------------------
 progressSchema.methods.updateWithMockTest = async function () {
-  // Using mongoose.model to avoid circular dependency
   const MockTestSubmission = model("MockTestSubmission");
-  
+
   const submissions = await MockTestSubmission.find({
     _id: { $in: this.mockTestSubmissions },
     status: "graded",
   });
 
   if (submissions.length) {
-    // You can implement custom logic to weight mock test scores alongside assignments.
-    // For now, we calculate an average Mock Test score, or add to avgMarks.
-    // Assuming each mock test has totalScore which is to be averaged.
     const totalMockTestScore = submissions.reduce((sum, s) => sum + (s.totalScore || 0), 0);
     const avgMockTestScore = totalMockTestScore / submissions.length;
-    
-    // Simple approach: combine assignment avgMarks and mockTest avg marks
-    // This formula can be refined based on client requirements.
     this.avgMarks = (this.avgMarks + avgMockTestScore) / 2;
   }
 
@@ -134,10 +114,33 @@ progressSchema.methods.updateWithMockTest = async function () {
   return this;
 };
 
+// ---------------------------
+// Store certificate snapshot
+// ---------------------------
+progressSchema.methods.generateCertificate = async function (description: string) {
+  const [student, course] = await Promise.all([
+    User.findById(this.student).select("name"),
+    Course.findById(this.course).select("title"),
+  ]);
 
+  if (!student) {
+    throw new Error("Student not found");
+  }
 
+  if (!course) {
+    throw new Error("Course not found");
+  }
+
+  this.certificates = {
+    name: student.name,
+    title: course.title,
+    description,
+    issuedAt: new Date(),
+  };
+
+  await this.save();
+  return this;
+};
 
 const Progress = model<IProgress>("Progress", progressSchema);
 export default Progress;
-
-

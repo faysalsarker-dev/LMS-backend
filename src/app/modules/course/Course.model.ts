@@ -29,6 +29,7 @@ const CourseSchema: Schema<ICourse> = new Schema(
     certificateAvailable: { type: Boolean, default: false },
     resources: [{ type: String }],
     isFeatured:{type:Boolean,default:false},
+    isInternational: { type: Boolean, default: true },
     certificateTemplate: { type: String, default: null },
   
   },

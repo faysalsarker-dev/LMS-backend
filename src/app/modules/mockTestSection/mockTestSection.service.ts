@@ -5,6 +5,7 @@ import { ApiError } from "../../errors/ApiError";
 import httpStatus from "http-status";
 import MockTest from "../mockTest/mockTest.model";
 import QueryBuilder from "../../builder/QueryBuilder";
+import { deleteFile } from "../../utils/fileDelete";
 
 export const createMockTestSection = async (payload: Partial<IMockTestSection>): Promise<IMockTestSection> => {
   const mockTest = await MockTest.findById(payload.mockTest);
@@ -63,18 +64,39 @@ export const updateMockTestSection = async (id: string, payload: Partial<IMockTe
 
 export const deleteMockTestSection = async (id: string): Promise<IMockTestSection | null> => {
   if (!Types.ObjectId.isValid(id)) throw new ApiError(httpStatus.BAD_REQUEST, "Invalid Section ID");
-  const section = await MockTestSection.findByIdAndDelete(id);
+
+  const section = await MockTestSection.findById(id);
   if (!section) throw new ApiError(httpStatus.NOT_FOUND, "Section not found");
 
-  // Remove reference from MockTest
-  if (section.mockTest && section.name) {
-    await MockTest.findByIdAndUpdate(section.mockTest, {
-      $unset: { [section.name]: "" },
+  const intl = section.isInternational ?? true;
+  for (const question of section.questions || []) {
+    if (question.audioUrl) {
+      try {
+        await deleteFile(question.audioUrl, intl);
+      } catch (error: any) {
+        console.error(`Failed to delete section question audio for ${id}:`, error.message);
+      }
+    }
+    for (const imageUrl of question.images || []) {
+      if (imageUrl) {
+        try {
+          await deleteFile(imageUrl, intl);
+        } catch (error: any) {
+          console.error(`Failed to delete section question image for ${id}:`, error.message);
+        }
+      }
+    }
+  }
+
+  const deleted = await MockTestSection.findByIdAndDelete(id);
+  if (!deleted) throw new ApiError(httpStatus.NOT_FOUND, "Section not found");
+
+  if (deleted.mockTest && deleted.name) {
+    await MockTest.findByIdAndUpdate(deleted.mockTest, {
+      $unset: { [deleted.name]: "" },
     });
   }
-  section.totalMarks = section.questions.reduce((sum, q) => sum + (q.marks || 0), 0);
 
-  await section.save();
-  return section;
+  return deleted;
 };
 
