@@ -27,6 +27,7 @@ export interface ICourse extends Document {
   certificateAvailable: boolean;
   resources: string[]; 
   isFeatured:boolean;
+  isInternational?: boolean;
   createdAt: Date;
   updatedAt: Date;
   certificateTemplate?: string;

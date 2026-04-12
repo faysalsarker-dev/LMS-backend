@@ -3,6 +3,7 @@ import Practice from './practice.model';
 import { IPractice, IPracticeItem } from './practice.interface';
 import mongoose, { FilterQuery, SortOrder } from 'mongoose';
 import User from '../auth/User.model';
+import { deleteFile } from '../../utils/fileDelete';
 
 interface GetAllOptions {
   courseId?: string;
@@ -110,6 +111,32 @@ const updatePractice = async (
 const deletePractice = async (id: string): Promise<void> => {
   const deleted = await Practice.findByIdAndDelete(id);
   if (!deleted) throw new ApiError(404, 'Practice not found');
+
+  const intl = deleted.isInternational ?? true;
+  if (deleted.thumbnail) {
+    try {
+      await deleteFile(deleted.thumbnail, intl);
+    } catch (error: any) {
+      console.error(`Failed to delete practice thumbnail for ${id}:`, error.message);
+    }
+  }
+
+  for (const item of deleted.items || []) {
+    if (item.audioUrl) {
+      try {
+        await deleteFile(item.audioUrl, intl);
+      } catch (error: any) {
+        console.error(`Failed to delete practice item audio for ${item._id}:`, error.message);
+      }
+    }
+    if (item.imageUrl) {
+      try {
+        await deleteFile(item.imageUrl, intl);
+      } catch (error: any) {
+        console.error(`Failed to delete practice item image for ${item._id}:`, error.message);
+      }
+    }
+  }
 };
 
 // ============== NEW: Item Management Methods ==============

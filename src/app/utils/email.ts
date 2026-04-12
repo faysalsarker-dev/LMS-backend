@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import config from "../config/config";
 import OTPEmail from "./otpTamplate";
 import ResetPasswordEmail from "./ResetPasswordEmail";
+import InviteEmail from "./InviteEmail";
 
 
 // Transporter configuration
@@ -18,7 +19,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendOtpEmail = async (to: string, otp: string): Promise<void> => {
   const mailOptions = {
-    from: `"EduPlatform" <${config.user}>`,
+    from: `<${config.user}>`,
     to,
     subject: "Your OTP Code - Humanistic Language Center",
     html:OTPEmail(otp)
@@ -30,10 +31,21 @@ export const sendOtpEmail = async (to: string, otp: string): Promise<void> => {
 
 export const sendLinkEmail = async (to: string, link: string): Promise<void> => {
   const mailOptions = {
-    from: `"Reset Password" <${config.user}>`,
+    from: `<${config.user}>`,
     to,
     subject: "Your OTP Code - Humanistic Language Center",
     html:ResetPasswordEmail(link)
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+export const sendInviteEmail = async (to: string, obj: { name: string; role: string; email: string; password: string }): Promise<void> => {
+  const mailOptions = {
+    from: `<${config.user}>`,
+    to,
+    subject: "Your Invite Link - Humanistic Language Center",
+    html:InviteEmail(obj)
   };
 
   await transporter.sendMail(mailOptions);

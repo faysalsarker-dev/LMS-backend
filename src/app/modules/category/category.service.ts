@@ -1,4 +1,3 @@
-import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 import { deleteFile } from "../../utils/fileDelete";
 import { ICategory } from "./category.interface";
 import { Category } from "./Category.model";
@@ -26,9 +25,16 @@ export const CategoryService = {
 
   async deleteCategory(id: string) {
     const category = await Category.findByIdAndDelete(id);
+    if (!category) return null;
 
-      await deleteFile(category?.thumbnail as string)
+    if (category.thumbnail) {
+      try {
+        await deleteFile(category.thumbnail, category.isInternational ?? true);
+      } catch (error: any) {
+        console.error("Failed to delete category thumbnail:", error.message);
+      }
+    }
+
     return category;
-
   },
 };

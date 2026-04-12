@@ -3,6 +3,7 @@ import { ApiError } from "../../errors/ApiError";
 import Progress from "../progress/progress.model";
 import { IAssignmentSubmission } from "./agt.interface";
 import AssignmentSubmission from "./Agt.model";
+import { deleteFile } from "../../utils/fileDelete";
 
 export const AssignmentSubmissionService = {
 
@@ -139,6 +140,15 @@ async getAllSubmissions(query: any = {}) {
   async deleteSubmission(id: string) {
     const deleted = await AssignmentSubmission.findByIdAndDelete(id);
     if (!deleted) throw new ApiError(404, "Submission not found");
+
+    if (deleted.fileUrl) {
+      try {
+        await deleteFile(deleted.fileUrl, deleted.isInternational ?? true);
+      } catch (error: any) {
+        console.error(`Failed to delete submission file for ${id}:`, error.message);
+      }
+    }
+
     return deleted;
   },
 

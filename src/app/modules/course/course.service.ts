@@ -7,6 +7,7 @@ import Progress from "../progress/progress.model";
 import { ApiError } from "../../errors/ApiError";
 import Lesson from "../lesson/Lesson.model";
 import User from "../auth/User.model";
+import { deleteFile } from "../../utils/fileDelete";
 import QueryBuilder from "../../builder/QueryBuilder";
 
 
@@ -123,6 +124,52 @@ export const updateCourse = async (id: string, data: Partial<ICourse>): Promise<
 
 export const deleteCourse = async (id: string): Promise<ICourse | null> => {
   if (!Types.ObjectId.isValid(id)) return null;
+
+  const course = await Course.findById(id).lean();
+  if (!course) return null;
+
+  const globalIntl = course.isInternational ?? true;
+  if (course.thumbnail) {
+    try {
+      await deleteFile(course.thumbnail, globalIntl);
+    } catch (error: any) {
+      console.error("Failed to delete course thumbnail:", error.message);
+    }
+  }
+
+  const milestones = await mongoose.model("Milestone").find({ course: id }).lean();
+  const lessonIds = milestones.flatMap((m: any) => m.lesson || []);
+  const lessons = await Lesson.find({ _id: { $in: lessonIds } }).lean();
+
+  for (const lesson of lessons) {
+    const lessonIntl = lesson.isInternational ?? globalIntl;
+    if (lesson.video?.url) {
+      try {
+        await deleteFile(lesson.video.url, lessonIntl);
+      } catch (error: any) {
+        console.error(`Failed to delete lesson video for ${lesson._id}:`, error.message);
+      }
+    }
+    if (lesson.audio?.url) {
+      try {
+        await deleteFile(lesson.audio.url, lessonIntl);
+      } catch (error: any) {
+        console.error(`Failed to delete lesson audio for ${lesson._id}:`, error.message);
+      }
+    }
+    if (lesson.questions && Array.isArray(lesson.questions)) {
+      for (const question of lesson.questions) {
+        if (question?.audio) {
+          try {
+            await deleteFile(question.audio, lessonIntl);
+          } catch (error: any) {
+            console.error(`Failed to delete lesson question audio for ${lesson._id}:`, error.message);
+          }
+        }
+      }
+    }
+  }
+
   return Course.findByIdAndDelete(id).exec();
 };
 

@@ -5,6 +5,8 @@ import { ApiError } from "../../errors/ApiError";
 import httpStatus from "http-status";
 import QueryBuilder from "../../builder/QueryBuilder";
 import User from "../auth/User.model";
+import MockTestSection from "../mockTestSection/mockTestSection.model";
+import { deleteFile } from "../../utils/fileDelete";
 
 export const getMocktestForUser = async (
   userId: string,
@@ -100,9 +102,45 @@ export const deleteMockTest = async (id: string): Promise<IMockTest | null> => {
   if (!Types.ObjectId.isValid(id))
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid ID");
 
-  // TODO: Make sure to implement logic later to delete the associated MockTestSections
-  const mockTest = await MockTest.findByIdAndDelete(id);
+  const mockTest = await MockTest.findById(id);
   if (!mockTest) throw new ApiError(httpStatus.NOT_FOUND, "MockTest not found");
 
-  return mockTest;
+  const intl = mockTest.isInternational ?? true;
+  if (mockTest.thumbnail) {
+    try {
+      await deleteFile(mockTest.thumbnail, intl);
+    } catch (error: any) {
+      console.error(`Failed to delete mock test thumbnail for ${id}:`, error.message);
+    }
+  }
+
+  const sectionIds = [mockTest.listening, mockTest.reading, mockTest.writing, mockTest.speaking].filter(Boolean);
+  for (const sectionId of sectionIds) {
+    const section = await MockTestSection.findById(sectionId);
+    if (!section) continue;
+
+    const sectionIntl = section.isInternational ?? intl;
+    for (const question of section.questions || []) {
+      if (question.audioUrl) {
+        try {
+          await deleteFile(question.audioUrl, sectionIntl);
+        } catch (error: any) {
+          console.error(`Failed to delete section question audio for section ${sectionId}:`, error.message);
+        }
+      }
+      for (const imageUrl of question.images || []) {
+        if (imageUrl) {
+          try {
+            await deleteFile(imageUrl, sectionIntl);
+          } catch (error: any) {
+            console.error(`Failed to delete section question image for section ${sectionId}:`, error.message);
+          }
+        }
+      }
+    }
+
+    await MockTestSection.findByIdAndDelete(sectionId);
+  }
+
+  return MockTest.findByIdAndDelete(id).exec();
 };

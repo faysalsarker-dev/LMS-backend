@@ -56,8 +56,9 @@ export interface ILesson extends Document {
   doc?: string;
   questions?: IQuestion[] | null;
   video?: IVideo | null;
-audio?: IAudio | null;
-assignment?:IAssignment | null;
+  audio?: IAudio | null;
+  assignment?:IAssignment | null;
+  isInternational?: boolean;
 
   status?: "active" | "inactive";
   viewCount?: number;

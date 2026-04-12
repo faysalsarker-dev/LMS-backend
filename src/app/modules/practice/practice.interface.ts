@@ -15,6 +15,7 @@ export interface IPractice extends Document {
   slug: string;
   description?: string;
   thumbnail?: string;
+  isInternational?: boolean;
   course: Types.ObjectId;   
   items: IPracticeItem[];
   isActive: boolean;
