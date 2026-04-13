@@ -47,9 +47,9 @@ export const handleGetStudentProgress = catchAsync(async (req: Request, res: Res
 
 export const handleGenerateCertificate = catchAsync(async (req: Request, res: Response) => {
   const studentId = req.user._id;
-  const { progressId } = req.params;
+  const { courseId } = req.params;
 
-  const svg = await progressService.generateCertificateSvg(studentId, progressId);
+  const svg = await progressService.generateCertificateSvg(studentId, courseId);
 
   res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
   res.status(200).send(svg);

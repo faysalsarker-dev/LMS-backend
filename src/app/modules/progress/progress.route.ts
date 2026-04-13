@@ -16,8 +16,8 @@ router.post(
   progressController.handleQuizLessonComplete,
 );
 
-router.get(
-  "/certificate/:progressId",
+router.post(
+  "/certificate/:courseId",
   checkAuth(),
   progressController.handleGenerateCertificate,
 );

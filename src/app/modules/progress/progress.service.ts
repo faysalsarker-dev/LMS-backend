@@ -36,6 +36,7 @@ const updateProgressPercentage = async (
     if (completedCount >= course.totalLectures && !progress.isCompleted) {
       progress.isCompleted = true;
       progress.completedAt = new Date();
+   await  progress.generateCertificate("Congratulations on completing the course!");
     }
   }
 };
@@ -187,11 +188,11 @@ export const getStudentProgress = async (
 
 export const generateCertificateSvg = async (
   studentId: string,
-  progressId: string
+  courseId: string
 ): Promise<string> => {
   const progress = await Progress.findOne({
-    _id: new Types.ObjectId(progressId),
     student: new Types.ObjectId(studentId),
+    course: new Types.ObjectId(courseId),
   }).select("isCompleted certificates");
 
   if (!progress) {
