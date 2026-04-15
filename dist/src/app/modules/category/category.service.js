@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CategoryService = void 0;
-const cloudinary_config_1 = require("../../config/cloudinary.config");
+const fileDelete_1 = require("../../utils/fileDelete");
 const Category_model_1 = require("./Category.model");
 exports.CategoryService = {
     async createCategory(data) {
@@ -21,7 +21,16 @@ exports.CategoryService = {
     },
     async deleteCategory(id) {
         const category = await Category_model_1.Category.findByIdAndDelete(id);
-        await (0, cloudinary_config_1.deleteImageFromCLoudinary)(category?.thumbnail);
+        if (!category)
+            return null;
+        if (category.thumbnail) {
+            try {
+                await (0, fileDelete_1.deleteFile)(category.thumbnail, category.isInternational ?? true);
+            }
+            catch (error) {
+                console.error("Failed to delete category thumbnail:", error.message);
+            }
+        }
         return category;
     },
 };

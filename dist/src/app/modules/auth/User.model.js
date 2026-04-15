@@ -34,6 +34,7 @@ const userSchema = new mongoose_1.Schema({
         country: { type: String, default: null },
         city: { type: String, default: null },
     },
+    isInternational: { type: Boolean, default: true },
     otp: { type: String, select: false },
     otpExpiry: { type: Date, select: false },
     sessionToken: { type: String, default: null, select: false },

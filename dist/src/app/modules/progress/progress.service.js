@@ -3,11 +3,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getStudentProgress = exports.markQuizAsComplete = exports.markLessonAsComplete = void 0;
+exports.generateCertificateSvg = exports.getStudentProgress = exports.markQuizAsComplete = exports.markLessonAsComplete = void 0;
+const promises_1 = __importDefault(require("fs/promises"));
+const path_1 = __importDefault(require("path"));
 const mongoose_1 = require("mongoose");
 const ApiError_1 = require("../../errors/ApiError");
 const Course_model_1 = __importDefault(require("../course/Course.model"));
 const progress_model_1 = __importDefault(require("./progress.model"));
+const CERTIFICATE_TEMPLATE_PATH = path_1.default.resolve(process.cwd(), "src/app/certificates/Certificate.svg");
+const escapeXml = (value) => value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 const updateProgressPercentage = async (progress, courseId) => {
     const course = await Course_model_1.default.findById(courseId).select("totalLectures");
     if (!course) {
@@ -17,42 +26,13 @@ const updateProgressPercentage = async (progress, courseId) => {
         const completedCount = progress.completedLessons.length;
         const percentage = Math.min((completedCount / course.totalLectures) * 100, 100);
         progress.progressPercentage = parseFloat(percentage.toFixed(2));
-        // Check if course is completed
         if (completedCount >= course.totalLectures && !progress.isCompleted) {
             progress.isCompleted = true;
             progress.completedAt = new Date();
+            await progress.generateCertificate("Congratulations on completing the course!");
         }
     }
 };
-// export const markLessonAsComplete = async (
-//   studentId: string,
-//   courseId: string,
-//   lessonId: string,
-// ): Promise<IProgress> => {
-//   // 2. Find the student's progress document
-//   const progress = await Progress.findOne({
-//     student: studentId,
-//     course: courseId,
-//   });
-//   if (!progress) {
-//     throw new ApiError(404,"Student is not enrolled in this course");
-//   }
-//   // 3. Add the lesson to the completed list
-//   // We use $addToSet to prevent duplicate lesson IDs from being added.
-//   await progress.updateOne({ $addToSet: { completedLessons: lessonId } });
-//   // 4. Refetch the document to get the updated array length
-//   const updatedProgress = await Progress.findById(progress._id);
-//   if (!updatedProgress) {
-//     throw new ApiError(500,"Failed to update progress");
-//   }
-// // Instead of updateOne then refetch, you could:
-//    if (!progress.completedLessons.some((l) => l.toString() === lessonId)) {
-//      progress.completedLessons.push(lessonId as any);
-//    }
-//    await updateProgressPercentage(progress, courseId);
-//    await progress.save();
-//   return updatedProgress;
-// };
 const markLessonAsComplete = async (studentId, courseId, lessonId) => {
     const progress = await progress_model_1.default.findOne({
         student: studentId,
@@ -61,7 +41,6 @@ const markLessonAsComplete = async (studentId, courseId, lessonId) => {
     if (!progress) {
         throw new ApiError_1.ApiError(404, "Student is not enrolled in this course");
     }
-    // Add lesson if not already completed
     if (!progress.completedLessons.some((l) => l.toString() === lessonId)) {
         progress.completedLessons.push(lessonId);
     }
@@ -81,7 +60,6 @@ const markQuizAsComplete = async (studentId, courseId, lessonId, passed) => {
     if (!passed) {
         throw new ApiError_1.ApiError(400, "Quiz not complete. Cannot mark lesson as complete.");
     }
-    // Check if quiz result already exists
     const existingIndex = progress.quizResults.findIndex((qr) => qr.lesson.toString() === lessonId);
     const result = {
         lesson: lessonId,
@@ -103,7 +81,6 @@ const markQuizAsComplete = async (studentId, courseId, lessonId, passed) => {
 };
 exports.markQuizAsComplete = markQuizAsComplete;
 const getStudentProgress = async (studentId, courseId) => {
-    // Fetch progress with populated data
     const progress = await progress_model_1.default.findOne({
         student: new mongoose_1.Types.ObjectId(studentId),
         course: new mongoose_1.Types.ObjectId(courseId),
@@ -128,11 +105,9 @@ const getStudentProgress = async (studentId, courseId) => {
     if (!course) {
         throw new ApiError_1.ApiError(404, "Course not found");
     }
-    // Calculate Quiz Statistics
     const totalQuizzes = progress.quizResults.length;
     const passedCount = progress.quizResults.filter(q => q.passed === true).length;
     const failedCount = totalQuizzes - passedCount;
-    // Transform data for the Student Overview
     return {
         overview: {
             progressPercentage: progress.progressPercentage,
@@ -175,3 +150,27 @@ const getStudentProgress = async (studentId, courseId) => {
     };
 };
 exports.getStudentProgress = getStudentProgress;
+const generateCertificateSvg = async (studentId, courseId) => {
+    const progress = await progress_model_1.default.findOne({
+        student: new mongoose_1.Types.ObjectId(studentId),
+        course: new mongoose_1.Types.ObjectId(courseId),
+    }).select("isCompleted certificates");
+    if (!progress) {
+        throw new ApiError_1.ApiError(404, "Progress not found");
+    }
+    if (!progress.isCompleted) {
+        throw new ApiError_1.ApiError(400, "Course is not completed yet");
+    }
+    if (!progress.certificates?.name ||
+        !progress.certificates?.title ||
+        !progress.certificates?.description ||
+        !progress.certificates?.issuedAt) {
+        throw new ApiError_1.ApiError(400, "Certificate data not found in progress");
+    }
+    const template = await promises_1.default.readFile(CERTIFICATE_TEMPLATE_PATH, "utf-8");
+    return template
+        .replace(/\{\{student_name\}\}/g, escapeXml(progress.certificates.name))
+        .replace(/\{\{course_title\}\}/g, escapeXml(progress.certificates.title))
+        .replace(/\{\{course_description\}\}/g, escapeXml(progress.certificates.description));
+};
+exports.generateCertificateSvg = generateCertificateSvg;

@@ -2,9 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = ResetPasswordEmail;
 function ResetPasswordEmail(resetLink) {
-    const primaryColor = '#6a45ff';
+    const primaryColor = '#35be98';
     const backgroundColor = '#f7f7f7';
-    const textColor = '#252429';
+    const textColor = '#343339';
     const lightTextColor = '#646368';
     return `
   <!DOCTYPE html>
@@ -52,13 +52,7 @@ function ResetPasswordEmail(resetLink) {
               <td bgcolor="#ffffff" align="center" valign="top" style="padding: 40px 30px 40px 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
 
                 <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                  <tr>
-                    <td align="center">
-                       <div style="width: 70px; height: 70px; background-color: ${primaryColor}; border-radius: 50%; display: grid; place-items: center; line-height: 70px;">
-                           <img src="https://i.ibb.co/3k5P2v2/shield-check.png" width="38" height="38" alt="Security Shield" style="vertical-align: middle;">
-                       </div>
-                    </td>
-                  </tr>
+                
 
                   <tr>
                     <td align="center" style="padding: 20px 0 10px 0; font-family: 'Poppins', Arial, sans-serif; color: ${textColor};">
@@ -92,7 +86,7 @@ function ResetPasswordEmail(resetLink) {
             <tr>
               <td align="center" style="padding: 20px 30px 20px 30px; color: #999999; font-family: Arial, sans-serif; font-size: 12px; line-height: 18px;">
                 <p style="margin: 0;">This email was sent to you because a password reset was initiated for your account.</p>
-                <p style="margin: 5px 0 0 0;">Your Company Name &copy; 2025 | 123 Street, City, Country</p>
+                <p style="margin: 5px 0 0 0;">Humanistic Language Center &copy; ${new Date().getFullYear()}</p>
               </td>
             </tr>
           </table>

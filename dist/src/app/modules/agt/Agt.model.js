@@ -14,6 +14,7 @@ const assignmentSubmissionSchema = new mongoose_1.Schema({
     fileUrl: {
         type: String,
     },
+    isInternational: { type: Boolean, default: true },
     textResponse: { type: String, default: null },
     submittedAt: { type: Date, default: Date.now },
     status: {

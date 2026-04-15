@@ -8,6 +8,7 @@ const ApiError_1 = require("../../errors/ApiError");
 const practice_model_1 = __importDefault(require("./practice.model"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const User_model_1 = __importDefault(require("../auth/User.model"));
+const fileDelete_1 = require("../../utils/fileDelete");
 const createPractice = async (payload) => {
     return practice_model_1.default.create(payload);
 };
@@ -69,6 +70,33 @@ const deletePractice = async (id) => {
     const deleted = await practice_model_1.default.findByIdAndDelete(id);
     if (!deleted)
         throw new ApiError_1.ApiError(404, 'Practice not found');
+    const intl = deleted.isInternational ?? true;
+    if (deleted.thumbnail) {
+        try {
+            await (0, fileDelete_1.deleteFile)(deleted.thumbnail, intl);
+        }
+        catch (error) {
+            console.error(`Failed to delete practice thumbnail for ${id}:`, error.message);
+        }
+    }
+    for (const item of deleted.items || []) {
+        if (item.audioUrl) {
+            try {
+                await (0, fileDelete_1.deleteFile)(item.audioUrl, intl);
+            }
+            catch (error) {
+                console.error(`Failed to delete practice item audio for ${item._id}:`, error.message);
+            }
+        }
+        if (item.imageUrl) {
+            try {
+                await (0, fileDelete_1.deleteFile)(item.imageUrl, intl);
+            }
+            catch (error) {
+                console.error(`Failed to delete practice item image for ${item._id}:`, error.message);
+            }
+        }
+    }
 };
 // ============== NEW: Item Management Methods ==============
 const addItemToPractice = async (practiceId, itemData) => {

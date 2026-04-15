@@ -26,6 +26,11 @@ const envSchema = zod_1.z.object({
     BUNNY_STORAGE_ZONE_PASSWORD: zod_1.z.string(),
     BUNNY_STORAGE_REGION_HOST: zod_1.z.string().default("storage.bunnycdn.com"),
     BUNNY_CDN_HOSTNAME: zod_1.z.string().optional(),
+    // ✅ Alibaba Cloud OSS
+    ALIBABA_REGION: zod_1.z.string(),
+    ALIBABA_ACCESS_KEY_ID: zod_1.z.string(),
+    ALIBABA_ACCESS_KEY_SECRET: zod_1.z.string(),
+    ALIBABA_BUCKET: zod_1.z.string(),
     // ✅ SSL (flat in env, grouped in export)
     SSL_STORE_ID: zod_1.z.string(),
     SSL_STORE_PASS: zod_1.z.string(),
@@ -68,6 +73,12 @@ exports.default = {
         storage_zone_password: env.data.BUNNY_STORAGE_ZONE_PASSWORD,
         storage_region_host: env.data.BUNNY_STORAGE_REGION_HOST,
         cdn_hostname: env.data.BUNNY_CDN_HOSTNAME,
+    },
+    alibabaCloud: {
+        region: env.data.ALIBABA_REGION,
+        accessKeyId: env.data.ALIBABA_ACCESS_KEY_ID,
+        accessKeySecret: env.data.ALIBABA_ACCESS_KEY_SECRET,
+        bucket: env.data.ALIBABA_BUCKET,
     },
     ssl: {
         sslId: env.data.SSL_STORE_ID,

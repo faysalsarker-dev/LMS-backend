@@ -42,6 +42,7 @@ const CheckAuth_1 = require("../../middleware/CheckAuth");
 const router = express_1.default.Router();
 router.post("/complete-lesson", (0, CheckAuth_1.checkAuth)(), progressController.handleMarkLessonComplete);
 router.post("/complete-quiz", (0, CheckAuth_1.checkAuth)(), progressController.handleQuizLessonComplete);
+router.post("/certificate/:courseId", (0, CheckAuth_1.checkAuth)(), progressController.handleGenerateCertificate);
 router.get("/:courseId", (0, CheckAuth_1.checkAuth)(), progressController.handleGetStudentProgress);
 const progressRoutes = router;
 exports.default = progressRoutes;

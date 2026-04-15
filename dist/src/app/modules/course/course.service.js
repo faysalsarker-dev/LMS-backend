@@ -44,6 +44,7 @@ const progress_model_1 = __importDefault(require("../progress/progress.model"));
 const ApiError_1 = require("../../errors/ApiError");
 const Lesson_model_1 = __importDefault(require("../lesson/Lesson.model"));
 const User_model_1 = __importDefault(require("../auth/User.model"));
+const fileDelete_1 = require("../../utils/fileDelete");
 const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const createCourse = async (data) => {
     const session = await mongoose_1.default.startSession();
@@ -126,6 +127,52 @@ exports.updateCourse = updateCourse;
 const deleteCourse = async (id) => {
     if (!mongoose_1.Types.ObjectId.isValid(id))
         return null;
+    const course = await Course_model_1.default.findById(id).lean();
+    if (!course)
+        return null;
+    const globalIntl = course.isInternational ?? true;
+    if (course.thumbnail) {
+        try {
+            await (0, fileDelete_1.deleteFile)(course.thumbnail, globalIntl);
+        }
+        catch (error) {
+            console.error("Failed to delete course thumbnail:", error.message);
+        }
+    }
+    const milestones = await mongoose_1.default.model("Milestone").find({ course: id }).lean();
+    const lessonIds = milestones.flatMap((m) => m.lesson || []);
+    const lessons = await Lesson_model_1.default.find({ _id: { $in: lessonIds } }).lean();
+    for (const lesson of lessons) {
+        const lessonIntl = lesson.isInternational ?? globalIntl;
+        if (lesson.video?.url) {
+            try {
+                await (0, fileDelete_1.deleteFile)(lesson.video.url, lessonIntl);
+            }
+            catch (error) {
+                console.error(`Failed to delete lesson video for ${lesson._id}:`, error.message);
+            }
+        }
+        if (lesson.audio?.url) {
+            try {
+                await (0, fileDelete_1.deleteFile)(lesson.audio.url, lessonIntl);
+            }
+            catch (error) {
+                console.error(`Failed to delete lesson audio for ${lesson._id}:`, error.message);
+            }
+        }
+        if (lesson.questions && Array.isArray(lesson.questions)) {
+            for (const question of lesson.questions) {
+                if (question?.audio) {
+                    try {
+                        await (0, fileDelete_1.deleteFile)(question.audio, lessonIntl);
+                    }
+                    catch (error) {
+                        console.error(`Failed to delete lesson question audio for ${lesson._id}:`, error.message);
+                    }
+                }
+            }
+        }
+    }
     return Course_model_1.default.findByIdAndDelete(id).exec();
 };
 exports.deleteCourse = deleteCourse;

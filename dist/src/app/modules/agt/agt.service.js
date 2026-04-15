@@ -8,6 +8,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const ApiError_1 = require("../../errors/ApiError");
 const progress_model_1 = __importDefault(require("../progress/progress.model"));
 const Agt_model_1 = __importDefault(require("./Agt.model"));
+const fileDelete_1 = require("../../utils/fileDelete");
 exports.AssignmentSubmissionService = {
     async createSubmission(data) {
         const session = await mongoose_1.default.startSession();
@@ -110,6 +111,14 @@ exports.AssignmentSubmissionService = {
         const deleted = await Agt_model_1.default.findByIdAndDelete(id);
         if (!deleted)
             throw new ApiError_1.ApiError(404, "Submission not found");
+        if (deleted.fileUrl) {
+            try {
+                await (0, fileDelete_1.deleteFile)(deleted.fileUrl, deleted.isInternational ?? true);
+            }
+            catch (error) {
+                console.error(`Failed to delete submission file for ${id}:`, error.message);
+            }
+        }
         return deleted;
     },
     // -----------------------

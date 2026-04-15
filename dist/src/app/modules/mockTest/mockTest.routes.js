@@ -36,7 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const MockTestController = __importStar(require("./mockTest.controller"));
 const CheckAuth_1 = require("../../middleware/CheckAuth");
-const multer_config_1 = require("../../config/multer.config");
+const fileUpload_middleware_1 = require("../../middleware/fileUpload.middleware");
 const rateLimiter_1 = require("../../middleware/rateLimiter");
 const router = (0, express_1.Router)();
 // ── Public reads ──────────────────────────────────────────────────
@@ -45,7 +45,7 @@ router.get("/for-user", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimi
 router.get("/:slug", (0, rateLimiter_1.rateLimit)("content"), MockTestController.getMockTestBySlug);
 router.get("/id/:id", (0, rateLimiter_1.rateLimit)("content"), MockTestController.getMockTestById);
 // ── Admin / Instructor mutations ─────────────────────────────────────
-router.post("/", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("write"), multer_config_1.multerUpload.single("thumbnail"), MockTestController.createMockTest);
-router.put("/:id", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("write"), multer_config_1.multerUpload.single("thumbnail"), MockTestController.updateMockTest);
+router.post("/", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("write"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("thumbnail"), MockTestController.createMockTest);
+router.put("/:id", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("write"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("thumbnail"), MockTestController.updateMockTest);
 router.delete("/:id", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("admin"), MockTestController.deleteMockTest);
 exports.default = router;

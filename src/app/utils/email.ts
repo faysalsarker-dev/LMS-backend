@@ -40,12 +40,12 @@ export const sendLinkEmail = async (to: string, link: string): Promise<void> => 
   await transporter.sendMail(mailOptions);
 };
 
-export const sendInviteEmail = async (to: string, obj: { name: string; role: string; email: string; password: string }): Promise<void> => {
+export const sendInviteEmail = async (to: string, obj: { name: string; role: string; email: string; password: string | undefined }): Promise<void> => {
   const mailOptions = {
     from: `<${config.user}>`,
     to,
     subject: "Your Invite Link - Humanistic Language Center",
-    html:InviteEmail(obj)
+    html:InviteEmail({ ...obj, password: obj.password || '' })
   };
 
   await transporter.sendMail(mailOptions);

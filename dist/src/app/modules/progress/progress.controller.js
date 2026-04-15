@@ -1,6 +1,4 @@
 "use strict";
-// import { Request, Response, NextFunction } from "express";
-// import * as progressService from "./progress.service";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -38,13 +36,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleGetStudentProgress = exports.handleQuizLessonComplete = exports.handleMarkLessonComplete = void 0;
+exports.handleGenerateCertificate = exports.handleGetStudentProgress = exports.handleQuizLessonComplete = exports.handleMarkLessonComplete = void 0;
 const progressService = __importStar(require("./progress.service"));
 const catchAsync_1 = require("../../utils/catchAsync");
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
-/**
- * Controller to handle marking a lesson as complete.
- */
 exports.handleMarkLessonComplete = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const studentId = req.user._id;
     const { courseId, lessonId } = req.body;
@@ -77,4 +72,11 @@ exports.handleGetStudentProgress = (0, catchAsync_1.catchAsync)(async (req, res)
         message: "Student progress retrieved successfully",
         data: progress,
     });
+});
+exports.handleGenerateCertificate = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const studentId = req.user._id;
+    const { courseId } = req.params;
+    const svg = await progressService.generateCertificateSvg(studentId, courseId);
+    res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
+    res.status(200).send(svg);
 });

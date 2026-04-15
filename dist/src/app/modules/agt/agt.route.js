@@ -6,19 +6,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const CheckAuth_1 = require("../../middleware/CheckAuth");
 const agt_controller_1 = require("./agt.controller");
-const multer_config_1 = require("../../config/multer.config");
+const fileUpload_middleware_1 = require("../../middleware/fileUpload.middleware");
 const router = express_1.default.Router();
 // ---------------------------
 // Student routes
 // ---------------------------
-router.post("/", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerVideoUpload.single("file"), agt_controller_1.AssignmentSubmissionController.createSubmission);
+router.post("/", (0, CheckAuth_1.checkAuth)(), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("file"), agt_controller_1.AssignmentSubmissionController.createSubmission);
 router.get("/:id", (0, CheckAuth_1.checkAuth)(), agt_controller_1.AssignmentSubmissionController.getSubmission);
 router.get("/", (0, CheckAuth_1.checkAuth)(), agt_controller_1.AssignmentSubmissionController.getAllSubmissions);
 // ---------------------------
 // Admin routes
 // ---------------------------
 router.patch("/review/:id", (0, CheckAuth_1.checkAuth)(), agt_controller_1.AssignmentSubmissionController.adminReview);
-router.patch("/:id", (0, CheckAuth_1.checkAuth)(), multer_config_1.multerUpload.single("file"), agt_controller_1.AssignmentSubmissionController.updateSubmission);
+router.patch("/:id", (0, CheckAuth_1.checkAuth)(), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("file"), agt_controller_1.AssignmentSubmissionController.updateSubmission);
 router.delete("/:id", (0, CheckAuth_1.checkAuth)(), agt_controller_1.AssignmentSubmissionController.deleteSubmission);
 router.get("/lesson-assignment/:id", (0, CheckAuth_1.checkAuth)(), agt_controller_1.AssignmentSubmissionController.getStudentAssignmentByLesson);
 exports.default = router;

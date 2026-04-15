@@ -39,6 +39,7 @@ const CategorySchema = new mongoose_1.Schema({
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
     thumbnail: { type: String, default: null },
+    isInternational: { type: Boolean, default: true },
     totalCourse: { type: Number, default: 0 },
 }, { timestamps: true });
 exports.Category = mongoose_1.default.model("Category", CategorySchema);

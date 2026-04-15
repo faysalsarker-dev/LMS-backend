@@ -8,6 +8,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const Lesson_model_1 = __importDefault(require("./Lesson.model"));
 const Milestone_model_1 = __importDefault(require("../milestone/Milestone.model"));
 const ApiError_1 = require("../../errors/ApiError");
+const fileDelete_1 = require("../../utils/fileDelete");
 // Create
 const createLesson = async (payload) => {
     const session = await mongoose_1.default.startSession();
@@ -86,7 +87,38 @@ const updateLesson = async (id, payload) => {
 exports.updateLesson = updateLesson;
 // Delete
 const deleteLesson = async (id) => {
-    const lesson = await Lesson_model_1.default.findByIdAndDelete(id);
-    return lesson;
+    const lesson = await Lesson_model_1.default.findById(id);
+    if (!lesson)
+        return null;
+    const intl = lesson.isInternational ?? true;
+    if (lesson.video?.url) {
+        try {
+            await (0, fileDelete_1.deleteFile)(lesson.video.url, intl);
+        }
+        catch (error) {
+            console.error(`Failed to delete lesson video for ${id}:`, error.message);
+        }
+    }
+    if (lesson.audio?.url) {
+        try {
+            await (0, fileDelete_1.deleteFile)(lesson.audio.url, intl);
+        }
+        catch (error) {
+            console.error(`Failed to delete lesson audio for ${id}:`, error.message);
+        }
+    }
+    if (lesson.questions && Array.isArray(lesson.questions)) {
+        for (const question of lesson.questions) {
+            if (question?.audio) {
+                try {
+                    await (0, fileDelete_1.deleteFile)(question.audio, intl);
+                }
+                catch (error) {
+                    console.error(`Failed to delete lesson question audio for ${id}:`, error.message);
+                }
+            }
+        }
+    }
+    return Lesson_model_1.default.findByIdAndDelete(id);
 };
 exports.deleteLesson = deleteLesson;
