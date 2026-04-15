@@ -13,6 +13,7 @@ import mongoose, { Query } from "mongoose";
 import { generateSessionToken } from "../../utils/sessionToken";
 import QueryBuilder from "../../builder/QueryBuilder";
 
+
 export const userService = {
   async register(data: Partial<IUser> & { isInviated?: boolean }) {
     const existing = await User.findOne({ email: data.email });
