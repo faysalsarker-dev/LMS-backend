@@ -14,6 +14,9 @@ const client = new OSS({
  * Extract file path from Alibaba Cloud URL
  * Handles both full URLs and direct paths
  */
+
+
+
 const getFilePathFromUrl = (urlOrPath: string): string => {
   try {
     // If it's a full URL, extract the path

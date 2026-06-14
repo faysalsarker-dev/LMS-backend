@@ -32,14 +32,13 @@ app.use(globalRateLimiter);
 app.get("/api/v1", (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
-    message: "Humanistic Language Center API is working.......",
+    message: "Humanistic Language Center API is working..........",
     
   });
 });
 
+
 app.use("/api/v1", router);
-
-
 app.use((req: Request, _res: Response, next: NextFunction) => {
   next(new ApiError(404,`Can't find ${req.originalUrl} on this server!`));
 });
