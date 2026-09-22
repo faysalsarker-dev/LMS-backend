@@ -2,28 +2,24 @@ import mongoose from 'mongoose';
 import app from './app';
 import config from './app/config/config';
 import { Server } from "http";
- import dns from 'dns';
+import dns from 'dns';
 
 let server: Server;
 
-const main = async () =>  {
-  try {
-   
-dns.setServers(['1.1.1.1', '8.8.8.8']);
-    await mongoose.connect(config.database_url);
-    
-    console.log('✅ MongoDB connected');
+const main = async () => {
+    try {
 
+        dns.setServers(['1.1.1.1', '8.8.8.8']);
+        await mongoose.connect(config.database_url);
 
-
-
-    server =  app.listen(config.port, () => {
-      console.log(`🚀 Server running on port ${config.port}`);
-    });
-  } catch (error) {
-    console.error('❌ MongoDB connection failed', error);
-    process.exit(1);
-  }
+        console.log('✅ MongoDB connected');
+        server = app.listen(config.port, () => {
+            console.log(`🚀 Server running on port ${config.port}`);
+        });
+    } catch (error) {
+        console.error('❌ MongoDB connection failed', error);
+        process.exit(1);
+    }
 };
 
 main();
