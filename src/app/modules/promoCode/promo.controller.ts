@@ -6,8 +6,12 @@ import { catchAsync } from "../../utils/catchAsync";
 // -------------------------- CREATE --------------------------
 export const createPromo = catchAsync(
   async (req: Request, res: Response) => {
-
-    const result = await PromoService.createPromo(req.body);
+    const owner = req.user._id || req.user.id;
+    const payload = {
+      ...req.body,
+      owner,
+    };
+    const result = await PromoService.createPromo(payload);
 
     sendResponse(res, {
       statusCode: 201,

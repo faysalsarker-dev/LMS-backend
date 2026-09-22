@@ -7,10 +7,10 @@ const auth_controller_1 = require("./auth.controller");
 const fileUpload_middleware_1 = require("../../middleware/fileUpload.middleware");
 const rateLimiter_1 = require("../../middleware/rateLimiter");
 const router = (0, express_1.Router)();
-router.get("/", auth_controller_1.AuthController.getAll);
+router.get("/", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), auth_controller_1.AuthController.getAll);
 // ── Credential endpoints ──────────────────────────────────────────
-router.post("/register", (0, rateLimiter_1.rateLimit)("auth"), auth_controller_1.AuthController.register);
-router.post("/login", (0, rateLimiter_1.rateLimit)("auth"), auth_controller_1.AuthController.login);
+router.post("/register", (0, rateLimiter_1.rateLimit)("register"), auth_controller_1.AuthController.register);
+router.post("/login", (0, rateLimiter_1.rateLimit)("login"), auth_controller_1.AuthController.login);
 // ── OTP / password recovery ───────────────────────────────────────
 router.post("/send-otp", (0, rateLimiter_1.rateLimit)("otp"), auth_controller_1.AuthController.sendOtp);
 router.put("/verify-otp", (0, rateLimiter_1.rateLimit)("otp"), auth_controller_1.AuthController.verifyOtp);

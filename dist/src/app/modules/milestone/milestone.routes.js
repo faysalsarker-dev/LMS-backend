@@ -36,11 +36,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const milestoneController = __importStar(require("./milestone.controller"));
 const rateLimiter_1 = require("../../middleware/rateLimiter");
+const CheckAuth_1 = require("../../middleware/CheckAuth");
+const auth_interface_1 = require("../auth/auth.interface");
 const router = (0, express_1.Router)();
 // ── Milestone CRUD ────────────────────────────────────────────────
-router.post("/", (0, rateLimiter_1.rateLimit)("write"), milestoneController.createMilestone);
+router.post("/", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.INSTRUCTOR, auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("write"), milestoneController.createMilestone);
 router.get("/", (0, rateLimiter_1.rateLimit)("content"), milestoneController.getAllMilestones);
 router.get("/:id", (0, rateLimiter_1.rateLimit)("content"), milestoneController.getMilestone);
-router.put("/:id", (0, rateLimiter_1.rateLimit)("write"), milestoneController.updateMilestone);
-router.delete("/:id", (0, rateLimiter_1.rateLimit)("admin"), milestoneController.deleteMilestone);
+router.put("/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.INSTRUCTOR, auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("write"), milestoneController.updateMilestone);
+router.delete("/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), milestoneController.deleteMilestone);
 exports.default = router;

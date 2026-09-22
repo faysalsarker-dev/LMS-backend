@@ -40,11 +40,13 @@ const express_1 = __importDefault(require("express"));
 const LessonController = __importStar(require("./lesson.controller"));
 const fileUpload_middleware_1 = require("../../middleware/fileUpload.middleware");
 const rateLimiter_1 = require("../../middleware/rateLimiter");
+const CheckAuth_1 = require("../../middleware/CheckAuth");
+const auth_interface_1 = require("../auth/auth.interface");
 const router = express_1.default.Router();
 // ── Lesson CRUD ──────────────────────────────────────────────────
-router.post("/", (0, rateLimiter_1.rateLimit)("upload"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)(["video", "audioFile"]), LessonController.createLessonController);
+router.post("/", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.INSTRUCTOR, auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("upload"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)(["video", "audioFile"]), LessonController.createLessonController);
 router.get("/", (0, rateLimiter_1.rateLimit)("content"), LessonController.getAllLessonsController);
 router.get("/:id", (0, rateLimiter_1.rateLimit)("content"), LessonController.getSingleLessonController);
-router.patch("/:id", (0, rateLimiter_1.rateLimit)("write"), LessonController.updateLessonController);
-router.delete("/:id", (0, rateLimiter_1.rateLimit)("admin"), LessonController.deleteLessonController);
+router.patch("/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.INSTRUCTOR, auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("write"), LessonController.updateLessonController);
+router.delete("/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), LessonController.deleteLessonController);
 exports.default = router;

@@ -5,6 +5,7 @@ import { iCourseSchema } from "./course.validation";
 import { dynamicFileUploadMiddleware } from "../../middleware/fileUpload.middleware";
 import { checkAuth } from "../../middleware/CheckAuth";
 import { rateLimit } from "../../middleware/rateLimiter";
+import { UserRoles } from "../auth/auth.interface";
 
 
 
@@ -40,6 +41,7 @@ router.get("/:slug", rateLimit("content"), CourseController.getCourseBySlug);
 // ── Mutations ─────────────────────────────────────────────────────
 router.post(
   "/",
+  checkAuth([UserRoles.INSTRUCTOR, UserRoles.ADMIN, UserRoles.SUPER_ADMIN]),
   rateLimit("write"),
   dynamicFileUploadMiddleware("file"),
   CourseController.createCourse,
@@ -47,6 +49,7 @@ router.post(
 
 router.put(
   "/:id",
+  checkAuth([UserRoles.INSTRUCTOR, UserRoles.ADMIN, UserRoles.SUPER_ADMIN]),
   rateLimit("write"),
   dynamicFileUploadMiddleware("file"),
   CourseController.updateCourse,
@@ -54,6 +57,7 @@ router.put(
 
 router.delete(
   "/:id",
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN]),
   rateLimit("admin"),
   CourseController.deleteCourse,
 );

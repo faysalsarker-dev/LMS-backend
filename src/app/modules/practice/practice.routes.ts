@@ -18,7 +18,7 @@ router.post(
 
 router.get(
   '/',
-  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
+  checkAuth([UserRoles.STUDENT, UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.INSTRUCTOR]),
   rateLimit('admin'),
   PracticeController.getAllPractices,
 );

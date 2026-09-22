@@ -2,12 +2,14 @@ import mongoose from 'mongoose';
 import app from './app';
 import config from './app/config/config';
 import { Server } from "http";
-
+ import dns from 'dns';
 
 let server: Server;
 
 const main = async () =>  {
   try {
+   
+dns.setServers(['1.1.1.1', '8.8.8.8']);
     await mongoose.connect(config.database_url);
     
     console.log('✅ MongoDB connected');

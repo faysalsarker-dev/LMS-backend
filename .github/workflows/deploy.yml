@@ -1,62 +1,83 @@
-name: Humanistic LMS Backend Deployment
+name: Backend CI/CD
 
 on:
   push:
     branches:
       - deploy
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22.x"
+  APP_DIR: /root/application/backend
+
+concurrency:
+  group: lms-backend-production
+  cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
-    name: Build and deploy on VPS
+  build:
+    name: Build TypeScript backend
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build project
+      - name: Build TypeScript
         run: npm run build
 
-      - name: Copy project to VPS
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_SSH_PORT }}
-          source: '.'
-          target: ${{ secrets.VPS_DESTINATION_PATH }}
-          rm: true
-          recursive: true
-          strip_components: 0
-          exclude: |
-            .github
-            node_modules
-            .git
-            .gitignore
-            README.md
+      - name: Run tests if available
+        run: npm run test --if-present
 
-      - name: Install production dependencies on VPS and restart service
-        uses: appleboy/ssh-action@master
+      - name: Verify JavaScript output
+        run: test -d dist
+
+  deploy:
+    name: Deploy backend to VPS
+    needs: build
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/deploy') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_SSH_PORT }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          script_stop: true
           script: |
-            cd ${{ secrets.VPS_DESTINATION_PATH }}
-            npm install --production
-            npm run build
-            if command -v pm2 >/dev/null 2>&1; then
-              pm2 restart humanistic-backend || pm2 start npm --name humanistic-backend -- start
-            else
-              echo 'PM2 not installed on VPS. Please start the app manually.'
-            fi
+            set -eu
+            cd "${{ env.APP_DIR }}"
+            test -f .env || { echo "Missing ${{ env.APP_DIR }}/.env on the VPS."; exit 1; }
+            git fetch --prune origin deploy
+            git checkout deploy
+            git reset --hard origin/deploy
+            docker compose up -d --build --remove-orphans backend
+            docker compose ps backend
+
+            for attempt in $(seq 1 12); do
+              health="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' lms-backend 2>/dev/null || true)"
+              if [ "$health" = "healthy" ]; then
+                exit 0
+              fi
+              echo "Waiting for lms-backend health check (current: ${health:-container not found})..."
+              sleep 5
+            done
+
+            echo "Deployment failed: lms-backend did not become healthy."
+            docker compose logs --tail=100 backend
+            exit 1

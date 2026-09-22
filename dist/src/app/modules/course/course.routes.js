@@ -38,6 +38,7 @@ const CourseController = __importStar(require("./course.controller"));
 const fileUpload_middleware_1 = require("../../middleware/fileUpload.middleware");
 const CheckAuth_1 = require("../../middleware/CheckAuth");
 const rateLimiter_1 = require("../../middleware/rateLimiter");
+const auth_interface_1 = require("../auth/auth.interface");
 const router = (0, express_1.Router)();
 // ── Public content reads ──────────────────────────────────────────
 router.get("/", (0, rateLimiter_1.rateLimit)("content"), CourseController.getAllCourses);
@@ -51,7 +52,7 @@ router.get("/:courseId/curriculum", (0, CheckAuth_1.checkAuth)(), (0, rateLimite
 // ⚠️ Wildcard route — MUST be last among GETs so it doesn't swallow specific paths
 router.get("/:slug", (0, rateLimiter_1.rateLimit)("content"), CourseController.getCourseBySlug);
 // ── Mutations ─────────────────────────────────────────────────────
-router.post("/", (0, rateLimiter_1.rateLimit)("write"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("file"), CourseController.createCourse);
-router.put("/:id", (0, rateLimiter_1.rateLimit)("write"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("file"), CourseController.updateCourse);
-router.delete("/:id", (0, rateLimiter_1.rateLimit)("admin"), CourseController.deleteCourse);
+router.post("/", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.INSTRUCTOR, auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("write"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("file"), CourseController.createCourse);
+router.put("/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.INSTRUCTOR, auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("write"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("file"), CourseController.updateCourse);
+router.delete("/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), CourseController.deleteCourse);
 exports.default = router;

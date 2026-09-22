@@ -9,7 +9,12 @@ const promo_service_1 = require("./promo.service");
 const catchAsync_1 = require("../../utils/catchAsync");
 // -------------------------- CREATE --------------------------
 exports.createPromo = (0, catchAsync_1.catchAsync)(async (req, res) => {
-    const result = await promo_service_1.PromoService.createPromo(req.body);
+    const owner = req.user._id || req.user.id;
+    const payload = {
+        ...req.body,
+        owner,
+    };
+    const result = await promo_service_1.PromoService.createPromo(payload);
     (0, sendResponse_1.default)(res, {
         statusCode: 201,
         success: true,

@@ -8,7 +8,15 @@ const mongoose_1 = require("mongoose");
 const mockTestSubmission_model_1 = __importDefault(require("./mockTestSubmission.model"));
 const progress_model_1 = __importDefault(require("../progress/progress.model"));
 const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
+const ApiError_1 = require("../../errors/ApiError");
 const submitMockTest = async (studentId, payload) => {
+    if (!payload ||
+        !payload.course ||
+        !payload.mockTest ||
+        !Array.isArray(payload.sections) ||
+        payload.sections.length === 0) {
+        throw new ApiError_1.ApiError(400, "Invalid submission payload: course, mockTest, and a non-empty sections array are required.");
+    }
     // 1. Find existing submission for this student, course, and mock test
     let submission = await mockTestSubmission_model_1.default.findOne({
         student: studentId,

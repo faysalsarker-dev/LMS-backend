@@ -7,11 +7,15 @@ import { rateLimit } from "../../middleware/rateLimiter";
 
 const router = Router();
 
-router.get("/", AuthController.getAll);
+router.get(
+  "/",
+  checkAuth([UserRoles.ADMIN, UserRoles.SUPER_ADMIN]),
+  AuthController.getAll,
+);
 
 // ── Credential endpoints ──────────────────────────────────────────
-router.post("/register", rateLimit("auth"), AuthController.register);
-router.post("/login",    rateLimit("auth"), AuthController.login);
+router.post("/register", rateLimit("register"), AuthController.register);
+router.post("/login",    rateLimit("login"),    AuthController.login);
 
 // ── OTP / password recovery ───────────────────────────────────────
 router.post("/send-otp",         rateLimit("otp"), AuthController.sendOtp);

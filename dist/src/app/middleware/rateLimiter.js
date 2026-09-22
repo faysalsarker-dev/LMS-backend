@@ -70,11 +70,23 @@ const express_rate_limit_1 = __importStar(require("express-rate-limit"));
 // ─── Centralized config ───────────────────────────────────────────────────────
 //  Edit THIS object to tune every rate limit from one place.
 const RATE_LIMIT_CONFIG = {
-    // Credential endpoints — tight to block brute-force
+    // Legacy / fallback auth profile
     auth: {
         windowMs: 15 * 60 * 1000,
         limit: 10,
+        message: "Too many authentication attempts. Please try again in 15 minutes.",
+    },
+    // Dedicated login limiter — tight to block brute-force
+    login: {
+        windowMs: 15 * 60 * 1000,
+        limit: 10,
         message: "Too many login attempts. Please try again in 15 minutes.",
+    },
+    // Dedicated register limiter — separate from login
+    register: {
+        windowMs: 15 * 60 * 1000,
+        limit: 10,
+        message: "Too many registration attempts. Please try again in 15 minutes.",
     },
     // OTP / password-reset — even tighter to prevent OTP enumeration
     otp: {
@@ -129,7 +141,7 @@ const RATE_LIMIT_CONFIG = {
 //  Authenticated requests → rate-limit per user ID (fairer, per-account).
 //  Unauthenticated requests → rate-limit per IP (standard brute-force guard).
 const keyGenerator = (req) => {
-    const userId = req.user?.id;
+    const userId = req.user?._id || req.user?.id;
     if (userId)
         return `user:${userId}`;
     // Handles proxies: req.ip already resolves correctly because
@@ -144,6 +156,15 @@ function buildLimiter(profile) {
         standardHeaders: "draft-8", // RateLimit-* headers (RFC 6585 / draft-8)
         legacyHeaders: false,
         keyGenerator,
+        skip: (req) => {
+            if (process.env.DISABLE_RATE_LIMIT === "true")
+                return true;
+            const user = req.user;
+            if (user && (user.role === "admin" || user.role === "super_admin")) {
+                return true;
+            }
+            return false;
+        },
         message: {
             success: false,
             status: 429,

@@ -6,9 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const app_1 = __importDefault(require("./app"));
 const config_1 = __importDefault(require("./app/config/config"));
+const dns_1 = __importDefault(require("dns"));
 let server;
 const main = async () => {
     try {
+        dns_1.default.setServers(['1.1.1.1', '8.8.8.8']);
         await mongoose_1.default.connect(config_1.default.database_url);
         console.log('✅ MongoDB connected');
         server = app_1.default.listen(config_1.default.port, () => {

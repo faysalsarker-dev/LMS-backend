@@ -6,11 +6,25 @@ import {
 } from "./mockTestSubmission.interface";
 import Progress from "../progress/progress.model";
 import QueryBuilder from "../../builder/QueryBuilder";
+import { ApiError } from "../../errors/ApiError";
 
 export const submitMockTest = async (
   studentId: string,
   payload: IMocktestSubmitPayload,
 ): Promise<IMockTestSubmission> => {
+  if (
+    !payload ||
+    !payload.course ||
+    !payload.mockTest ||
+    !Array.isArray(payload.sections) ||
+    payload.sections.length === 0
+  ) {
+    throw new ApiError(
+      400,
+      "Invalid submission payload: course, mockTest, and a non-empty sections array are required.",
+    );
+  }
+
   // 1. Find existing submission for this student, course, and mock test
   let submission = await MockTestSubmission.findOne({
     student: studentId,

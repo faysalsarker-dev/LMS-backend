@@ -12,7 +12,7 @@ const rateLimiter_1 = require("../../middleware/rateLimiter");
 const router = express_1.default.Router();
 // ── Practice CRUD (admin/instructor) ───────────────────────────────────
 router.post('/', (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN, auth_interface_1.UserRoles.INSTRUCTOR]), (0, rateLimiter_1.rateLimit)('write'), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)('file'), practice_controller_1.PracticeController.createPractice);
-router.get('/', (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN, auth_interface_1.UserRoles.INSTRUCTOR]), (0, rateLimiter_1.rateLimit)('admin'), practice_controller_1.PracticeController.getAllPractices);
+router.get('/', (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.STUDENT, auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN, auth_interface_1.UserRoles.INSTRUCTOR]), (0, rateLimiter_1.rateLimit)('admin'), practice_controller_1.PracticeController.getAllPractices);
 router.patch('/:id', (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN, auth_interface_1.UserRoles.INSTRUCTOR]), (0, rateLimiter_1.rateLimit)('write'), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)('file'), practice_controller_1.PracticeController.updatePractice);
 router.delete('/:id', (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN, auth_interface_1.UserRoles.INSTRUCTOR]), (0, rateLimiter_1.rateLimit)('admin'), practice_controller_1.PracticeController.deletePractice);
 // ── Student practice reads ───────────────────────────────────────────

@@ -40,19 +40,20 @@ const express_1 = __importDefault(require("express"));
 const EnrollmentController = __importStar(require("./enrollment.controller"));
 const CheckAuth_1 = require("../../middleware/CheckAuth");
 const rateLimiter_1 = require("../../middleware/rateLimiter");
+const auth_interface_1 = require("../auth/auth.interface");
 const router = express_1.default.Router();
 // ── Admin analytics ────────────────────────────────────────────────
-router.get("/analytics/total-earnings", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("admin"), EnrollmentController.getTotalEarningsController);
-router.get("/analytics/monthly-earnings/:year", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("admin"), EnrollmentController.getMonthlyEarningsController);
+router.get("/analytics/total-earnings", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), EnrollmentController.getTotalEarningsController);
+router.get("/analytics/monthly-earnings/:year", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), EnrollmentController.getMonthlyEarningsController);
 // ── Payment callbacks (no auth, called by SSL gateway) ──────────────────
 router.post("/success", EnrollmentController.paymentSSlSuccessController);
 router.post("/cancel", EnrollmentController.paymentSSlCancelController);
 router.post("/fail", EnrollmentController.paymentSSlFailedController);
 // ── Enrollment CRUD ────────────────────────────────────────────────
 router.post("/", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("write"), EnrollmentController.createEnrollmentController);
-router.get("/", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("admin"), EnrollmentController.getAllEnrollmentsController);
-router.get("/:id", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("admin"), EnrollmentController.getEnrollmentByIdController);
-router.patch("/:id", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("write"), EnrollmentController.updateEnrollmentController);
-router.delete("/:id", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("admin"), EnrollmentController.deleteEnrollmentController);
+router.get("/", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), EnrollmentController.getAllEnrollmentsController);
+router.get("/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), EnrollmentController.getEnrollmentByIdController);
+router.patch("/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("write"), EnrollmentController.updateEnrollmentController);
+router.delete("/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), EnrollmentController.deleteEnrollmentController);
 const EnrollmentRoutes = router;
 exports.default = EnrollmentRoutes;
