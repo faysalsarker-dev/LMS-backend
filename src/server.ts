@@ -6,22 +6,18 @@ import { Server } from "http";
 
 let server: Server;
 
-const main = async () =>  {
-  try {
-    await mongoose.connect(config.database_url);
-    
-    console.log('✅ MongoDB connected');
+const main = async () => {
+    try {
+        await mongoose.connect(config.database_url);
 
-
-
-
-    server =  app.listen(config.port, () => {
-      console.log(`🚀 Server running on port ${config.port}`);
-    });
-  } catch (error) {
-    console.error('❌ MongoDB connection failed', error);
-    process.exit(1);
-  }
+        console.log('✅ MongoDB connected');
+        server = app.listen(config.port, () => {
+            console.log(`🚀 Server running on port ${config.port}`);
+        });
+    } catch (error) {
+        console.error('❌ MongoDB connection failed', error);
+        process.exit(1);
+    }
 };
 
 main();
