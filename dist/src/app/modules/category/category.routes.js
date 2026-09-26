@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const category_controller_1 = require("./category.controller");
-const multer_config_1 = require("../../config/multer.config");
+const fileUpload_middleware_1 = require("../../middleware/fileUpload.middleware");
 const router = (0, express_1.Router)();
-router.post("/", multer_config_1.multerUpload.single('file'), category_controller_1.CategoryController.create);
+router.post("/", (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)('file'), category_controller_1.CategoryController.create);
 router.get("/", category_controller_1.CategoryController.getAll);
 router.get("/select", category_controller_1.CategoryController.getAllForSelecting);
 router.get("/:id", category_controller_1.CategoryController.getById);
-router.put("/:id", multer_config_1.multerUpload.single('file'), category_controller_1.CategoryController.update);
+router.put("/:id", (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)('file'), category_controller_1.CategoryController.update);
 router.delete("/:id", category_controller_1.CategoryController.delete);
 exports.default = router;

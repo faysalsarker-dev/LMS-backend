@@ -30,7 +30,7 @@ app.use(rateLimiter_1.globalRateLimiter);
 app.get("/api/v1", (_req, res) => {
     res.status(200).json({
         success: true,
-        message: "Humanistic Language Center API is working....... check deployment pipeline v1",
+        message: "Humanistic Language Center API is working.......",
     });
 });
 app.use("/api/v1", routes_1.router);

@@ -35,7 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const CourseController = __importStar(require("./course.controller"));
-const multer_config_1 = require("../../config/multer.config");
+const fileUpload_middleware_1 = require("../../middleware/fileUpload.middleware");
 const CheckAuth_1 = require("../../middleware/CheckAuth");
 const rateLimiter_1 = require("../../middleware/rateLimiter");
 const router = (0, express_1.Router)();
@@ -51,7 +51,7 @@ router.get("/:courseId/curriculum", (0, CheckAuth_1.checkAuth)(), (0, rateLimite
 // ⚠️ Wildcard route — MUST be last among GETs so it doesn't swallow specific paths
 router.get("/:slug", (0, rateLimiter_1.rateLimit)("content"), CourseController.getCourseBySlug);
 // ── Mutations ─────────────────────────────────────────────────────
-router.post("/", (0, rateLimiter_1.rateLimit)("write"), multer_config_1.multerUpload.single("file"), CourseController.createCourse);
-router.put("/:id", (0, rateLimiter_1.rateLimit)("write"), multer_config_1.multerUpload.single("file"), CourseController.updateCourse);
+router.post("/", (0, rateLimiter_1.rateLimit)("write"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("file"), CourseController.createCourse);
+router.put("/:id", (0, rateLimiter_1.rateLimit)("write"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("file"), CourseController.updateCourse);
 router.delete("/:id", (0, rateLimiter_1.rateLimit)("admin"), CourseController.deleteCourse);
 exports.default = router;

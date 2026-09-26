@@ -40,12 +40,12 @@ const express_1 = __importDefault(require("express"));
 const submissionController = __importStar(require("./mockTestSubmission.controller"));
 const CheckAuth_1 = require("../../middleware/CheckAuth");
 const auth_interface_1 = require("../auth/auth.interface");
-const multer_config_1 = require("../../config/multer.config");
+const fileUpload_middleware_1 = require("../../middleware/fileUpload.middleware");
 const rateLimiter_1 = require("../../middleware/rateLimiter");
 const router = express_1.default.Router();
 // ── Student submission ────────────────────────────────────────────
 router.post("/submit", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("quiz"), submissionController.handleSubmitMockTest);
-router.post("/submit-speaking", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("upload"), multer_config_1.multerVideoUpload.single("audio"), submissionController.handleSubmitSpeakingMockTest);
+router.post("/submit-speaking", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("upload"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("audio"), submissionController.handleSubmitSpeakingMockTest);
 // ── Student reads ─────────────────────────────────────────────────
 router.get("/my-submissions/:courseId", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), submissionController.handleGetStudentSubmissions);
 router.get("/my-mocktest-progress/:mockTestId", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("content"), submissionController.handleGetMockTestProgress);

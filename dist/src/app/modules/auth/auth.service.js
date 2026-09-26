@@ -24,6 +24,12 @@ exports.userService = {
         if (existing && !existing.isVerified) {
             throw new ApiError_1.ApiError(400, "Account is not verified");
         }
+        if (data.isInviated) {
+            const user = new User_model_1.default(data);
+            await user.save();
+            await (0, email_1.sendInviteEmail)(user.email, { name: user.name, role: user.role, email: user.email, password: data.password });
+            return user;
+        }
         const otp = (0, otpGenerator_1.generateOTP)();
         const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
         const user = new User_model_1.default({
@@ -43,7 +49,6 @@ exports.userService = {
         }
         const otp = (0, otpGenerator_1.generateOTP)();
         const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
-        console.log("Generated OTP:", otp, "for email:", email);
         user.otp = otp;
         user.otpExpiry = otpExpiry;
         await user.save();

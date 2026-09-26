@@ -64,6 +64,7 @@ const CourseSchema = new mongoose_1.Schema({
     certificateAvailable: { type: Boolean, default: false },
     resources: [{ type: String }],
     isFeatured: { type: Boolean, default: false },
+    isInternational: { type: Boolean, default: true },
     certificateTemplate: { type: String, default: null },
 }, { timestamps: true });
 // 🔹 Pre-save hook to generate unique slug

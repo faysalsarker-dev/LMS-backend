@@ -4,7 +4,7 @@ const express_1 = require("express");
 const CheckAuth_1 = require("../../middleware/CheckAuth");
 const auth_interface_1 = require("./auth.interface");
 const auth_controller_1 = require("./auth.controller");
-const multer_config_1 = require("../../config/multer.config");
+const fileUpload_middleware_1 = require("../../middleware/fileUpload.middleware");
 const rateLimiter_1 = require("../../middleware/rateLimiter");
 const router = (0, express_1.Router)();
 router.get("/", auth_controller_1.AuthController.getAll);
@@ -29,7 +29,7 @@ router.get("/me", (0, CheckAuth_1.checkAuth)([
     auth_interface_1.UserRoles.STUDENT,
 ]), auth_controller_1.AuthController.me);
 router.put("/update-password", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("write"), auth_controller_1.AuthController.updatePassword);
-router.put("/update", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("write"), multer_config_1.multerUpload.single("file"), auth_controller_1.AuthController.updateProfile);
+router.put("/update", (0, CheckAuth_1.checkAuth)(), (0, rateLimiter_1.rateLimit)("write"), (0, fileUpload_middleware_1.dynamicFileUploadMiddleware)("file"), auth_controller_1.AuthController.updateProfile);
 // ── Admin user management ─────────────────────────────────────────
 router.put("/update-user/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.ADMIN, auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), auth_controller_1.AuthController.updateUser);
 router.delete("/delete/:id", (0, CheckAuth_1.checkAuth)([auth_interface_1.UserRoles.SUPER_ADMIN]), (0, rateLimiter_1.rateLimit)("admin"), auth_controller_1.AuthController.deleteUser);

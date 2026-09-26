@@ -26,7 +26,7 @@ export const userService = {
     if(data.isInviated){
        const user = new User(data);
       await user.save();
-     await sendInviteEmail(user.email, { name: user.name, role: user.role, email: user.email, password: data.password });
+     await sendInviteEmail(user.email, { name: user.name, role: user.role, email: user.email, password: data.password as string });
       return user;
       }
 

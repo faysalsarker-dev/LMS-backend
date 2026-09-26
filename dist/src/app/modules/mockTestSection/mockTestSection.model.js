@@ -179,6 +179,7 @@ const MockTestSectionSchema = new mongoose_1.Schema({
         required: true,
     },
     totalMarks: { type: Number, default: 0 },
+    isInternational: { type: Boolean, default: true },
     timeLimit: { type: Number, default: 20, required: true }, // minutes
     instruction: { type: String, default: null },
     questions: { type: [mockQuestionSchema], default: [] },

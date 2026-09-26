@@ -93,8 +93,7 @@ const lessonSchema = new mongoose_1.Schema({
     doc: { type: mongoose_1.Schema.Types.Mixed, default: null },
     video: { type: videoSchema, default: null },
     audio: { type: audioSchema, default: null },
-    questions: { type: [questionSchema], default: [] },
-    assignment: { type: assignmentSchema, default: null },
+    isInternational: { type: Boolean, default: true },
     status: { type: String, enum: ["draft", "archived", "published"], default: "published" },
     viewCount: { type: Number, default: 0 },
 }, { timestamps: true });

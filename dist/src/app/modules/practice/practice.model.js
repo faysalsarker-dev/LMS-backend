@@ -57,6 +57,7 @@ const PracticeSchema = new mongoose_1.Schema({
     },
     items: [PracticeItemSchema],
     thumbnail: { type: String },
+    isInternational: { type: Boolean, default: true },
     isActive: { type: Boolean, default: true, index: true },
     usageCount: { type: Number, default: 0 }
 }, {
