@@ -33,7 +33,6 @@ app.get("/api/v1", (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: "Humanistic Language Center API is working.......",
-
   });
 });
 
