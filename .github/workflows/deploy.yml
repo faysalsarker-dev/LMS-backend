@@ -40,6 +40,13 @@ jobs:
           port: ${{ secrets.VPS_SSH_PORT }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /root/application/backend
-            git pull origin main
-            docker compose up -d --build
+              export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+              cd /path/to/your/project
+              git pull origin main
+              /usr/bin/docker compose down
+              /usr/bin/docker compose up -d --build
+
+
+
+
+            
