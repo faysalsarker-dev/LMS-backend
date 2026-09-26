@@ -45,6 +45,8 @@ export const userService = {
     });
 
     await user.save();
+
+  
     return user;
   },
 
