@@ -24,7 +24,7 @@ const userSchema = new Schema<IUser>(
       default: "student",
     },
     isActive: { type: Boolean, default: true },
-    isVerified: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: true },
     profile: { type: String, default: null },
     courses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
     wishlist: [{ type: Schema.Types.ObjectId, ref: "Course" }],

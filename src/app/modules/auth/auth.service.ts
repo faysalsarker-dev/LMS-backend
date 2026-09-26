@@ -23,22 +23,25 @@ export const userService = {
       throw new ApiError(400, "Account is not verified");
     }
 
-    if(data.isInviated){
-       const user = new User(data);
+    if (data.isInviated) {
+      const user = new User(data);
       await user.save();
-     await sendInviteEmail(user.email, { name: user.name, role: user.role, email: user.email, password: data.password as string });
+      await sendInviteEmail(user.email, { name: user.name, role: user.role, email: user.email, password: data.password as string });
       return user;
-      }
+    }
 
 
 
-    const otp = generateOTP();
-    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+    // const otp = generateOTP();
+    // const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
+    // const user = new User({
+    //   ...data,
+    //   otp,
+    //   otpExpiry,
+    // });
     const user = new User({
       ...data,
-      otp,
-      otpExpiry,
     });
 
     await user.save();
@@ -65,7 +68,7 @@ export const userService = {
   },
 
   async verifyOtp(email: string, otp: string) {
-   
+
     const user = await User.findOne({ email }).select({ otp: 1, otpExpiry: 1 });
     if (!user) throw new ApiError(404, "User not found");
 
@@ -98,29 +101,29 @@ export const userService = {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) throw new ApiError(401, "Invalid credentials");
 
-if (user?.sessionToken) {
-  throw new ApiError(
-    409,
-    "ALREADY_LOGGED_IN.",
-  );
-}
-
- 
+    if (user?.sessionToken) {
+      throw new ApiError(
+        409,
+        "ALREADY_LOGGED_IN.",
+      );
+    }
 
 
 
-  const sessionToken = generateSessionToken();
 
-user.sessionToken = sessionToken;
-  await user.save();
+
+    const sessionToken = generateSessionToken();
+
+    user.sessionToken = sessionToken;
+    await user.save();
 
     const refreshToken = generateToken(
-      { id: user._id, _id:user._id , role: user.role , profile:user.profile , name:user.name ,email:user.email ,sessionToken },
+      { id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email, sessionToken },
       config.jwt.refresh_expires_in
     );
 
     const accessToken = generateToken(
-      { id: user._id, _id:user._id , role: user.role , profile:user.profile , name:user.name ,email:user.email ,sessionToken },
+      { id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email, sessionToken },
       config.jwt.access_expires_in
     );
 
@@ -131,22 +134,22 @@ user.sessionToken = sessionToken;
 
 
 
-async logout(userId: string) {
-  return User.findByIdAndUpdate(
-    userId,
-    { sessionToken: null },
-    { new: true }
-  );
-},
+  async logout(userId: string) {
+    return User.findByIdAndUpdate(
+      userId,
+      { sessionToken: null },
+      { new: true }
+    );
+  },
 
-async logoutFromOthers(email: string) {
-  return User.findOneAndUpdate(
-    { email },           // filter by email
-    { sessionToken: null }, // update
-    { new: true }        // return the updated document
-  );
-}
-,
+  async logoutFromOthers(email: string) {
+    return User.findOneAndUpdate(
+      { email },           // filter by email
+      { sessionToken: null }, // update
+      { new: true }        // return the updated document
+    );
+  }
+  ,
 
 
 
@@ -159,7 +162,7 @@ async logoutFromOthers(email: string) {
     }
 
     const accessToken = generateToken(
-      { id: user._id, _id:user._id , role: user.role , profile:user.profile , name:user.name ,email:user.email ,sessionToken: user.sessionToken },
+      { id: user._id, _id: user._id, role: user.role, profile: user.profile, name: user.name, email: user.email, sessionToken: user.sessionToken },
       config.jwt.access_expires_in
     );
 
@@ -172,60 +175,60 @@ async logoutFromOthers(email: string) {
 
 
 
-async updatePassword(userId: string, payload: {
-  currentPassword: string;
-  newPassword: string;
-}) {
-  const user = await User.findById(userId).select("+password");
-  if (!user) {
-    throw new ApiError(404, "User not found");
-  }
-
-  // Compare current password
-  const isMatch = await bcrypt.compare(payload.currentPassword, user.password);
-  if (!isMatch) {
-    throw new ApiError(401, "Current password is incorrect");
-  }
-
-  // Hash and update the new password
-  const salt = await bcrypt.genSalt(config.bcrypt_salt_rounds);
-  const hashedPassword = await bcrypt.hash(payload.newPassword, salt);
-
-  user.password = hashedPassword;
-  await user.save();
-
-  return user
-},
-
-
-
-
-async updateProfile(userId: string, updates: Partial<IUser>) {
-  const user = await User.findById(userId);
-  if (!user) throw new ApiError(404, "User not found");
-
-  const oldProfile = user.profile;
-
-  const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true });
-
-  if (updates.profile && oldProfile) {
-    try {
-      await deleteImageFromCLoudinary(oldProfile);
-    } catch (err) {
-      console.error("Failed to delete old image:", err);
+  async updatePassword(userId: string, payload: {
+    currentPassword: string;
+    newPassword: string;
+  }) {
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+      throw new ApiError(404, "User not found");
     }
-  }
 
-  return updatedUser;
-},
+    // Compare current password
+    const isMatch = await bcrypt.compare(payload.currentPassword, user.password);
+    if (!isMatch) {
+      throw new ApiError(401, "Current password is incorrect");
+    }
+
+    // Hash and update the new password
+    const salt = await bcrypt.genSalt(config.bcrypt_salt_rounds);
+    const hashedPassword = await bcrypt.hash(payload.newPassword, salt);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    return user
+  },
 
 
-async updateUser(userId: string, updates: Partial<IUser>) {
-  const user = await User.findById(userId);
-  if (!user) throw new ApiError(404, "User not found");
-  const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true });
-  return updatedUser;
-},
+
+
+  async updateProfile(userId: string, updates: Partial<IUser>) {
+    const user = await User.findById(userId);
+    if (!user) throw new ApiError(404, "User not found");
+
+    const oldProfile = user.profile;
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true });
+
+    if (updates.profile && oldProfile) {
+      try {
+        await deleteImageFromCLoudinary(oldProfile);
+      } catch (err) {
+        console.error("Failed to delete old image:", err);
+      }
+    }
+
+    return updatedUser;
+  },
+
+
+  async updateUser(userId: string, updates: Partial<IUser>) {
+    const user = await User.findById(userId);
+    if (!user) throw new ApiError(404, "User not found");
+    const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true });
+    return updatedUser;
+  },
 
 
 
@@ -262,62 +265,62 @@ async updateUser(userId: string, updates: Partial<IUser>) {
 
 
 
-async getMe(
-  userId: string,
-  sessionToken: string,
-): Promise<any> {
-  const user = await User.findById(userId).select("+sessionToken");
+  async getMe(
+    userId: string,
+    sessionToken: string,
+  ): Promise<any> {
+    const user = await User.findById(userId).select("+sessionToken");
 
-  if (!user) throw new ApiError(404, "User not found");
-  
-  if (user.sessionToken !== sessionToken) {
-    
-    
-    return {
-      logout: true,
-      message: "Session expired. Logged in from another device."
-    };
-  }
+    if (!user) throw new ApiError(404, "User not found");
+
+    if (user.sessionToken !== sessionToken) {
 
 
-const userObj = user.toObject();
-delete userObj.sessionToken;
-const newInfo = userObj;
-  return newInfo;
-},
+      return {
+        logout: true,
+        message: "Session expired. Logged in from another device."
+      };
+    }
 
 
-async addToWishlist(id: string, courseId: string) {
-  const user = await User.findById(id);
-  if (!user) throw new Error("User not found");
+    const userObj = user.toObject();
+    delete userObj.sessionToken;
+    const newInfo = userObj;
+    return newInfo;
+  },
 
-  // Convert to ObjectId
-  const courseObjectId = new mongoose.Types.ObjectId(courseId);
+
+  async addToWishlist(id: string, courseId: string) {
+    const user = await User.findById(id);
+    if (!user) throw new Error("User not found");
+
+    // Convert to ObjectId
+    const courseObjectId = new mongoose.Types.ObjectId(courseId);
 
 
-  const isAlreadyInWishlist = user.wishlist.some(
-    (item: mongoose.Types.ObjectId) => item.equals(courseObjectId)
-  );
-
-  let updatedUser;
-  if (isAlreadyInWishlist) {
-    // 🔹 Remove if exists
-    updatedUser = await User.findByIdAndUpdate(
-      id,
-      { $pull: { wishlist: courseObjectId } },
-      { new: true }
+    const isAlreadyInWishlist = user.wishlist.some(
+      (item: mongoose.Types.ObjectId) => item.equals(courseObjectId)
     );
-  } else {
-    // 🔹 Add if not exists
-    updatedUser = await User.findByIdAndUpdate(
-      id,
-      { $push: { wishlist: courseObjectId } },
-      { new: true }
-    );
-  }
 
-  return updatedUser;
-},
+    let updatedUser;
+    if (isAlreadyInWishlist) {
+      // 🔹 Remove if exists
+      updatedUser = await User.findByIdAndUpdate(
+        id,
+        { $pull: { wishlist: courseObjectId } },
+        { new: true }
+      );
+    } else {
+      // 🔹 Add if not exists
+      updatedUser = await User.findByIdAndUpdate(
+        id,
+        { $push: { wishlist: courseObjectId } },
+        { new: true }
+      );
+    }
+
+    return updatedUser;
+  },
 
 
 
