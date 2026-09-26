@@ -41,7 +41,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
               export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-              cd /path/to/your/project
+              cd /root/application/backend
               git pull origin main
               /usr/bin/docker compose down
               /usr/bin/docker compose up -d --build
