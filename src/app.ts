@@ -19,6 +19,7 @@ app.use(
       "https://lms.faysalsarker.me",
       "https://humanisticlanguagecenter.com",
       "http://humanisticlanguagecenter.com",
+      "https://www.humanisticlanguagecenter.com",
       "http://localhost:5173"
     ],
     credentials: true,
