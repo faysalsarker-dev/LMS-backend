@@ -30,12 +30,15 @@ exports.userService = {
             await (0, email_1.sendInviteEmail)(user.email, { name: user.name, role: user.role, email: user.email, password: data.password });
             return user;
         }
-        const otp = (0, otpGenerator_1.generateOTP)();
-        const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+        // const otp = generateOTP();
+        // const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+        // const user = new User({
+        //   ...data,
+        //   otp,
+        //   otpExpiry,
+        // });
         const user = new User_model_1.default({
             ...data,
-            otp,
-            otpExpiry,
         });
         await user.save();
         return user;

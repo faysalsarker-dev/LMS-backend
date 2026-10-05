@@ -4,8 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
+const node_dns_1 = require("node:dns");
 const app_1 = __importDefault(require("./app"));
 const config_1 = __importDefault(require("./app/config/config"));
+(0, node_dns_1.setServers)(['1.1.1.1', '8.8.8.8']);
 let server;
 const main = async () => {
     try {

@@ -26,7 +26,7 @@ const userSchema = new mongoose_1.Schema({
         default: "student",
     },
     isActive: { type: Boolean, default: true },
-    isVerified: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: true },
     profile: { type: String, default: null },
     courses: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Course" }],
     wishlist: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Course" }],
