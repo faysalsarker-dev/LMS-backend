@@ -84,8 +84,9 @@ const lessonSchema = new Schema<ILesson>(
     order: { type: Number, min: 1 },
 
     type: { type: String, enum: ["video", "doc", "quiz", "audio" ,"assignment"], required: true },
-
+assignment: { type: assignmentSchema, default: null },
 doc: { type: Schema.Types.Mixed, default: null },
+    questions: { type: [questionSchema], default: [] },
     video: { type: videoSchema, default: null },
     audio: { type: audioSchema, default: null },
     isInternational: { type: Boolean, default: true },

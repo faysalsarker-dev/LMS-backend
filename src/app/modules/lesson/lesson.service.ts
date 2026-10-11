@@ -9,6 +9,7 @@ import { deleteFile } from "../../utils/fileDelete";
 export const createLesson = async (payload: Partial<ILesson>) => {
   const session = await mongoose.startSession();
   session.startTransaction();
+console.log("payload----------1", payload);
 
   try {
 
@@ -16,6 +17,9 @@ export const createLesson = async (payload: Partial<ILesson>) => {
     payload.questions = JSON.parse(payload.questions);
   }
   
+console.log("payload-----------2", payload);
+
+
 if (payload.type === "assignment" && typeof payload.assignment === "string") {
   payload.assignment = JSON.parse(payload.assignment);
 }

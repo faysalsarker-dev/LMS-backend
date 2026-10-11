@@ -9,7 +9,7 @@ import { ApiError } from "../../errors/ApiError";
 
 export const createLessonController = catchAsync(
   async (req: Request, res: Response) => {
-
+console.log("req.body=======1", req.body.questions);
 
 // Type definition for files
 const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -36,7 +36,10 @@ if (req.body.type === "video") {
   // cleanup temp fields
   delete req.body.videoUrl;
   delete req.body.videoDuration;
- }else if (req.body.type === "quiz" && req.body.questions) {
+ }
+ 
+ 
+ else if (req.body.type === "quiz" && req.body.questions) {
   let questions = req.body.questions;
   questions = JSON.parse(questions);
   const audioFile = files?.audioFile?.[0];
@@ -53,8 +56,12 @@ if (req.body.type === "video") {
       delete question.audioUrl;
       delete question.audioFile;
     }
+
+
     return question;
   });
+
+
 
   req.body.questions = questions;
 } else if(req.body.type === "audio") {
@@ -68,6 +75,8 @@ if (req.body.type === "video") {
 }
 
 
+
+console.log("req.body=======2", req.body.questions);
 
     const lesson = await LessonService.createLesson(req.body);
 

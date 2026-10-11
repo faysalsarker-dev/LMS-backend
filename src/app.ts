@@ -25,9 +25,9 @@ app.use(
     credentials: true,
   }),
 );
-app.use(morgan("dev"));
+// app.use(morgan("dev"));
 
-app.use(globalRateLimiter);
+// app.use(globalRateLimiter);
 
 
 app.get("/api/v1", (_req: Request, res: Response) => {
