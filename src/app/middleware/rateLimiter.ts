@@ -108,9 +108,9 @@ const RATE_LIMIT_CONFIG: Record<RateLimitProfile, ProfileConfig> = {
   // File / video uploads — heavy on storage/bandwidth; keep very low
   upload: {
     windowMs: 60 * 60 * 1000,
-    limit: 15,
+    limit: 3000,
     message:
-      "Upload limit reached. You can upload up to 15 files per hour.",
+      "Upload limit reached. You can upload up to 3000 files per hour.",
   },
 
   // Admin dashboards / analytics — higher than write, lower than content
